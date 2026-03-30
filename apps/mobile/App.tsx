@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Animated, StyleSheet, View, Image } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { AppNavigator } from "./src/navigation/AppNavigator";
 
 import AuthScreen from './src/screens/AuthScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
@@ -27,6 +28,7 @@ export default function App() {
   }, [fadeAnim]);
 
   return (
+    <AppNavigator />
     <View style={styles.container}>
       {/* The Router handles switching between screens */}
       <NavigationContainer>
