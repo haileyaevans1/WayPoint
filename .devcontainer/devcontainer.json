@@ -23,5 +23,5 @@
       ]
     }
   },
-  "postCreateCommand": "npm install -g expo-cli typescript ts-node"
+  "postCreateCommand": "npm install -g expo-cli typescript ts-node && cd services/ml-api && pip install -r requirements.txt"
 }
