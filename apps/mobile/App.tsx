@@ -2,11 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Animated, StyleSheet, View, Image } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { AppNavigator } from "./src/navigation/AppNavigator";
 
+// 1. Import Auth and your team's AppNavigator
 import AuthScreen from './src/screens/AuthScreen';
-import ProfileScreen from './src/screens/ProfileScreen';
+import { AppNavigator } from "./src/navigation/AppNavigator";
 import { colors } from './src/theme/colors';
+
+// (We no longer need to import ProfileScreen directly here, 
+// because AppNavigator handles it now!)
 
 const Stack = createNativeStackNavigator();
 
@@ -28,17 +31,23 @@ export default function App() {
   }, [fadeAnim]);
 
   return (
-    <AppNavigator />
     <View style={styles.container}>
-      {/* The Router handles switching between screens */}
+      
+      {/* 2. The Main Router */}
       <NavigationContainer>
         <Stack.Navigator screenOptions={{ headerShown: false }}>
+          
+          {/* The front door: Your video auth screen */}
           <Stack.Screen name="Auth" component={AuthScreen} />
-          <Stack.Screen name="Profile" component={ProfileScreen} />
+          
+          {/* The inside of the app: Your team's NavBar setup */}
+          {/* We named the route "Profile" so your Auth button still connects to it! */}
+          <Stack.Screen name="Profile" component={AppNavigator} />
+          
         </Stack.Navigator>
       </NavigationContainer>
 
-      {/* The Splash Screen stays on top of everything while it loads */}
+      {/* 3. The Splash Screen stays on top of everything while it loads */}
       {isSplashVisible && (
         <Animated.View style={[styles.splashContainer, { opacity: fadeAnim }]}>
           <Image
@@ -58,7 +67,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.blue1000,
   },
   splashContainer: {
-    ...StyleSheet.absoluteFill,
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: colors.blue1000,
     justifyContent: 'center',
     alignItems: 'center',
