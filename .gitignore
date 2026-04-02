@@ -25,6 +25,9 @@ venv/
 env/
 .env/
 
+# Synthetic / local-only datasets (not for commit)
+services/ml-api/data/*.csv
+
 # Environment Variables (CRITICAL for security)
 .env
 .env.local
