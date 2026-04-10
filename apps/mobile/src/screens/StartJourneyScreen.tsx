@@ -12,8 +12,27 @@ export function StartJourneyScreen() {
   const [measureType, setMeasureType] = useState<TripMeasure>("distance");
 
   return (
-    <View>
-      <Text>Start Journey</Text>
-    </View>
+    <LinearGradient
+      colors={[theme.colors.background, "#F4E8DA", theme.colors.backgroundDeep]}
+      style={styles.screen}
+    >
+      <ScrollView contentContainerStyle={styles.content}>
+        <Header
+          title="Start Your Journey"
+          subtitle="We’ll keep you connected along the way."
+        />
+
+        <Text>Start Journey</Text>
+      </ScrollView>
+    </LinearGradient>
   );
 }
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+  },
+  content: {
+    padding: 16,
+  },
+});
