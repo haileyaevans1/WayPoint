@@ -28,6 +28,13 @@ export function StartJourneyScreen() {
   );
 }
 
+const journeyTypes = [
+  { key: "walk", label: "Walk", icon: "🚶‍♀️" },
+  { key: "run", label: "Run", icon: "🏃‍♀️" },
+    { key: "hike", label: "Hike", icon: "🥾" },
+    { key: "bike", label: "Bike", icon: "🚴‍♀️" },
+];
+
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
