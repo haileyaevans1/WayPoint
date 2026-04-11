@@ -30,6 +30,26 @@ export function StartJourneyScreen() {
   const [distanceValue, setDistanceValue] = useState("2");
   const [destinationLocation, setDestinationLocation] = useState("");
   const [locationMode, setLocationMode] = useState<LocationMode>("current");
+const [distanceUnit, setDistanceUnit] = useState("mi");
+const [durationValue, setDurationValue] = useState("30");
+const [durationUnit, setDurationUnit] = useState("min");
+const [groupJourneyEnabled, setGroupJourneyEnabled] = useState(false);
+const [offRouteEnabled, setOffRouteEnabled] = useState(true);
+const [missedCheckInEnabled, setMissedCheckInEnabled] = useState(true);
+const [safetyPromptsEnabled, setSafetyPromptsEnabled] = useState(true);
+
+const enabledSafetySettings = [
+  offRouteEnabled,
+  missedCheckInEnabled,
+  safetyPromptsEnabled,
+].filter(Boolean).length;
+
+const selectedJourney = journeyTypes.find((item) => item.key === journeyType);
+
+const tripSetupLabel =
+  measureType === "distance"
+    ? `${distanceValue || "0"} ${distanceUnit}`
+    : `${durationValue || "0"} ${durationUnit}`;
 
   return (
     <LinearGradient
