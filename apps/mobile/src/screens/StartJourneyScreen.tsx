@@ -7,6 +7,13 @@ import { theme } from "../styles/theme";
 type JourneyType = "walk" | "run" | "hike" | "bike";
 type TripMeasure = "distance" | "duration";
 
+const journeyTypes = [
+  { key: "walk", label: "Walk", icon: "🚶‍♀️" },
+  { key: "run", label: "Run", icon: "🏃‍♀️" },
+  { key: "hike", label: "Hike", icon: "🥾" },
+  { key: "bike", label: "Bike", icon: "🚴‍♀️" },
+];
+
 export function StartJourneyScreen() {
   const [journeyType, setJourneyType] = useState<JourneyType>("walk");
   const [measureType, setMeasureType] = useState<TripMeasure>("distance");
@@ -23,31 +30,26 @@ export function StartJourneyScreen() {
         />
 
         <Text>Start Journey</Text>
+
+        {/* Journey Types */}
+        <View>
+          {journeyTypes.map((item) => (
+            <Text
+              key={item.key}
+              onPress={() => setJourneyType(item.key as JourneyType)}
+            >
+              {item.icon} {item.label}
+            </Text>
+          ))}
+        </View>
+
+        {/* Measure Toggle */}
+        <View>
+          <Text onPress={() => setMeasureType("distance")}>Distance</Text>
+          <Text onPress={() => setMeasureType("duration")}>Duration</Text>
+        </View>
+
       </ScrollView>
     </LinearGradient>
   );
 }
-
-const journeyTypes = [
-  { key: "walk", label: "Walk", icon: "🚶‍♀️" },
-  { key: "run", label: "Run", icon: "🏃‍♀️" },
-    { key: "hike", label: "Hike", icon: "🥾" },
-    { key: "bike", label: "Bike", icon: "🚴‍♀️" },
-];
-
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-  },
-  content: {
-    padding: 16,
-  },
-});
-
-<View>
-  {journeyTypes.map((item) => (
-    <Text key={item.key} onPress={() => setJourneyType(item.key as JourneyType)}>
-      {item.icon} {item.label}
-    </Text>
-  ))}
-</View>
