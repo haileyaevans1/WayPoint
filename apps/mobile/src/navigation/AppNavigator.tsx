@@ -10,6 +10,7 @@ import { HomeScreen } from "../screens/HomeScreen";
 import ProfileScreen from "../screens/ProfileScreen"; 
 import SettingsScreen from "../screens/SettingsScreen";
 import StatisticsScreen from "../screens/StatisticsScreen";
+import { ActiveJourneyScreen } from "../screens/ActiveJourneyScreen";
 import { StartJourneyScreen } from "../screens/StartJourneyScreen";
 
 // Import the team's theme and the AppScreen type
@@ -36,6 +37,10 @@ export function AppNavigator() {
         return <SettingsScreen />;
       case "stats":
         return <StatisticsScreen />;
+      case "startJourney":
+        return <StartJourneyScreen onStartJourney={() => setCurrentScreen("activeJourney")} />;
+      case "activeJourney":
+        return <ActiveJourneyScreen />;
       // If "routes" or "startJourney" is clicked before they are built, 
       // safely fallback to home so the app doesn't crash!
       default:

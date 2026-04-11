@@ -12,6 +12,10 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Header } from "../components/Header";
 import { theme } from "../styles/theme";
 
+type StartJourneyScreenProps = {
+  onStartJourney?: () => void;
+};
+
 type JourneyType = "walk" | "run" | "hike" | "bike";
 type TripMeasure = "distance" | "duration";
 type LocationMode = "current" | "custom";
@@ -60,7 +64,7 @@ const journeyTypes: Array<{
 
 const trustedContacts: string[] = [];
 
-export function StartJourneyScreen() {
+export function StartJourneyScreen({ onStartJourney }: StartJourneyScreenProps) {
   const [journeyType, setJourneyType] = useState<JourneyType>("walk");
   const [measureType, setMeasureType] = useState<TripMeasure>("distance");
   const [distanceValue, setDistanceValue] = useState("2");
@@ -526,6 +530,15 @@ export function StartJourneyScreen() {
               </View>
             ))}
           </View>
+          <Pressable
+            style={({ pressed }) => [
+              styles.readyButton,
+              pressed && styles.readyButtonPressed,
+            ]}
+            onPress={onStartJourney}
+          >
+            <Text style={styles.readyButtonText}>Start journey</Text>
+          </Pressable>
         </LinearGradient>
       </ScrollView>
     </LinearGradient>
@@ -1081,5 +1094,25 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "rgba(79,90,34,0.88)",
   },
+  readyButton: {
+    marginTop: 4,
+    alignSelf: "flex-start",
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderRadius: theme.radius.pill,
+    backgroundColor: "rgba(255,255,255,0.92)",
+    shadowColor: theme.colors.brandDeep,
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 3,
+  },
+  readyButtonPressed: {
+    opacity: 0.82,
+  },
+  readyButtonText: {
+    fontSize: 15,
+    fontWeight: "800",
+    color: readyLimeTextDark,
+  },
 });
-
