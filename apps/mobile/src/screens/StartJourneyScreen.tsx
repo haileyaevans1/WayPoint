@@ -12,6 +12,7 @@ import { theme } from "../styles/theme";
 
 type JourneyType = "walk" | "run" | "hike" | "bike";
 type TripMeasure = "distance" | "duration";
+type LocationMode = "current" | "custom";
 
 const journeyTypes = [
   { key: "walk", label: "Walk", icon: "🚶‍♀️" },
@@ -24,6 +25,8 @@ export function StartJourneyScreen() {
   const [journeyType, setJourneyType] = useState<JourneyType>("walk");
   const [measureType, setMeasureType] = useState<TripMeasure>("distance");
   const [distanceValue, setDistanceValue] = useState("2");
+  const [destinationLocation, setDestinationLocation] = useState("");
+  const [locationMode, setLocationMode] = useState<LocationMode>("current");
 
   return (
     <LinearGradient
@@ -43,7 +46,6 @@ export function StartJourneyScreen() {
 
         <Text style={styles.pageTitle}>Start Journey</Text>
 
-        {/* Journey Types */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Journey Type</Text>
           {journeyTypes.map((item) => (
@@ -60,7 +62,6 @@ export function StartJourneyScreen() {
           ))}
         </View>
 
-        {/* Measure Toggle */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Trip Setup</Text>
           <View style={styles.toggleRow}>
@@ -94,6 +95,54 @@ export function StartJourneyScreen() {
             />
           )}
         </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Location</Text>
+
+          <View
+            style={[
+              styles.locationCard,
+              locationMode === "current" && styles.selectedCard,
+            ]}
+          >
+            <Text style={styles.locationLabel}>Current location</Text>
+            <Text style={styles.locationValue}>Downtown Tulsa, OK</Text>
+            <Text
+              style={styles.actionText}
+              onPress={() => setLocationMode("current")}
+            >
+              {locationMode === "current" ? "Selected" : "Use"}
+            </Text>
+          </View>
+
+          <View
+            style={[
+              styles.locationCard,
+              locationMode === "custom" && styles.selectedCard,
+            ]}
+          >
+            <Text style={styles.locationLabel}>Enter another location</Text>
+            <TextInput
+              value={destinationLocation}
+              onChangeText={(value) => {
+                setDestinationLocation(value);
+                if (value.length > 0) {
+                  setLocationMode("custom");
+                }
+              }}
+              onFocus={() => setLocationMode("custom")}
+              placeholder="Destination or meeting point"
+              placeholderTextColor={theme.colors.textMuted}
+              style={styles.input}
+            />
+            <Text
+              style={styles.actionText}
+              onPress={() => setLocationMode("custom")}
+            >
+              {locationMode === "custom" ? "Selected" : "Use"}
+            </Text>
+          </View>
+        </View>
       </ScrollView>
     </LinearGradient>
   );
@@ -117,7 +166,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     padding: 16,
     borderRadius: 16,
-    gap: 10,
+    gap: 12,
   },
   sectionTitle: {
     fontSize: 18,
@@ -144,5 +193,30 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: theme.colors.text,
     backgroundColor: theme.colors.white,
+  },
+  locationCard: {
+    backgroundColor: theme.colors.surfaceSoft,
+    padding: 14,
+    borderRadius: 14,
+    gap: 8,
+  },
+  selectedCard: {
+    borderWidth: 1,
+    borderColor: theme.colors.brand,
+  },
+  locationLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: theme.colors.textMuted,
+  },
+  locationValue: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: theme.colors.text,
+  },
+  actionText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: theme.colors.brand,
   },
 });
