@@ -43,3 +43,11 @@ const styles = StyleSheet.create({
     padding: 16,
   },
 });
+
+<View>
+  {journeyTypes.map((item) => (
+    <Text key={item.key} onPress={() => setJourneyType(item.key as JourneyType)}>
+      {item.icon} {item.label}
+    </Text>
+  ))}
+</View>
