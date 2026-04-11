@@ -10,6 +10,7 @@ import { HomeScreen } from "../screens/HomeScreen";
 import ProfileScreen from "../screens/ProfileScreen"; 
 import SettingsScreen from "../screens/SettingsScreen";
 import StatisticsScreen from "../screens/StatisticsScreen";
+import { StartJourneyScreen } from "../screens/StartJourneyScreen";
 
 // Import the team's theme and the AppScreen type
 import { theme, AppScreen } from "../styles/theme"; 
