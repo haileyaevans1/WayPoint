@@ -5,6 +5,7 @@ import {
   Text,
   TextInput,
   View,
+  Pressable,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Header } from "../components/Header";
@@ -20,6 +21,8 @@ const journeyTypes = [
   { key: "hike", label: "Hike", icon: "🥾" },
   { key: "bike", label: "Bike", icon: "🚴‍♀️" },
 ];
+
+const trustedContacts: string[] = [];
 
 export function StartJourneyScreen() {
   const [journeyType, setJourneyType] = useState<JourneyType>("walk");
@@ -143,6 +146,46 @@ export function StartJourneyScreen() {
             </Text>
           </View>
         </View>
+
+        <View style={styles.section}>
+          <View style={styles.contactsHeader}>
+            <View>
+              <Text style={styles.sectionTitle}>Trusted Contacts</Text>
+              <Text style={styles.sectionText}>
+                Choose who should receive updates if something seems off.
+              </Text>
+            </View>
+
+            <View style={styles.countBadge}>
+              <Text style={styles.countValue}>{trustedContacts.length}</Text>
+              <Text style={styles.countLabel}>selected</Text>
+            </View>
+          </View>
+
+          {trustedContacts.length > 0 && (
+            <View style={styles.contactRow}>
+              {trustedContacts.map((contact) => (
+                <View key={contact} style={styles.contactChip}>
+                  <Text style={styles.contactChipText}>{contact}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+
+          <Pressable style={styles.contactCard}>
+            <Text style={styles.contactCardTitle}>Add trusted contacts</Text>
+            <Text style={styles.contactCardText}>
+              Pick the people you want to keep in the loop during this journey.
+            </Text>
+          </Pressable>
+
+          <Pressable style={styles.contactCard}>
+            <Text style={styles.contactCardTitle}>Add emergency contact</Text>
+            <Text style={styles.contactCardText}>
+              Optionally add one more person for urgent situations.
+            </Text>
+          </Pressable>
+        </View>
       </ScrollView>
     </LinearGradient>
   );
@@ -172,6 +215,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "700",
     color: theme.colors.text,
+  },
+  sectionText: {
+    fontSize: 14,
+    color: theme.colors.textSoft,
+    lineHeight: 20,
   },
   toggleRow: {
     flexDirection: "row",
@@ -218,5 +266,59 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "700",
     color: theme.colors.brand,
+  },
+  contactsHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: 12,
+  },
+  countBadge: {
+    backgroundColor: theme.colors.surfaceSoft,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 12,
+    alignItems: "center",
+    minWidth: 70,
+  },
+  countValue: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: theme.colors.brand,
+  },
+  countLabel: {
+    fontSize: 12,
+    color: theme.colors.textSoft,
+  },
+  contactRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  contactChip: {
+    backgroundColor: theme.colors.surfaceSoft,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 999,
+  },
+  contactChipText: {
+    color: theme.colors.text,
+    fontWeight: "600",
+  },
+  contactCard: {
+    backgroundColor: theme.colors.surfaceSoft,
+    padding: 14,
+    borderRadius: 14,
+    gap: 6,
+  },
+  contactCardTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: theme.colors.text,
+  },
+  contactCardText: {
+    fontSize: 14,
+    color: theme.colors.textSoft,
+    lineHeight: 20,
   },
 });
