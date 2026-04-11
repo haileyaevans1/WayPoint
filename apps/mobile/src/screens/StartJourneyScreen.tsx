@@ -18,6 +18,8 @@ type LocationMode = "current" | "custom";
 
 const readyLimeLight = "#CFE17A";
 const readyLime = "#AFCB46";
+const readyLimeText = "#566126";
+const readyLimeTextDark = "#4F5A22";
 
 const journeyTypes: Array<{
   key: JourneyType;
@@ -68,6 +70,20 @@ export function StartJourneyScreen() {
   const [destinationLocation, setDestinationLocation] = useState("");
   const [locationMode, setLocationMode] = useState<LocationMode>("current");
   const [groupJourneyEnabled, setGroupJourneyEnabled] = useState(false);
+  const [offRouteEnabled, setOffRouteEnabled] = useState(true);
+  const [missedCheckInEnabled, setMissedCheckInEnabled] = useState(true);
+  const [safetyPromptsEnabled, setSafetyPromptsEnabled] = useState(true);
+
+  const enabledSafetySettings = [
+    offRouteEnabled,
+    missedCheckInEnabled,
+    safetyPromptsEnabled,
+  ].filter(Boolean).length;
+  const selectedJourney = journeyTypes.find((item) => item.key === journeyType);
+  const tripSetupLabel =
+    measureType === "distance"
+      ? `${distanceValue || "0"} ${distanceUnit}`
+      : `${durationValue || "0"} ${durationUnit}`;
 
   return (
     <LinearGradient
@@ -91,12 +107,35 @@ export function StartJourneyScreen() {
           tagline="Quick setup, Low stress"
         />
 
+        <LinearGradient
+          colors={["rgba(255,255,255,0.92)", "rgba(255,251,247,0.72)"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.progressBanner}
+        >
+          <View style={styles.progressTopRow}>
+            <Text style={styles.progressEyebrow}>Start here</Text>
+          </View>
+          <Text style={styles.progressTitle}>Set up your trip in a few taps</Text>
+          <Text style={styles.progressText}>
+            Pick your journey, add your people, and start when you are ready.
+          </Text>
+          <View style={styles.progressChecklist}>
+            <Text style={styles.progressChecklistDot}>•</Text>
+            {["Journey", "Trusted contacts", "Safety"].map((item) => (
+              <View key={item} style={styles.progressChecklistItem}>
+                <Text style={styles.progressChecklistLabel}>{item}</Text>
+                <Text style={styles.progressChecklistDot}>•</Text>
+              </View>
+            ))}
+          </View>
+        </LinearGradient>
+
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionEyebrow}>Journey type</Text>
             <Text style={styles.sectionTitle}>What kind of trip is this?</Text>
           </View>
-
           <View style={styles.typeGrid}>
             {journeyTypes.map((item) => {
               const selected = item.key === journeyType;
@@ -105,10 +144,7 @@ export function StartJourneyScreen() {
                 <Pressable
                   key={item.key}
                   onPress={() => setJourneyType(item.key)}
-                  style={[
-                    styles.typePressable,
-                    selected && styles.typePressableSelected,
-                  ]}
+                  style={[styles.typePressable, selected && styles.typePressableSelected]}
                 >
                   <View style={[styles.typeCard, selected && styles.typeCardSelected]}>
                     <View
@@ -123,14 +159,12 @@ export function StartJourneyScreen() {
                     >
                       <Text style={styles.typeIcon}>{item.icon}</Text>
                     </View>
-
                     <Text
                       style={[styles.typeLabel, selected && styles.typeLabelSelected]}
                       numberOfLines={1}
                     >
                       {item.label}
                     </Text>
-
                     <View style={styles.typeBlurbWrap}>
                       <Text
                         style={[styles.typeBlurb, selected && styles.typeBlurbSelected]}
@@ -152,7 +186,6 @@ export function StartJourneyScreen() {
               <Text style={styles.sectionEyebrow}>Distance or duration</Text>
               <Text style={styles.sectionTitle}>How should we define this trip?</Text>
             </View>
-
             <View style={styles.segmentedControl}>
               {(["distance", "duration"] as const).map((item) => {
                 const selected = item === measureType;
@@ -188,7 +221,6 @@ export function StartJourneyScreen() {
                   : "Type how long you expect this trip to take."}
               </Text>
             </View>
-
             <View style={styles.measureInputRow}>
               <TextInput
                 value={measureType === "distance" ? distanceValue : durationValue}
@@ -200,7 +232,6 @@ export function StartJourneyScreen() {
                 placeholderTextColor={theme.colors.textMuted}
                 style={styles.measureInput}
               />
-
               <View style={styles.measureUnitToggle}>
                 {(measureType === "distance" ? ["mi", "km"] : ["min", "hr"]).map(
                   (unit) => {
@@ -232,7 +263,7 @@ export function StartJourneyScreen() {
                         </Text>
                       </Pressable>
                     );
-                  }
+                  },
                 )}
               </View>
             </View>
@@ -255,12 +286,10 @@ export function StartJourneyScreen() {
               <View style={[styles.locationBadge, styles.locationBadgeWarm]}>
                 <Text style={styles.locationBadgeText}>📍</Text>
               </View>
-
               <View style={styles.locationCopy}>
                 <Text style={styles.locationLabel}>Current location</Text>
                 <Text style={styles.locationValue}>Downtown Tulsa, OK</Text>
               </View>
-
               <Pressable
                 style={[
                   styles.locationAction,
@@ -288,7 +317,6 @@ export function StartJourneyScreen() {
               <View style={[styles.locationBadge, styles.locationBadgeCool]}>
                 <Text style={styles.locationBadgeText}>↗</Text>
               </View>
-
               <View style={styles.locationCopy}>
                 <Text style={styles.locationLabel}>Enter another location</Text>
                 <TextInput
@@ -308,7 +336,6 @@ export function StartJourneyScreen() {
                   ]}
                 />
               </View>
-
               <Pressable
                 style={[
                   styles.locationAction,
@@ -319,8 +346,7 @@ export function StartJourneyScreen() {
                 <Text
                   style={[
                     styles.locationActionText,
-                    locationMode === "custom" &&
-                      styles.locationActionTextCustomSelected,
+                    locationMode === "custom" && styles.locationActionTextCustomSelected,
                   ]}
                 >
                   {locationMode === "custom" ? "Selected" : "Use"}
@@ -339,14 +365,11 @@ export function StartJourneyScreen() {
           <View style={styles.contactsHeaderRow}>
             <View style={styles.sectionHeaderText}>
               <Text style={styles.sectionEyebrow}>Safety contacts</Text>
-              <Text style={styles.sectionTitle}>
-                Stay connected with people you trust
-              </Text>
+              <Text style={styles.sectionTitle}>Stay connected with people you trust</Text>
               <Text style={styles.sectionText}>
                 Your safety circle will be notified if something looks off.
               </Text>
             </View>
-
             <View style={styles.contactsCountBadge}>
               <Text style={styles.contactsCountValue}>{trustedContacts.length}</Text>
               <Text style={styles.contactsCountLabel}>selected</Text>
@@ -394,7 +417,6 @@ export function StartJourneyScreen() {
                 Turn this on for a shared walk, run, outing, or meetup.
               </Text>
             </View>
-
             <Switch
               value={groupJourneyEnabled}
               onValueChange={setGroupJourneyEnabled}
@@ -405,7 +427,6 @@ export function StartJourneyScreen() {
               thumbColor={groupJourneyEnabled ? readyLime : theme.colors.white}
             />
           </View>
-
           <View
             style={[
               styles.groupStatusCard,
@@ -422,6 +443,90 @@ export function StartJourneyScreen() {
             </Text>
           </View>
         </View>
+
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionEyebrow}>Safety settings</Text>
+            <Text style={styles.sectionTitle}>What safety support should stay on?</Text>
+            <Text style={styles.sectionText}>
+              These settings carry into the Active Journey experience.
+            </Text>
+          </View>
+
+          <View style={styles.safetySummaryRow}>
+            <View style={styles.safetySummaryCard}>
+              <Text style={styles.safetySummaryValue}>{enabledSafetySettings}/3</Text>
+              <Text style={styles.safetySummaryLabel}>Safety options enabled</Text>
+            </View>
+          </View>
+
+          <View style={styles.settingsList}>
+            {[
+              {
+                label: "Notify if off route",
+                detail: "Trusted contacts get a nudge if you drift from plan.",
+                value: offRouteEnabled,
+                onChange: setOffRouteEnabled,
+              },
+              {
+                label: "Notify if check-in is missed",
+                detail: "Send a check if you miss your expected confirmation.",
+                value: missedCheckInEnabled,
+                onChange: setMissedCheckInEnabled,
+              },
+              {
+                label: "Safety prompts enabled",
+                detail: "Keep calm reminders and check-ins active on the way.",
+                value: safetyPromptsEnabled,
+                onChange: setSafetyPromptsEnabled,
+              },
+            ].map((setting) => (
+              <View key={setting.label} style={styles.settingCard}>
+                <View style={styles.settingCopy}>
+                  <Text style={styles.settingLabel}>{setting.label}</Text>
+                  <Text style={styles.settingText}>{setting.detail}</Text>
+                </View>
+                <Switch
+                  value={setting.value}
+                  onValueChange={setting.onChange}
+                  trackColor={{
+                    false: "rgba(127,112,118,0.22)",
+                    true: "rgba(127,112,118,0.22)",
+                  }}
+                  thumbColor={setting.value ? readyLime : theme.colors.white}
+                />
+              </View>
+            ))}
+          </View>
+        </View>
+
+        <LinearGradient
+          colors={[readyLimeLight, readyLime]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.readyCard}
+        >
+          <Text style={styles.readyEyebrow}>Ready to start?</Text>
+          <Text style={styles.readyTitle}>
+            {selectedJourney?.label} • {tripSetupLabel}
+          </Text>
+          <Text style={styles.readyText}>
+            {trustedContacts.length} trusted contacts selected. {enabledSafetySettings} safety
+            settings enabled.
+          </Text>
+          <View style={styles.readyChecklist}>
+            {[
+              `Trip type: ${selectedJourney?.label}`,
+              `Trip setup: ${tripSetupLabel}`,
+              groupJourneyEnabled ? "Group journey on" : "Solo journey",
+            ].map((item) => (
+              <View key={item} style={styles.readyChecklistItem}>
+                <Text style={styles.readyChecklistBullet}>•</Text>
+                <Text style={styles.readyChecklistLabel}>{item}</Text>
+              </View>
+            ))}
+          </View>
+        </LinearGradient>
       </ScrollView>
     </LinearGradient>
   );
@@ -437,6 +542,62 @@ const styles = StyleSheet.create({
     paddingTop: 18,
     paddingBottom: 180,
     gap: 18,
+  },
+  progressBanner: {
+    borderRadius: 30,
+    padding: 22,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.56)",
+    shadowColor: theme.colors.brandDeep,
+    shadowOpacity: 0.06,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 3,
+  },
+  progressTopRow: {
+    alignItems: "flex-start",
+  },
+  progressEyebrow: {
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 2,
+    textTransform: "uppercase",
+    color: theme.colors.textMuted,
+  },
+  progressTitle: {
+    marginTop: 4,
+    fontSize: 24,
+    lineHeight: 29,
+    fontWeight: "800",
+    color: theme.colors.text,
+  },
+  progressText: {
+    marginTop: 8,
+    fontSize: 15,
+    lineHeight: 22,
+    color: theme.colors.textSoft,
+  },
+  progressChecklist: {
+    marginTop: 14,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 12,
+  },
+  progressChecklistItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+  },
+  progressChecklistDot: {
+    fontSize: 16,
+    color: readyLime,
+  },
+  progressChecklistLabel: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: theme.colors.text,
   },
   section: {
     backgroundColor: "rgba(255,253,251,0.98)",
@@ -568,7 +729,7 @@ const styles = StyleSheet.create({
     color: theme.colors.textSoft,
   },
   segmentLabelSelected: {
-    color: "#566126",
+    color: readyLimeText,
   },
   measureInputCard: {
     padding: 16,
@@ -624,7 +785,7 @@ const styles = StyleSheet.create({
     color: theme.colors.textSoft,
   },
   measureUnitLabelSelected: {
-    color: "#566126",
+    color: readyLimeText,
   },
   locationStack: {
     gap: 12,
@@ -720,7 +881,7 @@ const styles = StyleSheet.create({
     color: theme.colors.brandDeep,
   },
   locationActionTextCustomSelected: {
-    color: "#566126",
+    color: readyLimeText,
   },
   contactsHeaderRow: {
     flexDirection: "row",
@@ -815,6 +976,11 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 4,
   },
+  settingLabel: {
+    fontSize: 17,
+    fontWeight: "800",
+    color: theme.colors.text,
+  },
   settingText: {
     fontSize: 14,
     lineHeight: 20,
@@ -839,4 +1005,81 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     color: theme.colors.textSoft,
   },
+  safetySummaryRow: {
+    flexDirection: "row",
+  },
+  safetySummaryCard: {
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 20,
+    backgroundColor: theme.colors.white,
+  },
+  safetySummaryValue: {
+    fontSize: 22,
+    fontWeight: "900",
+    color: readyLime,
+  },
+  safetySummaryLabel: {
+    marginTop: 2,
+    fontSize: 13,
+    fontWeight: "700",
+    color: theme.colors.textSoft,
+  },
+  settingsList: {
+    gap: 12,
+  },
+  settingCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+    padding: 16,
+    borderRadius: 22,
+    backgroundColor: theme.colors.white,
+  },
+  readyCard: {
+    borderRadius: 30,
+    padding: 22,
+    gap: 12,
+    shadowColor: "#92A93A",
+    shadowOpacity: 0.16,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 8,
+  },
+  readyEyebrow: {
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 1.8,
+    textTransform: "uppercase",
+    color: "rgba(86,97,38,0.82)",
+  },
+  readyTitle: {
+    fontSize: 28,
+    lineHeight: 32,
+    fontWeight: "900",
+    color: readyLimeTextDark,
+  },
+  readyText: {
+    fontSize: 15,
+    lineHeight: 22,
+    color: "rgba(79,90,34,0.82)",
+  },
+  readyChecklist: {
+    gap: 8,
+  },
+  readyChecklistItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  readyChecklistBullet: {
+    fontSize: 16,
+    color: readyLimeText,
+  },
+  readyChecklistLabel: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "rgba(79,90,34,0.88)",
+  },
 });
+
