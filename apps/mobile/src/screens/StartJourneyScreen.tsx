@@ -91,14 +91,32 @@ export function StartJourneyScreen({
     missedCheckInEnabled,
     safetyPromptsEnabled,
   ].filter(Boolean).length;
+  const totalSafetySettings = enabledSafetySettings + 1;
   const selectedJourney = journeyTypes.find((item) => item.key === journeyType);
   const previewPeople = groupJourneyEnabled
     ? previewGroupMembers
     : previewTrustedContacts;
+  const locationSummary =
+    locationMode === "current"
+      ? "Current location"
+      : destinationLocation.trim() || "Custom destination";
+  const peopleSummary = groupJourneyEnabled
+    ? `${previewPeople.length} people joining`
+    : `${previewPeople.length} trusted contacts`;
   const tripSetupLabel =
     measureType === "distance"
       ? `${distanceValue || "0"} ${distanceUnit}`
-      : `${durationHours || "0"} hr ${durationMinutes || "0"} min`;
+      : Number(durationHours || "0") > 0
+        ? `${durationHours || "0"} hr ${durationMinutes || "0"} min`
+        : `${durationMinutes || "0"} min`;
+  const readySummaryTopLine = [
+    groupJourneyEnabled ? "Group" : "Solo",
+    routeShape === "loop" ? "Loop" : "One-way",
+  ].join(" • ");
+  const readySummaryBottomLine = [
+    tripSetupLabel,
+    selectedJourney?.label,
+  ].join(" • ");
 
   return (
     <LinearGradient
@@ -626,25 +644,22 @@ export function StartJourneyScreen({
           style={styles.readyCard}
         >
           <Text style={styles.readyEyebrow}>Ready to start?</Text>
-          <Text style={styles.readyTitle}>
-            {selectedJourney?.label} • {tripSetupLabel}
-          </Text>
-          <Text style={styles.readyText}>
-            {trustedContacts.length} trusted contacts selected. {enabledSafetySettings} safety
-            settings enabled.
-          </Text>
-          <View style={styles.readyChecklist}>
-            {[
-              `Trip type: ${selectedJourney?.label}`,
-              `Trip setup: ${tripSetupLabel}`,
-              routeShape === "loop" ? "Route shape: Loop" : "Route shape: One-way",
-              groupJourneyEnabled ? "Group journey on" : "Solo journey",
-            ].map((item) => (
-              <View key={item} style={styles.readyChecklistItem}>
-                <Text style={styles.readyChecklistBullet}>•</Text>
-                <Text style={styles.readyChecklistLabel}>{item}</Text>
-              </View>
-            ))}
+          <Text style={styles.readyTitle}>{readySummaryTopLine}</Text>
+          <Text style={styles.readyTitle}>{readySummaryBottomLine}</Text>
+          <View style={styles.readySummaryRow}>
+            {[locationSummary, peopleSummary, `${totalSafetySettings}/4 safety settings`].map(
+              (item, index, list) => (
+                <View key={item} style={styles.readySummaryItem}>
+                  {index === 0 || item === `${totalSafetySettings}/4 safety settings` ? (
+                    <Text style={styles.readySummaryDot}>•</Text>
+                  ) : null}
+                  <Text style={styles.readySummaryText}>{item}</Text>
+                  {index < list.length - 1 || item === `${totalSafetySettings}/4 safety settings` ? (
+                    <Text style={styles.readySummaryDot}>•</Text>
+                  ) : null}
+                </View>
+              ),
+            )}
           </View>
           <Pressable
             style={({ pressed }) => [
@@ -1323,6 +1338,26 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 22,
     color: "rgba(79,90,34,0.82)",
+  },
+  readySummaryRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    gap: 10,
+  },
+  readySummaryItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  readySummaryDot: {
+    fontSize: 16,
+    color: readyLimeText,
+  },
+  readySummaryText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "rgba(79,90,34,0.88)",
   },
   readyChecklist: {
     gap: 8,
