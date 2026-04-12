@@ -66,6 +66,7 @@ const journeyTypes: Array<{
 
 const trustedContacts: string[] = [];
 const previewTrustedContacts = ["Maya", "Jordan", "Chris"] as const;
+const previewGroupMembers = ["Ava", "Noah", "Lena"] as const;
 
 export function StartJourneyScreen({
   onStartJourney,
@@ -91,6 +92,9 @@ export function StartJourneyScreen({
     safetyPromptsEnabled,
   ].filter(Boolean).length;
   const selectedJourney = journeyTypes.find((item) => item.key === journeyType);
+  const previewPeople = groupJourneyEnabled
+    ? previewGroupMembers
+    : previewTrustedContacts;
   const tripSetupLabel =
     measureType === "distance"
       ? `${distanceValue || "0"} ${distanceUnit}`
@@ -469,17 +473,52 @@ export function StartJourneyScreen({
         >
           <View style={styles.contactsHeaderRow}>
             <View style={styles.sectionHeaderText}>
-              <Text style={styles.sectionEyebrow}>Safety contacts</Text>
-              <Text style={styles.sectionTitle}>Stay connected with people you trust</Text>
+              <Text style={styles.sectionEyebrow}>Journey sharing</Text>
+              <Text style={styles.sectionTitle}>Who is connected to this trip?</Text>
               <Text style={styles.sectionText}>
-                Manage your trusted contacts in Profile, then make quick updates here before
-                you start this journey.
+                Choose who is joining you and who should receive safety updates for this
+                journey.
               </Text>
             </View>
             <View style={styles.contactsCountBadge}>
               <Text style={styles.contactsCountValue}>{trustedContacts.length}</Text>
               <Text style={styles.contactsCountLabel}>selected</Text>
             </View>
+          </View>
+
+          <View style={styles.settingRow}>
+            <View style={styles.settingCopy}>
+              <Text style={styles.sectionEyebrow}>Group journey</Text>
+              <Text style={styles.sectionTitle}>Is anyone joining you?</Text>
+              <Text style={styles.settingText}>
+                Turn this on for a shared walk, run, outing, or meetup.
+              </Text>
+            </View>
+            <Switch
+              value={groupJourneyEnabled}
+              onValueChange={setGroupJourneyEnabled}
+              trackColor={{
+                false: "rgba(127,112,118,0.22)",
+                true: "rgba(127,112,118,0.22)",
+              }}
+              thumbColor={groupJourneyEnabled ? readyLime : theme.colors.white}
+            />
+          </View>
+
+          <View
+            style={[
+              styles.groupStatusCard,
+              groupJourneyEnabled && styles.groupStatusCardEnabled,
+            ]}
+          >
+            <Text style={styles.groupStatusLabel}>
+              {groupJourneyEnabled ? "Group journey is on" : "Solo journey is on"}
+            </Text>
+            <Text style={styles.groupStatusText}>
+              {groupJourneyEnabled
+                ? "Pick who is joining you on this route, and keep trusted contacts in place for safety updates."
+                : "Trusted contacts will be the people monitoring your trip and safety updates."}
+            </Text>
           </View>
 
           {trustedContacts.length > 0 ? (
@@ -498,11 +537,22 @@ export function StartJourneyScreen({
           <View style={styles.contactsActionGrid}>
             <Pressable style={styles.contactActionCard} onPress={onOpenProfile}>
               <View style={styles.contactActionCopy}>
-                <Text style={styles.contactActionEyebrow}>Trusted contacts</Text>
-                <Text style={styles.contactActionTitle}>Manage contacts for this trip</Text>
+                <Text style={styles.contactActionEyebrow}>
+                  {groupJourneyEnabled ? "Trip people" : "Trusted contacts"}
+                </Text>
+                <Text style={styles.contactActionTitle}>
+                  {groupJourneyEnabled
+                    ? "Manage group members and safety contacts"
+                    : "Manage contacts for this trip"}
+                </Text>
+                <Text style={styles.contactActionText}>
+                  {groupJourneyEnabled
+                    ? "Group members are joining the route, while trusted contacts stay in the loop for safety updates."
+                    : "Trusted contacts will get safety updates for this journey."}
+                </Text>
               </View>
               <View style={styles.contactPreviewRow}>
-                {previewTrustedContacts.map((contact, index) => (
+                {previewPeople.map((contact, index) => (
                   <View key={contact} style={styles.contactPreviewItem}>
                     <View
                       style={[
@@ -528,42 +578,6 @@ export function StartJourneyScreen({
             </Pressable>
           </View>
         </LinearGradient>
-
-        <View style={styles.section}>
-          <View style={styles.settingRow}>
-            <View style={styles.settingCopy}>
-              <Text style={styles.sectionEyebrow}>Group journey</Text>
-              <Text style={styles.sectionTitle}>Going with other people?</Text>
-              <Text style={styles.settingText}>
-                Turn this on for a shared walk, run, outing, or meetup.
-              </Text>
-            </View>
-            <Switch
-              value={groupJourneyEnabled}
-              onValueChange={setGroupJourneyEnabled}
-              trackColor={{
-                false: "rgba(127,112,118,0.22)",
-                true: "rgba(127,112,118,0.22)",
-              }}
-              thumbColor={groupJourneyEnabled ? readyLime : theme.colors.white}
-            />
-          </View>
-          <View
-            style={[
-              styles.groupStatusCard,
-              groupJourneyEnabled && styles.groupStatusCardEnabled,
-            ]}
-          >
-            <Text style={styles.groupStatusLabel}>
-              {groupJourneyEnabled ? "Group Journey is on" : "Solo Journey is on"}
-            </Text>
-            <Text style={styles.groupStatusText}>
-              {groupJourneyEnabled
-                ? "Good for walking with friends, a group outing, or a shared activity."
-                : "Perfect for a quick individual trip with your safety settings active."}
-            </Text>
-          </View>
-        </View>
 
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
