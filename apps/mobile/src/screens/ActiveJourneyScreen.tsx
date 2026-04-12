@@ -25,13 +25,25 @@ export function ActiveJourneyScreen({
   const [journeyState, setJourneyState] = useState<JourneyState>("active");
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Active Journey Screen</Text>
-    </View>
+    <LinearGradient
+      colors={[theme.colors.background, "#F4E8DA", theme.colors.backgroundDeep]}
+      style={styles.screen}
+    >
+      <ScrollView contentContainerStyle={styles.content}>
+        <Header
+          title="Active Journey"
+          subtitle="We’re tracking your journey and standing by."
+          tagline="Stay calm, Stay connected"
+        />
+      </ScrollView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+  },
   container: {
     flex: 1,
     alignItems: "center",
