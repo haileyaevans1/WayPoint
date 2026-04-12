@@ -49,6 +49,14 @@ export function ActiveJourneyScreen({
         />
         <View style={{ padding: 16 }}>
           <Text>Status: {statusLabel}</Text>
+          {!isComplete && (
+            <Text
+              onPress={() => setJourneyState("complete")}
+              style={{ marginTop: 20 }}
+            >
+              End Journey
+            </Text>
+          )}
         </View>
       </ScrollView>
     </LinearGradient>
