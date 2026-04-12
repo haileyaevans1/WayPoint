@@ -15,7 +15,8 @@ type NavBarProps = {
 };
 
 export function NavBar({ activeScreen, onNavigate }: NavBarProps) {
-  const isJourneyScreen = activeScreen === "startJourney";
+  const isJourneyScreen =
+    activeScreen === "startJourney" || activeScreen === "activeJourney";
 
   return (
     <View style={styles.wrapper}>

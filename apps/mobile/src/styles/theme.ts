@@ -56,6 +56,7 @@ export const theme = {
 export type AppScreen =
   | "home"
   | "startJourney"
+  | "activeJourney"
   | "routes"
   | "stats"
   | "profile"
