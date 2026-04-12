@@ -1,5 +1,12 @@
 import { useState } from "react";
-import { ScrollView, StyleSheet, Text, View, Pressable } from "react-native";
+import { 
+  ScrollView, 
+  StyleSheet, 
+  Text, 
+  View, 
+  Pressable,
+  Modal,
+} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Header } from "../components/Header";
 import { theme } from "../styles/theme";
@@ -41,6 +48,8 @@ export function ActiveJourneyScreen({
     { name: "Trusted Contact 2", status: "Connected" },
   ];
 
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
+
   return (
     <LinearGradient
       colors={[theme.colors.background, "#F4E8DA", theme.colors.backgroundDeep]}
@@ -69,6 +78,16 @@ export function ActiveJourneyScreen({
           <Text>Time remaining: 18 min</Text>
         </View>
         {!isComplete ? (
+          <Pressable
+            style={styles.endButton}
+            onPress={() => {
+              setJourneyState("complete");
+              setShowCompletionModal(true);
+              onJourneyComplete?.();
+            }}
+          >
+            <Text style={styles.endButtonText}>End Journey</Text>
+          </Pressable>
           <View style={styles.section}>
             <Text style={styles.sectionEyebrow}>Are you safe?</Text>
             <Text style={styles.sectionTitle}>
@@ -198,6 +217,29 @@ export function ActiveJourneyScreen({
           </View>
         ) : null}
       </ScrollView>
+      <Modal visible={showCompletionModal} transparent animationType="fade">
+      <View style={styles.completionOverlay}>
+        <LinearGradient
+          colors={["#CFE17A", "#AFCB46"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.completionModal}
+        >
+          <Text style={styles.completionEyebrow}>Journey complete</Text>
+          <Text style={styles.completionTitle}>You made it safely</Text>
+          <Text style={styles.completionText}>
+            Your trusted contacts have been updated and your journey is now
+            marked complete.
+          </Text>
+          <Pressable
+            style={styles.completionButton}
+            onPress={() => setShowCompletionModal(false)}
+          >
+            <Text style={styles.completionButtonText}>Close</Text>
+          </Pressable>
+        </LinearGradient>
+      </View>
+    </Modal>
     </LinearGradient>
   );
 }
@@ -374,5 +416,64 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "700",
     color: theme.colors.text,
+  },
+  endButton: {
+    borderRadius: theme.radius.pill,
+    backgroundColor: theme.colors.ink,
+    paddingVertical: 17,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  endButtonText: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: theme.colors.white,
+  },
+  completionOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(41,34,28,0.38)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 24,
+  },
+  completionModal: {
+    width: "100%",
+    maxWidth: 360,
+    borderRadius: 34,
+    paddingHorizontal: 24,
+    paddingTop: 28,
+    paddingBottom: 22,
+    gap: 14,
+  },
+  completionEyebrow: {
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 1.8,
+    textTransform: "uppercase",
+    color: "rgba(86,97,38,0.82)",
+  },
+  completionTitle: {
+    fontSize: 28,
+    lineHeight: 32,
+    fontWeight: "900",
+    color: "#4F5A22",
+  },
+  completionText: {
+    fontSize: 15,
+    lineHeight: 22,
+    color: "rgba(79,90,34,0.82)",
+  },
+  completionButton: {
+    marginTop: 6,
+    alignSelf: "center",
+    borderRadius: theme.radius.pill,
+    backgroundColor: "rgba(79,90,34,0.18)",
+    paddingHorizontal: 22,
+    paddingVertical: 12,
+  },
+  completionButtonText: {
+    fontSize: 15,
+    fontWeight: "800",
+    color: "#4F5A22",
   },
 });
