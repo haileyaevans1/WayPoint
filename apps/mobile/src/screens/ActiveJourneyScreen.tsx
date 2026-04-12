@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View, Pressable } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Header } from "../components/Header";
 import { theme } from "../styles/theme";
@@ -89,6 +89,31 @@ export function ActiveJourneyScreen({
             </View>
           </View>
         ) : null}
+        <LinearGradient
+          colors={["rgba(255,255,255,0.98)", "rgba(255,251,247,0.95)"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.deadlineCard}
+        >
+          <Text style={styles.sectionEyebrow}>Countdown</Text>
+          <View style={styles.deadlineRow}>
+            <Text style={styles.deadlineValue}>
+              {journeyState === "late" ? "00:45" : "18:12"}
+            </Text>
+            <View>
+              <Text style={styles.deadlineLabel}>
+                {journeyState === "late"
+                  ? "Until contact alert"
+                  : "Until next check-in"}
+              </Text>
+              <Text style={styles.deadlineText}>
+                {journeyState === "late"
+                  ? "Trusted contacts will be notified after the grace period."
+                  : "You’re still within your expected journey window."}
+              </Text>
+            </View>
+          </View>
+        </LinearGradient>
       </ScrollView>
     </LinearGradient>
   );
@@ -167,5 +192,34 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: warningOrange,
     textAlign: "center",
+  },
+  deadlineCard: {
+    borderRadius: 28,
+    padding: 20,
+    gap: 12,
+  },
+  deadlineRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+  },
+  deadlineValue: {
+    fontSize: 34,
+    lineHeight: 34,
+    fontWeight: "900",
+    color: theme.colors.text,
+    letterSpacing: -1.4,
+  },
+  deadlineLabel: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: theme.colors.text,
+  },
+  deadlineText: {
+    marginTop: 4,
+    fontSize: 13,
+    lineHeight: 19,
+    color: theme.colors.textSoft,
+    maxWidth: 180,
   },
 });
