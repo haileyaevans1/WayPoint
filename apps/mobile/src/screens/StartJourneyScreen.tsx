@@ -19,6 +19,7 @@ type StartJourneyScreenProps = {
 type JourneyType = "walk" | "run" | "hike" | "bike";
 type TripMeasure = "distance" | "duration";
 type LocationMode = "current" | "custom";
+type RouteShape = "oneWay" | "loop";
 
 const readyLimeLight = "#CFE17A";
 const readyLime = "#AFCB46";
@@ -73,6 +74,7 @@ export function StartJourneyScreen({ onStartJourney }: StartJourneyScreenProps) 
   const [durationMinutes, setDurationMinutes] = useState("30");
   const [destinationLocation, setDestinationLocation] = useState("");
   const [locationMode, setLocationMode] = useState<LocationMode>("current");
+  const [routeShape, setRouteShape] = useState<RouteShape>("oneWay");
   const [groupJourneyEnabled, setGroupJourneyEnabled] = useState(false);
   const [offRouteEnabled, setOffRouteEnabled] = useState(true);
   const [missedCheckInEnabled, setMissedCheckInEnabled] = useState(true);
@@ -303,29 +305,31 @@ export function StartJourneyScreen({ onStartJourney }: StartJourneyScreenProps) 
                 locationMode === "current" && styles.locationCardSelected,
               ]}
             >
-              <View style={[styles.locationBadge, styles.locationBadgeWarm]}>
-                <Text style={styles.locationBadgeText}>📍</Text>
-              </View>
-              <View style={styles.locationCopy}>
-                <Text style={styles.locationLabel}>Current location</Text>
-                <Text style={styles.locationValue}>Downtown Tulsa, OK</Text>
-              </View>
-              <Pressable
-                style={[
-                  styles.locationAction,
-                  locationMode === "current" && styles.locationActionSelected,
-                ]}
-                onPress={() => setLocationMode("current")}
-              >
-                <Text
+              <View style={styles.locationTopRow}>
+                <View style={[styles.locationBadge, styles.locationBadgeWarm]}>
+                  <Text style={styles.locationBadgeText}>📍</Text>
+                </View>
+                <View style={styles.locationCopy}>
+                  <Text style={styles.locationLabel}>Current location</Text>
+                  <Text style={styles.locationValue}>Downtown Tulsa, OK</Text>
+                </View>
+                <Pressable
                   style={[
-                    styles.locationActionText,
-                    locationMode === "current" && styles.locationActionTextSelected,
+                    styles.locationAction,
+                    locationMode === "current" && styles.locationActionSelected,
                   ]}
+                  onPress={() => setLocationMode("current")}
                 >
-                  {locationMode === "current" ? "Selected" : "Use"}
-                </Text>
-              </Pressable>
+                  <Text
+                    style={[
+                      styles.locationActionText,
+                      locationMode === "current" && styles.locationActionTextSelected,
+                    ]}
+                  >
+                    {locationMode === "current" ? "Selected" : "Select"}
+                  </Text>
+                </Pressable>
+              </View>
             </View>
 
             <View
@@ -334,45 +338,121 @@ export function StartJourneyScreen({ onStartJourney }: StartJourneyScreenProps) 
                 locationMode === "custom" && styles.locationOptionCardSelected,
               ]}
             >
-              <View style={[styles.locationBadge, styles.locationBadgeCool]}>
-                <Text style={styles.locationBadgeText}>↗</Text>
-              </View>
-              <View style={styles.locationCopy}>
-                <Text style={styles.locationLabel}>Enter another location</Text>
-                <TextInput
-                  value={destinationLocation}
-                  onChangeText={(value) => {
-                    setDestinationLocation(value);
-                    if (value.length > 0) {
-                      setLocationMode("custom");
-                    }
-                  }}
-                  onFocus={() => setLocationMode("custom")}
-                  placeholder="Destination or meeting point"
-                  placeholderTextColor={theme.colors.textMuted}
+              <View style={styles.locationTopRow}>
+                <View style={[styles.locationBadge, styles.locationBadgeCool]}>
+                  <Text style={styles.locationBadgeText}>↗</Text>
+                </View>
+                <View style={styles.locationCopy}>
+                  <Text style={styles.locationLabel}>Enter another location</Text>
+                </View>
+                <Pressable
                   style={[
-                    styles.locationInput,
-                    locationMode === "custom" && styles.locationInputSelected,
+                    styles.locationAction,
+                    locationMode === "custom" && styles.locationActionSelected,
                   ]}
-                />
+                  onPress={() => setLocationMode("custom")}
+                >
+                  <Text
+                    style={[
+                      styles.locationActionText,
+                      locationMode === "custom" && styles.locationActionTextSelected,
+                    ]}
+                  >
+                    {locationMode === "custom" ? "Selected" : "Select"}
+                  </Text>
+                </Pressable>
               </View>
-              <Pressable
+              <TextInput
+                value={destinationLocation}
+                onChangeText={(value) => {
+                  setDestinationLocation(value);
+                  if (value.length > 0) {
+                    setLocationMode("custom");
+                  }
+                }}
+                onFocus={() => setLocationMode("custom")}
+                placeholder="Destination or meeting point"
+                placeholderTextColor={theme.colors.textMuted}
                 style={[
-                  styles.locationAction,
-                  locationMode === "custom" && styles.locationActionCustomSelected,
+                  styles.locationInput,
+                  locationMode === "custom" && styles.locationInputSelected,
                 ]}
-                onPress={() => setLocationMode("custom")}
-              >
-                <Text
+              />
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionEyebrow}>Route shape</Text>
+            <Text style={styles.sectionTitle}>Should this journey loop back?</Text>
+            <Text style={styles.sectionText}>
+              Choose whether this trip ends elsewhere or brings you back to the start.
+            </Text>
+          </View>
+
+          <View style={styles.routeShapeGrid}>
+            {[
+              {
+                key: "oneWay" as const,
+                title: "One-way",
+                text: "Finish at a different destination.",
+              },
+              {
+                key: "loop" as const,
+                title: "Loop",
+                text: "Return to your starting point.",
+              },
+            ].map((option) => {
+              const selected = routeShape === option.key;
+
+              return (
+                <Pressable
+                  key={option.key}
+                  onPress={() => setRouteShape(option.key)}
                   style={[
-                    styles.locationActionText,
-                    locationMode === "custom" && styles.locationActionTextCustomSelected,
+                    styles.routeShapeCard,
+                    selected && styles.routeShapeCardSelected,
                   ]}
                 >
-                  {locationMode === "custom" ? "Selected" : "Use"}
-                </Text>
-              </Pressable>
-            </View>
+                  <View style={styles.routeShapeTopRow}>
+                    <View style={styles.routeShapeCopy}>
+                      <Text
+                        style={[
+                          styles.routeShapeTitle,
+                          selected && styles.routeShapeTitleSelected,
+                        ]}
+                      >
+                        {option.title}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.routeShapeText,
+                          selected && styles.routeShapeTextSelected,
+                        ]}
+                      >
+                        {option.text}
+                      </Text>
+                    </View>
+                    <View
+                      style={[
+                        styles.routeShapeAction,
+                        selected && styles.routeShapeActionSelected,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.routeShapeActionText,
+                          selected && styles.routeShapeActionTextSelected,
+                        ]}
+                      >
+                        {selected ? "Selected" : "Select"}
+                      </Text>
+                    </View>
+                  </View>
+                </Pressable>
+              );
+            })}
           </View>
         </View>
 
@@ -538,6 +618,7 @@ export function StartJourneyScreen({ onStartJourney }: StartJourneyScreenProps) 
             {[
               `Trip type: ${selectedJourney?.label}`,
               `Trip setup: ${tripSetupLabel}`,
+              routeShape === "loop" ? "Route shape: Loop" : "Route shape: One-way",
               groupJourneyEnabled ? "Group journey on" : "Solo journey",
             ].map((item) => (
               <View key={item} style={styles.readyChecklistItem}>
@@ -833,30 +914,31 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   locationCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
     padding: 16,
     borderRadius: 22,
     backgroundColor: theme.colors.surfaceSoft,
+    gap: 6,
   },
   locationCardSelected: {
     borderWidth: 1,
-    borderColor: "rgba(222,133,88,0.3)",
-    backgroundColor: "rgba(255,247,241,0.98)",
+    borderColor: "rgba(175,203,70,0.42)",
+    backgroundColor: "rgba(207,225,122,0.2)",
   },
   locationOptionCard: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 14,
     padding: 16,
     borderRadius: 22,
-    backgroundColor: "rgba(183,205,235,0.16)",
+    backgroundColor: theme.colors.surfaceSoft,
+    gap: 12,
   },
   locationOptionCardSelected: {
     borderWidth: 1,
-    borderColor: "rgba(107,116,134,0.2)",
-    backgroundColor: "rgba(237,242,248,0.96)",
+    borderColor: "rgba(175,203,70,0.42)",
+    backgroundColor: "rgba(207,225,122,0.2)",
+  },
+  locationTopRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12,
   },
   locationBadge: {
     width: 46,
@@ -900,7 +982,7 @@ const styles = StyleSheet.create({
   },
   locationInputSelected: {
     borderWidth: 1,
-    borderColor: "rgba(107,116,134,0.2)",
+    borderColor: "rgba(175,203,70,0.42)",
   },
   locationAction: {
     paddingHorizontal: 14,
@@ -909,9 +991,6 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.white,
   },
   locationActionSelected: {
-    backgroundColor: "rgba(222,133,88,0.14)",
-  },
-  locationActionCustomSelected: {
     backgroundColor: "rgba(175,203,70,0.22)",
   },
   locationActionText: {
@@ -920,9 +999,62 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
   },
   locationActionTextSelected: {
-    color: theme.colors.brandDeep,
+    color: readyLimeText,
   },
-  locationActionTextCustomSelected: {
+  routeShapeGrid: {
+    gap: 12,
+  },
+  routeShapeCard: {
+    borderRadius: 22,
+    padding: 16,
+    backgroundColor: theme.colors.surfaceSoft,
+    gap: 6,
+  },
+  routeShapeTopRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12,
+  },
+  routeShapeCopy: {
+    flex: 1,
+    gap: 6,
+  },
+  routeShapeCardSelected: {
+    borderWidth: 1,
+    borderColor: "rgba(175,203,70,0.42)",
+    backgroundColor: "rgba(207,225,122,0.2)",
+  },
+  routeShapeTitle: {
+    fontSize: 17,
+    fontWeight: "800",
+    color: theme.colors.text,
+  },
+  routeShapeTitleSelected: {
+    color: readyLimeTextDark,
+  },
+  routeShapeText: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: theme.colors.textSoft,
+  },
+  routeShapeTextSelected: {
+    color: readyLimeText,
+  },
+  routeShapeAction: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: theme.radius.pill,
+    backgroundColor: theme.colors.white,
+  },
+  routeShapeActionSelected: {
+    backgroundColor: "rgba(175,203,70,0.26)",
+  },
+  routeShapeActionText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: theme.colors.text,
+  },
+  routeShapeActionTextSelected: {
     color: readyLimeText,
   },
   contactsHeaderRow: {
