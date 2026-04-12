@@ -141,6 +141,31 @@ export function ActiveJourneyScreen({
             ))}
           </View>
         </View>
+        {journeyState === "offRoute" ? (
+          <View style={[styles.section, styles.warningSection]}>
+            <Text style={styles.sectionEyebrow}>Off-route warning</Text>
+            <Text style={styles.sectionTitle}>You appear to be off route</Text>
+            <Text style={styles.sectionText}>
+              Return to your route or confirm you’re safe so your contacts know
+              everything is okay.
+            </Text>
+            <View style={styles.warningActionRow}>
+              <Pressable style={styles.warningPrimaryAction}>
+                <Text style={styles.warningPrimaryActionText}>I’m okay</Text>
+              </Pressable>
+              <Pressable style={styles.warningSecondaryAction}>
+                <Text style={styles.warningSecondaryActionText}>
+                  Send location
+                </Text>
+              </Pressable>
+              <Pressable style={styles.warningSecondaryAction}>
+                <Text style={styles.warningSecondaryActionText}>
+                  Re-route me
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        ) : null}
       </ScrollView>
     </LinearGradient>
   );
@@ -281,5 +306,42 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "800",
     color: "#566126",
+  },
+  warningSection: {
+    borderWidth: 1,
+    borderColor: "rgba(229,139,91,0.2)",
+    backgroundColor: "rgba(255,249,245,0.98)",
+  },
+  sectionText: {
+    fontSize: 14,
+    lineHeight: 21,
+    color: theme.colors.textSoft,
+  },
+  warningActionRow: {
+    gap: 10,
+  },
+  warningPrimaryAction: {
+    borderRadius: 22,
+    paddingVertical: 15,
+    paddingHorizontal: 18,
+    backgroundColor: warningOrange,
+    alignItems: "center",
+  },
+  warningPrimaryActionText: {
+    fontSize: 15,
+    fontWeight: "800",
+    color: theme.colors.white,
+  },
+  warningSecondaryAction: {
+    borderRadius: 22,
+    paddingVertical: 15,
+    paddingHorizontal: 18,
+    backgroundColor: theme.colors.surfaceSoft,
+    alignItems: "center",
+  },
+  warningSecondaryActionText: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: theme.colors.text,
   },
 });
