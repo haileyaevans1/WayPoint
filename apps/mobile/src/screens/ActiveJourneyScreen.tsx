@@ -58,6 +58,11 @@ export function ActiveJourneyScreen({
             </Text>
           )}
         </View>
+        <View style={{ padding: 16 }}>
+          <Text>Elapsed: 12 min</Text>
+          <Text>Expected finish: 2:30 PM</Text>
+          <Text>Time remaining: 18 min</Text>
+        </View>
       </ScrollView>
     </LinearGradient>
   );
