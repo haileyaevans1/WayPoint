@@ -166,6 +166,37 @@ export function ActiveJourneyScreen({
             </View>
           </View>
         ) : null}
+        {journeyState === "late" ? (
+          <View style={[styles.section, styles.warningSection]}>
+            <Text style={styles.sectionEyebrow}>Completion warning</Text>
+            <Text style={styles.sectionTitle}>
+              You haven’t completed your journey yet
+            </Text>
+            <Text style={styles.sectionText}>
+              Complete now. After five minutes your trusted contacts will be
+              notified automatically.
+            </Text>
+            <View style={styles.warningActionRow}>
+              <Pressable
+                style={styles.warningPrimaryAction}
+                onPress={() => {
+                  setJourneyState("complete");
+                  onJourneyComplete?.();
+                }}
+              >
+                <Text style={styles.warningPrimaryActionText}>
+                  Complete Journey
+                </Text>
+              </Pressable>
+              <Pressable style={styles.warningSecondaryAction}>
+                <Text style={styles.warningSecondaryActionText}>I’m safe</Text>
+              </Pressable>
+              <Pressable style={styles.warningSecondaryAction}>
+                <Text style={styles.warningSecondaryActionText}>Need help</Text>
+              </Pressable>
+            </View>
+          </View>
+        ) : null}
       </ScrollView>
     </LinearGradient>
   );
