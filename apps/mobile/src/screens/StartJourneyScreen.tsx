@@ -584,52 +584,36 @@ export function StartJourneyScreen({
             <Text style={styles.sectionEyebrow}>Safety settings</Text>
             <Text style={styles.sectionTitle}>What safety support should stay on?</Text>
             <Text style={styles.sectionText}>
-              These settings carry into the Active Journey experience.
+              Your saved safety settings live in Profile. Here’s what is currently selected
+              for this journey.
             </Text>
           </View>
 
-          <View style={styles.safetySummaryRow}>
+          <View style={styles.safetySummaryHeader}>
             <View style={styles.safetySummaryCard}>
-              <Text style={styles.safetySummaryValue}>{enabledSafetySettings}/3</Text>
+              <Text style={styles.safetySummaryValue}>4/4</Text>
               <Text style={styles.safetySummaryLabel}>Safety options enabled</Text>
             </View>
+            <Pressable style={styles.contactActionButton} onPress={onOpenProfile}>
+              <Text style={styles.contactActionButtonText}>Open Profile</Text>
+            </Pressable>
           </View>
 
-          <View style={styles.settingsList}>
+          <View style={styles.safetyChecklist}>
             {[
-              {
-                label: "Notify if off route",
-                detail: "Trusted contacts get a nudge if you drift from plan.",
-                value: offRouteEnabled,
-                onChange: setOffRouteEnabled,
-              },
-              {
-                label: "Notify if check-in is missed",
-                detail: "Send a check if you miss your expected confirmation.",
-                value: missedCheckInEnabled,
-                onChange: setMissedCheckInEnabled,
-              },
-              {
-                label: "Safety prompts enabled",
-                detail: "Keep calm reminders and check-ins active on the way.",
-                value: safetyPromptsEnabled,
-                onChange: setSafetyPromptsEnabled,
-              },
-            ].map((setting) => (
-              <View key={setting.label} style={styles.settingCard}>
-                <View style={styles.settingCopy}>
-                  <Text style={styles.settingLabel}>{setting.label}</Text>
-                  <Text style={styles.settingText}>{setting.detail}</Text>
-                </View>
-                <Switch
-                  value={setting.value}
-                  onValueChange={setting.onChange}
-                  trackColor={{
-                    false: "rgba(127,112,118,0.22)",
-                    true: "rgba(127,112,118,0.22)",
-                  }}
-                  thumbColor={setting.value ? readyLime : theme.colors.white}
-                />
+              "Off-route alerts",
+              "Missed check-in alerts",
+              "Emergency action",
+              "Safety check-ins",
+            ].map((item, index, list) => (
+              <View key={item} style={styles.safetyChecklistItem}>
+                {index === 0 || index === 2 ? (
+                  <Text style={styles.safetyChecklistDot}>•</Text>
+                ) : null}
+                <Text style={styles.safetyChecklistLabel}>{item}</Text>
+                {index < list.length - 1 || index === list.length - 1 ? (
+                  <Text style={styles.safetyChecklistDot}>•</Text>
+                ) : null}
               </View>
             ))}
           </View>
@@ -1269,8 +1253,11 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     color: theme.colors.textSoft,
   },
-  safetySummaryRow: {
+  safetySummaryHeader: {
     flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
   },
   safetySummaryCard: {
     paddingHorizontal: 16,
@@ -1289,16 +1276,25 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: theme.colors.textSoft,
   },
-  settingsList: {
+  safetyChecklist: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
     gap: 12,
   },
-  settingCard: {
+  safetyChecklistItem: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 16,
-    padding: 16,
-    borderRadius: 22,
-    backgroundColor: theme.colors.white,
+    gap: 8,
+  },
+  safetyChecklistDot: {
+    fontSize: 16,
+    color: readyLime,
+  },
+  safetyChecklistLabel: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: theme.colors.text,
   },
   readyCard: {
     borderRadius: 30,
