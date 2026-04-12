@@ -36,6 +36,11 @@ export function ActiveJourneyScreen({
           ? "Journey Complete"
           : "On Track";
 
+  const contactStatuses = [
+    { name: "Trusted Contact 1", status: "Notified" },
+    { name: "Trusted Contact 2", status: "Connected" },
+  ];
+
   return (
     <LinearGradient
       colors={[theme.colors.background, "#F4E8DA", theme.colors.backgroundDeep]}
@@ -114,6 +119,28 @@ export function ActiveJourneyScreen({
             </View>
           </View>
         </LinearGradient>
+        <View style={styles.section}>
+          <Text style={styles.sectionEyebrow}>Trusted contact status</Text>
+          <Text style={styles.sectionTitle}>
+            Your safety circle is connected
+          </Text>
+
+          <View style={styles.contactStatusList}>
+            {contactStatuses.map((contact) => (
+              <View key={contact.name} style={styles.contactStatusCard}>
+                <View>
+                  <Text style={styles.contactStatusName}>{contact.name}</Text>
+                  <Text style={styles.contactStatusMeta}>{contact.status}</Text>
+                </View>
+                <View style={styles.contactStatusBadge}>
+                  <Text style={styles.contactStatusBadgeText}>
+                    {contact.status}
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        </View>
       </ScrollView>
     </LinearGradient>
   );
@@ -221,5 +248,38 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     color: theme.colors.textSoft,
     maxWidth: 180,
+  },
+  contactStatusList: {
+    gap: 12,
+  },
+  contactStatusCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 14,
+    padding: 16,
+    borderRadius: 22,
+    backgroundColor: theme.colors.surfaceSoft,
+  },
+  contactStatusName: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: theme.colors.text,
+  },
+  contactStatusMeta: {
+    marginTop: 4,
+    fontSize: 13,
+    color: theme.colors.textSoft,
+  },
+  contactStatusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: theme.radius.pill,
+    backgroundColor: "rgba(184,207,92,0.18)",
+  },
+  contactStatusBadgeText: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: "#566126",
   },
 });
