@@ -63,6 +63,32 @@ export function ActiveJourneyScreen({
           <Text>Expected finish: 2:30 PM</Text>
           <Text>Time remaining: 18 min</Text>
         </View>
+        {!isComplete ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionEyebrow}>Are you safe?</Text>
+            <Text style={styles.sectionTitle}>
+              Check in quickly if you need to
+            </Text>
+
+            <View style={styles.safetyPromptGrid}>
+              <Pressable style={[styles.safetyAction, styles.safeAction]}>
+                <Text style={styles.safeActionLabel}>Yes, I’m safe</Text>
+              </Pressable>
+
+              <Pressable style={styles.secondarySafetyAction}>
+                <Text style={styles.secondarySafetyActionLabel}>
+                  Send location to trusted contact
+                </Text>
+              </Pressable>
+
+              <Pressable style={styles.emergencyAction}>
+                <Text style={styles.emergencyActionLabel}>
+                  Call emergency services
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        ) : null}
       </ScrollView>
     </LinearGradient>
   );
@@ -80,5 +106,66 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 20,
     fontWeight: "600",
+  },
+  section: {
+    backgroundColor: "rgba(255,253,251,0.98)",
+    borderRadius: 28,
+    padding: 20,
+    gap: 14,
+  },
+  sectionEyebrow: {
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 1.8,
+    textTransform: "uppercase",
+    color: theme.colors.textMuted,
+  },
+  sectionTitle: {
+    fontSize: 22,
+    lineHeight: 26,
+    fontWeight: "800",
+    color: theme.colors.text,
+  },
+  safetyPromptGrid: {
+    gap: 12,
+  },
+  safetyAction: {
+    borderRadius: 22,
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  safeAction: {
+    backgroundColor: readyLime,
+  },
+  safeActionLabel: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#566126",
+  },
+  secondarySafetyAction: {
+    borderRadius: 22,
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+    backgroundColor: theme.colors.surfaceSoft,
+  },
+  secondarySafetyActionLabel: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: theme.colors.text,
+    textAlign: "center",
+  },
+  emergencyAction: {
+    borderRadius: 22,
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+    backgroundColor: "#F7D9C9",
+  },
+  emergencyActionLabel: {
+    fontSize: 15,
+    fontWeight: "800",
+    color: warningOrange,
+    textAlign: "center",
   },
 });
