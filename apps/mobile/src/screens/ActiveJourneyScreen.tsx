@@ -19,7 +19,11 @@ const readyLime = "#AFCB46";
 const warningOrange = "#E58B5B";
 
 
-export function ActiveJourneyScreen() {
+export function ActiveJourneyScreen({
+  onJourneyComplete,
+}: ActiveJourneyScreenProps) {
+  const [journeyState, setJourneyState] = useState<JourneyState>("active");
+
   return (
     <View style={styles.container}>
       <Text style={styles.text}>Active Journey Screen</Text>
