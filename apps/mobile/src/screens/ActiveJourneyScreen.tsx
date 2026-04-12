@@ -47,6 +47,9 @@ export function ActiveJourneyScreen({
           subtitle="We’re tracking your journey and standing by."
           tagline="Stay calm, Stay connected"
         />
+        <View style={{ padding: 16 }}>
+          <Text>Status: {statusLabel}</Text>
+        </View>
       </ScrollView>
     </LinearGradient>
   );
