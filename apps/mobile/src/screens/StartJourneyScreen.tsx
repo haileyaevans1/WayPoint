@@ -69,8 +69,8 @@ export function StartJourneyScreen({ onStartJourney }: StartJourneyScreenProps) 
   const [measureType, setMeasureType] = useState<TripMeasure>("distance");
   const [distanceValue, setDistanceValue] = useState("2");
   const [distanceUnit, setDistanceUnit] = useState("mi");
-  const [durationValue, setDurationValue] = useState("30");
-  const [durationUnit, setDurationUnit] = useState("min");
+  const [durationHours, setDurationHours] = useState("0");
+  const [durationMinutes, setDurationMinutes] = useState("30");
   const [destinationLocation, setDestinationLocation] = useState("");
   const [locationMode, setLocationMode] = useState<LocationMode>("current");
   const [groupJourneyEnabled, setGroupJourneyEnabled] = useState(false);
@@ -87,7 +87,7 @@ export function StartJourneyScreen({ onStartJourney }: StartJourneyScreenProps) 
   const tripSetupLabel =
     measureType === "distance"
       ? `${distanceValue || "0"} ${distanceUnit}`
-      : `${durationValue || "0"} ${durationUnit}`;
+      : `${durationHours || "0"} hr ${durationMinutes || "0"} min`;
 
   return (
     <LinearGradient
@@ -222,36 +222,27 @@ export function StartJourneyScreen({ onStartJourney }: StartJourneyScreenProps) 
               <Text style={styles.measureInputHint}>
                 {measureType === "distance"
                   ? "Type how far you plan to go."
-                  : "Type how long you expect this trip to take."}
+                  : "Set how many hours and minutes you expect this trip to take."}
               </Text>
             </View>
-            <View style={styles.measureInputRow}>
-              <TextInput
-                value={measureType === "distance" ? distanceValue : durationValue}
-                onChangeText={
-                  measureType === "distance" ? setDistanceValue : setDurationValue
-                }
-                keyboardType="numeric"
-                placeholder={measureType === "distance" ? "2" : "30"}
-                placeholderTextColor={theme.colors.textMuted}
-                style={styles.measureInput}
-              />
-              <View style={styles.measureUnitToggle}>
-                {(measureType === "distance" ? ["mi", "km"] : ["min", "hr"]).map(
-                  (unit) => {
-                    const selected =
-                      measureType === "distance"
-                        ? distanceUnit === unit
-                        : durationUnit === unit;
+            {measureType === "distance" ? (
+              <View style={styles.measureInputRow}>
+                <TextInput
+                  value={distanceValue}
+                  onChangeText={setDistanceValue}
+                  keyboardType="numeric"
+                  placeholder="2"
+                  placeholderTextColor={theme.colors.textMuted}
+                  style={styles.measureInput}
+                />
+                <View style={styles.measureUnitToggle}>
+                  {(["mi", "km"] as const).map((unit) => {
+                    const selected = distanceUnit === unit;
 
                     return (
                       <Pressable
                         key={unit}
-                        onPress={() =>
-                          measureType === "distance"
-                            ? setDistanceUnit(unit)
-                            : setDurationUnit(unit)
-                        }
+                        onPress={() => setDistanceUnit(unit)}
                         style={[
                           styles.measureUnitPill,
                           selected && styles.measureUnitPillSelected,
@@ -267,10 +258,35 @@ export function StartJourneyScreen({ onStartJourney }: StartJourneyScreenProps) 
                         </Text>
                       </Pressable>
                     );
-                  },
-                )}
+                  })}
+                </View>
               </View>
-            </View>
+            ) : (
+              <View style={styles.durationRow}>
+                <View style={styles.durationField}>
+                  <Text style={styles.durationLabel}>Hours</Text>
+                  <TextInput
+                    value={durationHours}
+                    onChangeText={setDurationHours}
+                    keyboardType="numeric"
+                    placeholder="0"
+                    placeholderTextColor={theme.colors.textMuted}
+                    style={styles.measureInput}
+                  />
+                </View>
+                <View style={styles.durationField}>
+                  <Text style={styles.durationLabel}>Minutes</Text>
+                  <TextInput
+                    value={durationMinutes}
+                    onChangeText={setDurationMinutes}
+                    keyboardType="numeric"
+                    placeholder="30"
+                    placeholderTextColor={theme.colors.textMuted}
+                    style={styles.measureInput}
+                  />
+                </View>
+              </View>
+            )}
           </View>
         </View>
 
@@ -799,6 +815,19 @@ const styles = StyleSheet.create({
   },
   measureUnitLabelSelected: {
     color: readyLimeText,
+  },
+  durationRow: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  durationField: {
+    flex: 1,
+    gap: 8,
+  },
+  durationLabel: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: theme.colors.textSoft,
   },
   locationStack: {
     gap: 12,
