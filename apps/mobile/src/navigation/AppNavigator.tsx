@@ -38,7 +38,12 @@ export function AppNavigator() {
       case "stats":
         return <StatisticsScreen />;
       case "startJourney":
-        return <StartJourneyScreen onStartJourney={() => setCurrentScreen("activeJourney")} />;
+        return (
+          <StartJourneyScreen
+            onStartJourney={() => setCurrentScreen("activeJourney")}
+            onOpenProfile={() => setCurrentScreen("profile")}
+          />
+        );
       case "activeJourney":
         return <ActiveJourneyScreen />;
       // If "routes" or "startJourney" is clicked before they are built, 

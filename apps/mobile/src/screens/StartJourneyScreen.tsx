@@ -14,6 +14,7 @@ import { theme } from "../styles/theme";
 
 type StartJourneyScreenProps = {
   onStartJourney?: () => void;
+  onOpenProfile?: () => void;
 };
 
 type JourneyType = "walk" | "run" | "hike" | "bike";
@@ -64,8 +65,12 @@ const journeyTypes: Array<{
 ];
 
 const trustedContacts: string[] = [];
+const previewTrustedContacts = ["Maya", "Jordan", "Chris"] as const;
 
-export function StartJourneyScreen({ onStartJourney }: StartJourneyScreenProps) {
+export function StartJourneyScreen({
+  onStartJourney,
+  onOpenProfile,
+}: StartJourneyScreenProps) {
   const [journeyType, setJourneyType] = useState<JourneyType>("walk");
   const [measureType, setMeasureType] = useState<TripMeasure>("distance");
   const [distanceValue, setDistanceValue] = useState("2");
@@ -467,7 +472,8 @@ export function StartJourneyScreen({ onStartJourney }: StartJourneyScreenProps) 
               <Text style={styles.sectionEyebrow}>Safety contacts</Text>
               <Text style={styles.sectionTitle}>Stay connected with people you trust</Text>
               <Text style={styles.sectionText}>
-                Your safety circle will be notified if something looks off.
+                Manage your trusted contacts in Profile, then make quick updates here before
+                you start this journey.
               </Text>
             </View>
             <View style={styles.contactsCountBadge}>
@@ -490,20 +496,35 @@ export function StartJourneyScreen({ onStartJourney }: StartJourneyScreenProps) 
           ) : null}
 
           <View style={styles.contactsActionGrid}>
-            <Pressable style={styles.contactActionCard}>
-              <Text style={styles.contactActionEyebrow}>Trusted contacts</Text>
-              <Text style={styles.contactActionTitle}>Add trusted contacts</Text>
-              <Text style={styles.contactActionText}>
-                Choose who should get updates on this journey.
-              </Text>
-            </Pressable>
-
-            <Pressable style={styles.contactActionCard}>
-              <Text style={styles.contactActionEyebrow}>Emergency contact</Text>
-              <Text style={styles.contactActionTitle}>Optional backup contact</Text>
-              <Text style={styles.contactActionText}>
-                Add one more person for urgent situations.
-              </Text>
+            <Pressable style={styles.contactActionCard} onPress={onOpenProfile}>
+              <View style={styles.contactActionCopy}>
+                <Text style={styles.contactActionEyebrow}>Trusted contacts</Text>
+                <Text style={styles.contactActionTitle}>Manage contacts for this trip</Text>
+              </View>
+              <View style={styles.contactPreviewRow}>
+                {previewTrustedContacts.map((contact, index) => (
+                  <View key={contact} style={styles.contactPreviewItem}>
+                    <View
+                      style={[
+                        styles.contactPreviewAvatar,
+                        index === 0
+                          ? styles.contactPreviewAvatarWarm
+                          : index === 1
+                            ? styles.contactPreviewAvatarCool
+                            : styles.contactPreviewAvatarSoft,
+                      ]}
+                    >
+                      <Text style={styles.contactPreviewAvatarText}>{contact[0]}</Text>
+                    </View>
+                    <Text style={styles.contactPreviewName}>{contact}</Text>
+                  </View>
+                ))}
+              </View>
+              <View style={styles.contactActionFooter}>
+                <View style={styles.contactActionButton}>
+                  <Text style={styles.contactActionButtonText}>Open Profile</Text>
+                </View>
+              </View>
             </Pressable>
           </View>
         </LinearGradient>
@@ -991,7 +1012,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.white,
   },
   locationActionSelected: {
-    backgroundColor: "rgba(175,203,70,0.22)",
+    backgroundColor: readyLime,
   },
   locationActionText: {
     fontSize: 13,
@@ -1047,7 +1068,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.white,
   },
   routeShapeActionSelected: {
-    backgroundColor: "rgba(175,203,70,0.26)",
+    backgroundColor: readyLime,
   },
   routeShapeActionText: {
     fontSize: 13,
@@ -1123,6 +1144,9 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surfaceSoft,
     gap: 6,
   },
+  contactActionCopy: {
+    gap: 2,
+  },
   contactActionEyebrow: {
     fontSize: 11,
     fontWeight: "800",
@@ -1139,6 +1163,58 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     color: theme.colors.textSoft,
+  },
+  contactPreviewRow: {
+    flexDirection: "row",
+    gap: 16,
+    marginTop: 4,
+    marginBottom: 4,
+  },
+  contactPreviewItem: {
+    alignItems: "center",
+    gap: 8,
+  },
+  contactPreviewAvatar: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  contactPreviewAvatarWarm: {
+    backgroundColor: "rgba(240,174,141,0.34)",
+  },
+  contactPreviewAvatarCool: {
+    backgroundColor: "rgba(183,205,235,0.42)",
+  },
+  contactPreviewAvatarSoft: {
+    backgroundColor: "rgba(207,225,122,0.3)",
+  },
+  contactPreviewAvatarText: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: theme.colors.text,
+  },
+  contactPreviewName: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: theme.colors.textSoft,
+  },
+  contactActionFooter: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    marginTop: 6,
+  },
+  contactActionButton: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: theme.radius.pill,
+    backgroundColor: readyLime,
+  },
+  contactActionButtonText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: readyLimeText,
   },
   settingRow: {
     flexDirection: "row",
