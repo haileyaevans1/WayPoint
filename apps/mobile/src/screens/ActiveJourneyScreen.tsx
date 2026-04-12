@@ -1,10 +1,5 @@
 import { useState } from "react";
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Header } from "../components/Header";
 import { theme } from "../styles/theme";
@@ -18,11 +13,28 @@ type ActiveJourneyScreenProps = {
 const readyLime = "#AFCB46";
 const warningOrange = "#E58B5B";
 
-
 export function ActiveJourneyScreen({
   onJourneyComplete,
 }: ActiveJourneyScreenProps) {
   const [journeyState, setJourneyState] = useState<JourneyState>("active");
+
+  const isComplete = journeyState === "complete";
+
+  const statusAccent =
+    journeyState === "offRoute"
+      ? warningOrange
+      : journeyState === "late"
+        ? theme.colors.brand
+        : readyLime;
+
+  const statusLabel =
+    journeyState === "offRoute"
+      ? "Off Route"
+      : journeyState === "late"
+        ? "Needs Check-In"
+        : journeyState === "complete"
+          ? "Journey Complete"
+          : "On Track";
 
   return (
     <LinearGradient
