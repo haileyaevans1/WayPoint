@@ -34,6 +34,7 @@ export function AppNavigator() {
             onOpenSavedRoutes={() => {}}
             onOpenPopularRoutes={() => {}}
             onOpenAlerts={() => {}}
+            journeyMode={activeJourneyConfig ? "active" : "idle"}
           />
         );
       case "profile":
@@ -70,6 +71,7 @@ export function AppNavigator() {
             onOpenSavedRoutes={() => {}}
             onOpenPopularRoutes={() => {}}
             onOpenAlerts={() => {}}
+            journeyMode={activeJourneyConfig ? "active" : "idle"}
           />
         ); 
     }

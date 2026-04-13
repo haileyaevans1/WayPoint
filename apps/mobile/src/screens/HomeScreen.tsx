@@ -1,11 +1,39 @@
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import MapView, { Marker, Polyline } from "react-native-maps";
 import { Header } from "../components/Header";
 import { theme } from "../styles/theme";
 
 const readyLimeLight = "#CFE17A";
 const readyLimeTextDark = "#4F5A22";
 const readyLimeText = "#566126";
+
+const previewRoute = [
+  { latitude: 29.4246, longitude: -98.4898 },
+  { latitude: 29.4256, longitude: -98.4883 },
+  { latitude: 29.4265, longitude: -98.4867 },
+  { latitude: 29.4271, longitude: -98.4852 },
+  { latitude: 29.4263, longitude: -98.4838 },
+  { latitude: 29.4249, longitude: -98.4832 },
+  { latitude: 29.4235, longitude: -98.4838 },
+  { latitude: 29.4226, longitude: -98.4855 },
+  { latitude: 29.4231, longitude: -98.4874 },
+  { latitude: 29.4246, longitude: -98.4898 },
+] as const;
+
+const liveLocationRegion = {
+  latitude: 29.4249,
+  longitude: -98.486,
+  latitudeDelta: 0.01,
+  longitudeDelta: 0.01,
+};
+
+const activeRouteRegion = {
+  latitude: 29.4249,
+  longitude: -98.486,
+  latitudeDelta: 0.0068,
+  longitudeDelta: 0.0068,
+};
 
 type JourneyMode = "idle" | "active" | "off_route" | "complete";
 
@@ -95,26 +123,49 @@ export function HomeScreen({
 
         <View style={styles.heroShell}>
           <View style={styles.hero}>
-            <View style={styles.skyBlob} />
-            <View style={styles.grassBlob} />
-            <View style={styles.grassBlobTwo} />
-            {heroState.showRoute ? (
-              <>
-                <View style={[styles.routeLinePrimary, { opacity: heroState.routeOpacity }]} />
-                <View style={[styles.routeNodeLeft, { opacity: heroState.routeOpacity }]} />
-                <View style={[styles.routeNodeRight, { opacity: heroState.routeOpacity }]} />
-              </>
-            ) : null}
-            <View style={styles.pinWrap}>
-              <View style={styles.pinCircleOuter}>
-                <View style={styles.pinCircleInner} />
-              </View>
-              <View style={styles.pinTail} />
+            <MapView
+              style={styles.mapView}
+              initialRegion={heroState.showRoute ? activeRouteRegion : liveLocationRegion}
+              showsUserLocation={!heroState.showRoute}
+              followsUserLocation={!heroState.showRoute}
+              scrollEnabled={false}
+              zoomEnabled={false}
+              pitchEnabled={false}
+              rotateEnabled={false}
+              toolbarEnabled={false}
+              showsCompass={false}
+              pointerEvents="none"
+            >
+              {heroState.showRoute ? (
+                <>
+                  <Polyline
+                    coordinates={[...previewRoute]}
+                    strokeColor="#675EF2"
+                    strokeWidth={5}
+                    lineCap="round"
+                    lineJoin="round"
+                  />
+                  <Marker coordinate={previewRoute[0]} title="Start" />
+                  <Marker
+                    coordinate={previewRoute[Math.min(4, previewRoute.length - 1)]}
+                    title="Current position"
+                    pinColor={theme.colors.brand}
+                  />
+                </>
+              ) : null}
+            </MapView>
+            <LinearGradient
+              colors={["rgba(255,255,255,0.06)", "rgba(255,250,247,0.16)"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.mapTint}
+            />
+
+            <View style={styles.mapBadge}>
+              <Text style={styles.mapBadgeLabel}>
+                {heroState.showRoute ? "Active route" : "Live location"}
+              </Text>
             </View>
-            <View style={styles.waveOne} />
-            <View style={styles.waveTwo} />
-            <View style={styles.waveThree} />
-            <View style={styles.mapCard} />
 
             <View style={styles.statusCard}>
               <View style={styles.statusRow}>
@@ -254,139 +305,30 @@ const styles = StyleSheet.create({
     borderRadius: 32,
     backgroundColor: theme.colors.heroSkySoft,
   },
-  skyBlob: {
+  mapView: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  mapTint: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  mapBadge: {
     position: "absolute",
-    right: -24,
-    top: -18,
-    width: 204,
-    height: 204,
-    borderRadius: 102,
-    backgroundColor: theme.colors.heroSky,
+    right: 16,
+    top: 16,
+    borderRadius: 16,
+    backgroundColor: "rgba(255,250,247,0.92)",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    shadowColor: theme.colors.ink,
+    shadowOpacity: 0.08,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 4,
   },
-  grassBlob: {
-    position: "absolute",
-    left: -32,
-    bottom: 58,
-    width: 296,
-    height: 164,
-    borderRadius: 100,
-    backgroundColor: theme.colors.heroGrass,
-    transform: [{ rotate: "-10deg" }],
-  },
-  grassBlobTwo: {
-    position: "absolute",
-    left: -20,
-    bottom: -20,
-    width: 260,
-    height: 150,
-    borderRadius: 100,
-    backgroundColor: theme.colors.heroGrassDeep,
-    opacity: 0.6,
-  },
-  routeLinePrimary: {
-    position: "absolute",
-    left: 118,
-    top: 188,
-    width: 184,
-    height: 12,
-    borderRadius: 999,
-    backgroundColor: "#6D73F1",
-    transform: [{ rotate: "15deg" }],
-  },
-  routeNodeLeft: {
-    position: "absolute",
-    left: 96,
-    top: 212,
-    width: 24,
-    height: 24,
-    borderRadius: 999,
-    backgroundColor: "#6D73F1",
-    borderWidth: 5,
-    borderColor: "rgba(255,255,255,0.9)",
-  },
-  routeNodeRight: {
-    position: "absolute",
-    right: 92,
-    top: 230,
-    width: 24,
-    height: 24,
-    borderRadius: 999,
-    backgroundColor: "#6D73F1",
-    borderWidth: 5,
-    borderColor: "rgba(255,255,255,0.9)",
-  },
-  pinWrap: {
-    position: "absolute",
-    left: "50%",
-    top: 142,
-    marginLeft: -36,
-    alignItems: "center",
-  },
-  pinCircleOuter: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: "#675EF2",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  pinCircleInner: {
-    width: 24,
-    height: 24,
-    borderRadius: 999,
-    backgroundColor: theme.colors.white,
-    borderWidth: 7,
-    borderColor: "#675EF2",
-  },
-  pinTail: {
-    marginTop: -4,
-    width: 0,
-    height: 0,
-    borderLeftWidth: 21,
-    borderRightWidth: 21,
-    borderTopWidth: 26,
-    borderLeftColor: "transparent",
-    borderRightColor: "transparent",
-    borderTopColor: "#675EF2",
-  },
-  waveOne: {
-    position: "absolute",
-    left: -60,
-    top: 124,
-    width: 470,
-    height: 24,
-    borderRadius: 999,
-    backgroundColor: "rgba(255,255,255,0.88)",
-    transform: [{ rotate: "9deg" }],
-  },
-  waveTwo: {
-    position: "absolute",
-    left: 70,
-    top: 46,
-    width: 304,
-    height: 18,
-    borderRadius: 999,
-    backgroundColor: "rgba(255,255,255,0.8)",
-    transform: [{ rotate: "-8deg" }],
-  },
-  waveThree: {
-    position: "absolute",
-    left: 150,
-    bottom: 60,
-    width: 276,
-    height: 20,
-    borderRadius: 999,
-    backgroundColor: "rgba(255,255,255,0.82)",
-    transform: [{ rotate: "-8deg" }],
-  },
-  mapCard: {
-    position: "absolute",
-    right: 58,
-    top: 74,
-    width: 66,
-    height: 36,
-    borderRadius: 14,
-    backgroundColor: "rgba(255,255,255,0.54)",
+  mapBadgeLabel: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: theme.colors.text,
   },
   statusCard: {
     margin: 14,
