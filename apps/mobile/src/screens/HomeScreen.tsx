@@ -3,15 +3,18 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Header } from "../components/Header";
 import { theme } from "../styles/theme";
 
+const readyLimeLight = "#CFE17A";
+const readyLimeTextDark = "#4F5A22";
+const readyLimeText = "#566126";
+
 type JourneyMode = "idle" | "active" | "off_route" | "complete";
 
 type HomeScreenProps = {
   onOpenSavedRoutes: () => void;
   onOpenPopularRoutes: () => void;
   onOpenAlerts: () => void;
+  journeyMode?: JourneyMode;
 };
-
-const mockHeroMode: JourneyMode = "idle";
 
 const heroStateByMode: Record<
   JourneyMode,
@@ -72,9 +75,10 @@ export function HomeScreen({
   onOpenSavedRoutes,
   onOpenPopularRoutes,
   onOpenAlerts,
+  journeyMode = "idle",
 }: HomeScreenProps) {
-  const heroState = heroStateByMode[mockHeroMode];
-
+  const heroState = heroStateByMode[journeyMode];
+  
   return (
     <LinearGradient
       colors={[theme.colors.background, theme.colors.backgroundAlt, theme.colors.backgroundDeep]}
