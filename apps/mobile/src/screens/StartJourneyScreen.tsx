@@ -29,6 +29,8 @@ export type StartJourneyConfig = {
   tripSetupLabel: string;
   locationSummary: string;
   routeShape: RouteShape;
+  contactNames: string[];
+  contactLabel: string;
   startedAt: string;
 };
 
@@ -703,6 +705,10 @@ export function StartJourneyScreen({
                 tripSetupLabel,
                 locationSummary,
                 routeShape,
+                contactNames: [...previewPeople],
+                contactLabel: groupJourneyEnabled
+                  ? "Group status"
+                  : "Trusted contact status",
                 startedAt: new Date().toISOString(),
               })
             }

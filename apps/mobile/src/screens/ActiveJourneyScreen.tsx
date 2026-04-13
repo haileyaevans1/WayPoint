@@ -29,7 +29,7 @@ const readyLimeTextDark = "#4F5A22";
 const warningPeach = "#F7D9C9";
 const warningOrange = "#E58B5B";
 
-const contactStatuses = [
+const fallbackContactStatuses = [
   { name: "Trusted Contact 1", status: "Notified" },
   { name: "Trusted Contact 2", status: "Connected" },
 ];
@@ -60,7 +60,6 @@ export function ActiveJourneyScreen({
   journeyConfig,
 }: ActiveJourneyScreenProps) {
   const { height: windowHeight } = useWindowDimensions();
-  const endJourneyPulse = useRef(new Animated.Value(1)).current;
   const safetyPulse = useRef(new Animated.Value(1)).current;
   const [journeyState, setJourneyState] = useState<JourneyState>("active");
   const [showCompletionModal, setShowCompletionModal] = useState(false);
@@ -102,6 +101,13 @@ export function ActiveJourneyScreen({
   )}:${String(remainingSeconds % 60).padStart(2, "0")}`;
   const expectedFinish = new Date(startedAtMs + totalDurationSeconds * 1000);
   const checkInTime = new Date(expectedFinish.getTime() + 5 * 60 * 1000);
+  const checkInCountdownSeconds = Math.max(
+    0,
+    Math.floor((checkInTime.getTime() - now) / 1000),
+  );
+  const checkInCountdownDisplay = `${String(
+    Math.floor(checkInCountdownSeconds / 60),
+  ).padStart(2, "0")}:${String(checkInCountdownSeconds % 60).padStart(2, "0")}`;
   const timeFormatter = useMemo(
     () =>
       new Intl.DateTimeFormat("en-US", {
@@ -110,30 +116,24 @@ export function ActiveJourneyScreen({
       }),
     [],
   );
+  const syncedContactStatuses =
+    journeyConfig?.contactNames && journeyConfig.contactNames.length > 0
+      ? journeyConfig.contactNames.map((name, index) => ({
+          name,
+          status: index === 0 ? "Connected" : "Notified",
+        }))
+      : fallbackContactStatuses;
+  const [activeContactName, setActiveContactName] = useState(
+    syncedContactStatuses[0]?.name ?? "",
+  );
 
   useEffect(() => {
     if (isComplete) {
-      endJourneyPulse.stopAnimation();
-      endJourneyPulse.setValue(1);
       safetyPulse.stopAnimation();
       safetyPulse.setValue(1);
       return;
     }
 
-    const endJourneyPulseLoop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(endJourneyPulse, {
-          toValue: 1.06,
-          duration: 900,
-          useNativeDriver: true,
-        }),
-        Animated.timing(endJourneyPulse, {
-          toValue: 1,
-          duration: 900,
-          useNativeDriver: true,
-        }),
-      ]),
-    );
     const safetyPulseLoop = Animated.loop(
       Animated.sequence([
         Animated.timing(safetyPulse, {
@@ -149,18 +149,14 @@ export function ActiveJourneyScreen({
       ]),
     );
 
-    endJourneyPulseLoop.start();
     safetyPulseLoop.start();
 
     return () => {
-      endJourneyPulseLoop.stop();
-      endJourneyPulse.stopAnimation();
-      endJourneyPulse.setValue(1);
       safetyPulseLoop.stop();
       safetyPulse.stopAnimation();
       safetyPulse.setValue(1);
     };
-  }, [endJourneyPulse, isComplete, safetyPulse]);
+  }, [isComplete, safetyPulse]);
 
   useEffect(() => {
     if (isComplete) {
@@ -240,7 +236,7 @@ export function ActiveJourneyScreen({
       >
         <View style={styles.mapShell}>
           <View style={styles.heroShell}>
-            <View style={[styles.hero, { minHeight: windowHeight - 180 }]}>
+            <View style={[styles.hero, { minHeight: windowHeight - 200 }]}>
               <MapView
                 style={styles.mapView}
                 initialRegion={journeyRegion}
@@ -263,31 +259,24 @@ export function ActiveJourneyScreen({
                 <Marker coordinate={journeyRoute[4]} title="Current position" />
               </MapView>
               <View style={styles.mapTint} />
-              <View style={styles.mapTopControls}>
-                {!isComplete ? (
-                  <Animated.View
-                    style={[
-                      styles.mapSafetyPulseWrap,
-                      { transform: [{ scale: safetyPulse }] },
-                    ]}
+              {!isComplete ? (
+                <Animated.View
+                  style={[
+                    styles.mapSafetyPulseWrap,
+                    styles.mapSafetyCornerWrap,
+                    { transform: [{ scale: safetyPulse }] },
+                  ]}
+                >
+                  <Pressable
+                    style={styles.mapSafetyButton}
+                    onPress={() => setShowSafetyModal(true)}
                   >
-                    <Pressable
-                      style={styles.mapSafetyButton}
-                      onPress={() => setShowSafetyModal(true)}
-                    >
-                      <Text style={styles.mapSafetyEyebrow}>Quick check</Text>
-                      <Text style={styles.mapSafetyText}>Safe?</Text>
-                    </Pressable>
-                  </Animated.View>
-                ) : null}
-                <View style={styles.heroStatusCard}>
-                  <View style={styles.heroStatusRow}>
-                    <View>
-                      <Text style={styles.heroStatusLabel}>Status</Text>
-                      <Text style={styles.heroStatusValue}>{statusLabel}</Text>
-                    </View>
-                  </View>
-                </View>
+                    <Text style={styles.mapSafetyEyebrow}>Quick check-in</Text>
+                    <Text style={styles.mapSafetyText}>Safe?</Text>
+                  </Pressable>
+                </Animated.View>
+              ) : null}
+              <View style={styles.mapTopControls}>
                 <Pressable
                   style={({ pressed }) => [
                     styles.mapAlertButton,
@@ -300,26 +289,20 @@ export function ActiveJourneyScreen({
                   <View style={styles.mapAlertDot} />
                 </Pressable>
                 {!isComplete ? (
-                  <Animated.View
-                    style={[
-                      styles.mapEndJourneyPulseWrap,
-                      { transform: [{ scale: endJourneyPulse }] },
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.mapEndJourneyButton,
+                      pressed && styles.mapEndJourneyButtonPressed,
                     ]}
+                    onPress={() => {
+                      setJourneyState("complete");
+                      setShowCompletionModal(true);
+                      onJourneyComplete?.();
+                    }}
                   >
-                    <Pressable
-                      style={({ pressed }) => [
-                        styles.mapEndJourneyButton,
-                        pressed && styles.mapEndJourneyButtonPressed,
-                      ]}
-                      onPress={() => {
-                        setJourneyState("complete");
-                        setShowCompletionModal(true);
-                        onJourneyComplete?.();
-                      }}
-                    >
-                      <Text style={styles.mapEndJourneyText}>End Journey</Text>
-                    </Pressable>
-                  </Animated.View>
+                    <Text style={styles.mapEndJourneyEyebrow}>All done?</Text>
+                    <Text style={styles.mapEndJourneyText}>End Journey</Text>
+                  </Pressable>
                 ) : null}
               </View>
 
@@ -329,9 +312,8 @@ export function ActiveJourneyScreen({
                   <Text style={styles.heroLocationValue}>Riverwalk Loop</Text>
                 </View>
                 <View style={styles.weatherWrap}>
-                  <Text style={styles.weatherLabel}>Weather</Text>
+                  <Text style={styles.weatherLabel}>Sunny</Text>
                   <Text style={styles.weatherValue}>72°F</Text>
-                  <Text style={styles.weatherText}>Sunny</Text>
                 </View>
               </View>
             </View>
@@ -384,7 +366,7 @@ export function ActiveJourneyScreen({
           <Text style={styles.sectionEyebrow}>Countdown</Text>
           <View style={styles.deadlineRow}>
             <Text style={styles.deadlineValue}>
-              {journeyState === "late" ? "00:45" : "18:12"}
+              {journeyState === "late" ? "00:45" : checkInCountdownDisplay}
             </Text>
             <View>
               <Text style={styles.deadlineLabel}>
@@ -402,22 +384,45 @@ export function ActiveJourneyScreen({
         </LinearGradient>
 
         <View style={styles.section}>
-          <Text style={styles.sectionEyebrow}>Trusted contact status</Text>
+          <Text style={styles.sectionEyebrow}>
+            {journeyConfig?.contactLabel ?? "Trusted contact status"}
+          </Text>
           <Text style={styles.sectionTitle}>Your safety circle is connected</Text>
 
-          <View style={styles.contactStatusList}>
-            {contactStatuses.map((contact) => (
-              <View key={contact.name} style={styles.contactStatusCard}>
-                <View>
-                  <Text style={styles.contactStatusName}>{contact.name}</Text>
-                  <Text style={styles.contactStatusMeta}>{contact.status}</Text>
-                </View>
-                <View style={styles.contactStatusBadge}>
-                  <Text style={styles.contactStatusBadgeText}>
-                    {contact.status}
+          <View style={styles.contactPreviewRow}>
+            {syncedContactStatuses.map((contact, index) => (
+              <Pressable
+                key={`${contact.name}-preview`}
+                style={[
+                  styles.contactPreviewItem,
+                  activeContactName === contact.name &&
+                    styles.contactPreviewItemActive,
+                ]}
+                onPress={() => setActiveContactName(contact.name)}
+              >
+                <View
+                  style={[
+                    styles.contactPreviewAvatar,
+                    index === 0
+                      ? styles.contactPreviewAvatarWarm
+                      : index === 1
+                        ? styles.contactPreviewAvatarCool
+                        : styles.contactPreviewAvatarSoft,
+                  ]}
+                >
+                  <Text style={styles.contactPreviewAvatarText}>
+                    {contact.name[0]}
                   </Text>
                 </View>
-              </View>
+                <Text style={styles.contactPreviewName}>{contact.name}</Text>
+              </Pressable>
+            ))}
+          </View>
+          <View style={styles.contactActionRow}>
+            {["Message", "Share location", "Call"].map((action) => (
+              <Pressable key={action} style={styles.contactActionButton}>
+                <Text style={styles.contactActionButtonText}>{action}</Text>
+              </Pressable>
             ))}
           </View>
         </View>
@@ -612,9 +617,9 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   mapAlertButton: {
-    minWidth: 64,
+    minWidth: 60,
     minHeight: 46,
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
     paddingVertical: 11,
     borderRadius: 20,
     backgroundColor: warningPeach,
@@ -632,7 +637,7 @@ const styles = StyleSheet.create({
     opacity: 0.82,
   },
   mapAlertIcon: {
-    fontSize: 23,
+    fontSize: 22,
     color: warningOrange,
   },
   mapAlertDot: {
@@ -647,61 +652,40 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 11,
     borderRadius: 20,
-    backgroundColor: readyLime,
+    backgroundColor: warningOrange,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#92A93A",
-    shadowOpacity: 0.08,
+    shadowColor: warningOrange,
+    shadowOpacity: 0.18,
     shadowRadius: 18,
     shadowOffset: { width: 0, height: 8 },
     elevation: 4,
-  },
-  mapEndJourneyPulseWrap: {
-    borderRadius: 20,
   },
   mapEndJourneyButtonPressed: {
     opacity: 0.82,
   },
-  mapEndJourneyText: {
-    fontSize: 15,
-    fontWeight: "800",
-    color: readyLimeText,
-  },
-  heroStatusCard: {
-    minHeight: 44,
-    borderRadius: 20,
-    backgroundColor: theme.colors.white,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    shadowColor: theme.colors.ink,
-    shadowOpacity: 0.08,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 4,
-  },
-  heroStatusRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 0,
-  },
-  heroStatusLabel: {
+  mapEndJourneyEyebrow: {
     fontSize: 11,
-    color: theme.colors.textMuted,
+    color: "rgba(255,255,255,0.82)",
+    textAlign: "center",
   },
-  heroStatusValue: {
+  mapEndJourneyText: {
     marginTop: 2,
     fontSize: 15,
-    fontWeight: "700",
-    color: theme.colors.text,
+    fontWeight: "800",
+    color: theme.colors.white,
+    textAlign: "center",
   },
   mapSafetyButton: {
     minWidth: 92,
     minHeight: 46,
     borderRadius: 20,
-    backgroundColor: warningOrange,
+    backgroundColor: readyLime,
     paddingHorizontal: 14,
     paddingVertical: 9,
-    shadowColor: warningOrange,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#92A93A",
     shadowOpacity: 0.18,
     shadowRadius: 18,
     shadowOffset: { width: 0, height: 8 },
@@ -710,15 +694,22 @@ const styles = StyleSheet.create({
   mapSafetyPulseWrap: {
     borderRadius: 20,
   },
+  mapSafetyCornerWrap: {
+    position: "absolute",
+    top: 22,
+    left: 16,
+  },
   mapSafetyEyebrow: {
     fontSize: 11,
-    color: "rgba(255,255,255,0.82)",
+    color: "rgba(79,90,34,0.82)",
+    textAlign: "center",
   },
   mapSafetyText: {
     marginTop: 2,
     fontSize: 15,
     fontWeight: "700",
-    color: theme.colors.white,
+    color: readyLimeTextDark,
+    textAlign: "center",
   },
   heroLocationCard: {
     position: "absolute",
@@ -738,12 +729,12 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   heroLocationLabel: {
-    fontSize: 11,
+    fontSize: 13,
     color: theme.colors.textMuted,
   },
   heroLocationValue: {
     marginTop: 3,
-    fontSize: 17,
+    fontSize: 19,
     fontWeight: "700",
     color: theme.colors.text,
   },
@@ -751,12 +742,12 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
   },
   weatherLabel: {
-    fontSize: 11,
+    fontSize: 13,
     color: theme.colors.textMuted,
   },
   weatherValue: {
     marginTop: 3,
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "700",
     color: theme.colors.text,
   },
@@ -908,11 +899,14 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   deadlineValue: {
-    fontSize: 34,
+    width: 104,
+    fontSize: 31,
     lineHeight: 34,
     fontWeight: "900",
     color: theme.colors.text,
-    letterSpacing: -1.4,
+    letterSpacing: 0,
+    textAlign: "center",
+    fontVariant: ["tabular-nums"],
   },
   deadlineLabel: {
     fontSize: 14,
@@ -926,38 +920,64 @@ const styles = StyleSheet.create({
     color: theme.colors.textSoft,
     maxWidth: 180,
   },
-  contactStatusList: {
-    gap: 12,
-  },
-  contactStatusCard: {
+  contactPreviewRow: {
     flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 14,
-    padding: 16,
-    borderRadius: 22,
-    backgroundColor: theme.colors.surfaceSoft,
+    gap: 16,
+    marginTop: 2,
+    marginBottom: 2,
   },
-  contactStatusName: {
-    fontSize: 16,
+  contactPreviewItem: {
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 18,
+  },
+  contactPreviewItemActive: {
+    backgroundColor: "rgba(255,250,247,0.92)",
+  },
+  contactPreviewAvatar: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  contactPreviewAvatarWarm: {
+    backgroundColor: "rgba(240,174,141,0.34)",
+  },
+  contactPreviewAvatarCool: {
+    backgroundColor: "rgba(183,205,235,0.42)",
+  },
+  contactPreviewAvatarSoft: {
+    backgroundColor: "rgba(207,225,122,0.3)",
+  },
+  contactPreviewAvatarText: {
+    fontSize: 18,
     fontWeight: "800",
     color: theme.colors.text,
   },
-  contactStatusMeta: {
-    marginTop: 4,
-    fontSize: 13,
+  contactPreviewName: {
+    fontSize: 12,
+    fontWeight: "700",
     color: theme.colors.textSoft,
   },
-  contactStatusBadge: {
-    paddingHorizontal: 12,
+  contactActionRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+    marginTop: 8,
+  },
+  contactActionButton: {
+    paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: theme.radius.pill,
-    backgroundColor: "rgba(184,207,92,0.18)",
+    backgroundColor: theme.colors.surfaceSoft,
   },
-  contactStatusBadgeText: {
-    fontSize: 12,
-    fontWeight: "800",
-    color: readyLimeText,
+  contactActionButtonText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: theme.colors.text,
   },
   warningActionRow: {
     gap: 10,
