@@ -13,14 +13,24 @@ import { Header } from "../components/Header";
 import { theme } from "../styles/theme";
 
 type StartJourneyScreenProps = {
-  onStartJourney?: () => void;
+  onStartJourney?: (journeyConfig: StartJourneyConfig) => void;
   onOpenProfile?: () => void;
 };
 
-type JourneyType = "walk" | "run" | "hike" | "bike";
-type TripMeasure = "distance" | "duration";
+export type JourneyType = "walk" | "run" | "hike" | "bike";
+export type TripMeasure = "distance" | "duration";
 type LocationMode = "current" | "custom";
-type RouteShape = "oneWay" | "loop";
+export type RouteShape = "oneWay" | "loop";
+
+export type StartJourneyConfig = {
+  journeyLabel: string;
+  measureType: TripMeasure;
+  plannedDurationMinutes: number;
+  tripSetupLabel: string;
+  locationSummary: string;
+  routeShape: RouteShape;
+  startedAt: string;
+};
 
 const readyLimeLight = "#CFE17A";
 const readyLime = "#AFCB46";
@@ -67,6 +77,13 @@ const journeyTypes: Array<{
 const trustedContacts: string[] = [];
 const previewTrustedContacts = ["Maya", "Jordan", "Chris"] as const;
 const previewGroupMembers = ["Ava", "Noah", "Lena"] as const;
+
+const journeySpeedMph: Record<JourneyType, number> = {
+  walk: 3,
+  run: 6,
+  hike: 2.5,
+  bike: 10,
+};
 
 export function StartJourneyScreen({
   onStartJourney,
@@ -117,6 +134,18 @@ export function StartJourneyScreen({
     tripSetupLabel,
     selectedJourney?.label,
   ].join(" • ");
+  const numericDistanceValue = Number(distanceValue || "0");
+  const distanceInMiles =
+    distanceUnit === "km" ? numericDistanceValue * 0.621371 : numericDistanceValue;
+  const durationMinutesTotal =
+    Number(durationHours || "0") * 60 + Number(durationMinutes || "0");
+  const plannedDurationMinutes =
+    measureType === "duration"
+      ? Math.max(1, durationMinutesTotal || 30)
+      : Math.max(
+          5,
+          Math.round((distanceInMiles / journeySpeedMph[journeyType]) * 60) || 0,
+        );
 
   return (
     <LinearGradient
@@ -666,7 +695,17 @@ export function StartJourneyScreen({
               styles.readyButton,
               pressed && styles.readyButtonPressed,
             ]}
-            onPress={onStartJourney}
+            onPress={() =>
+              onStartJourney?.({
+                journeyLabel: selectedJourney?.label ?? "Journey",
+                measureType,
+                plannedDurationMinutes,
+                tripSetupLabel,
+                locationSummary,
+                routeShape,
+                startedAt: new Date().toISOString(),
+              })
+            }
           >
             <Text style={styles.readyButtonText}>Start journey</Text>
           </Pressable>

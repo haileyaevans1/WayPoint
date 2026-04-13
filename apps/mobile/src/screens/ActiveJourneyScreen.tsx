@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  Animated,
   Modal,
   Pressable,
   ScrollView,
@@ -11,12 +12,14 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import MapView, { Marker, Polyline } from "react-native-maps";
 import { theme } from "../styles/theme";
+import type { StartJourneyConfig } from "./StartJourneyScreen";
 
 type JourneyState = "active" | "offRoute" | "late" | "complete";
 
 type ActiveJourneyScreenProps = {
   onJourneyComplete?: () => void;
   onOpenAlerts?: () => void;
+  journeyConfig?: StartJourneyConfig | null;
 };
 
 const readyLimeLight = "#CFE17A";
@@ -54,10 +57,13 @@ const journeyRegion = {
 export function ActiveJourneyScreen({
   onJourneyComplete,
   onOpenAlerts,
+  journeyConfig,
 }: ActiveJourneyScreenProps) {
   const { height: windowHeight } = useWindowDimensions();
+  const endJourneyPulse = useRef(new Animated.Value(1)).current;
   const [journeyState, setJourneyState] = useState<JourneyState>("active");
   const [showCompletionModal, setShowCompletionModal] = useState(false);
+  const [now, setNow] = useState(Date.now());
 
   const isComplete = journeyState === "complete";
   const statusAccent =
@@ -74,6 +80,77 @@ export function ActiveJourneyScreen({
         : journeyState === "complete"
           ? "Journey Complete"
           : "On Track";
+  const startedAtMs = journeyConfig?.startedAt
+    ? new Date(journeyConfig.startedAt).getTime()
+    : Date.now();
+  const plannedDurationMinutes = journeyConfig?.plannedDurationMinutes ?? 30;
+  const totalDurationSeconds = plannedDurationMinutes * 60;
+  const elapsedSeconds = Math.max(0, Math.floor((now - startedAtMs) / 1000));
+  const remainingSeconds = Math.max(0, totalDurationSeconds - elapsedSeconds);
+  const elapsedDisplay = `${String(Math.floor(elapsedSeconds / 60)).padStart(
+    2,
+    "0",
+  )}:${String(elapsedSeconds % 60).padStart(2, "0")}`;
+  const remainingDisplay = `${String(
+    Math.floor(remainingSeconds / 60),
+  ).padStart(2, "0")}:${String(remainingSeconds % 60).padStart(2, "0")}`;
+  const countdownDisplay = `${String(Math.floor(remainingSeconds / 60)).padStart(
+    2,
+    "0",
+  )}:${String(remainingSeconds % 60).padStart(2, "0")}`;
+  const expectedFinish = new Date(startedAtMs + totalDurationSeconds * 1000);
+  const checkInTime = new Date(expectedFinish.getTime() + 5 * 60 * 1000);
+  const timeFormatter = useMemo(
+    () =>
+      new Intl.DateTimeFormat("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+      }),
+    [],
+  );
+
+  useEffect(() => {
+    if (isComplete) {
+      endJourneyPulse.stopAnimation();
+      endJourneyPulse.setValue(1);
+      return;
+    }
+
+    const pulseLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(endJourneyPulse, {
+          toValue: 1.06,
+          duration: 900,
+          useNativeDriver: true,
+        }),
+        Animated.timing(endJourneyPulse, {
+          toValue: 1,
+          duration: 900,
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+
+    pulseLoop.start();
+
+    return () => {
+      pulseLoop.stop();
+      endJourneyPulse.stopAnimation();
+      endJourneyPulse.setValue(1);
+    };
+  }, [endJourneyPulse, isComplete]);
+
+  useEffect(() => {
+    if (isComplete) {
+      return;
+    }
+
+    const intervalId = setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [isComplete]);
 
   return (
     <LinearGradient
@@ -177,19 +254,26 @@ export function ActiveJourneyScreen({
                   <View style={styles.mapAlertDot} />
                 </Pressable>
                 {!isComplete ? (
-                  <Pressable
-                    style={({ pressed }) => [
-                      styles.mapEndJourneyButton,
-                      pressed && styles.mapEndJourneyButtonPressed,
+                  <Animated.View
+                    style={[
+                      styles.mapEndJourneyPulseWrap,
+                      { transform: [{ scale: endJourneyPulse }] },
                     ]}
-                    onPress={() => {
-                      setJourneyState("complete");
-                      setShowCompletionModal(true);
-                      onJourneyComplete?.();
-                    }}
                   >
-                    <Text style={styles.mapEndJourneyText}>End Journey</Text>
-                  </Pressable>
+                    <Pressable
+                      style={({ pressed }) => [
+                        styles.mapEndJourneyButton,
+                        pressed && styles.mapEndJourneyButtonPressed,
+                      ]}
+                      onPress={() => {
+                        setJourneyState("complete");
+                        setShowCompletionModal(true);
+                        onJourneyComplete?.();
+                      }}
+                    >
+                      <Text style={styles.mapEndJourneyText}>End Journey</Text>
+                    </Pressable>
+                  </Animated.View>
                 ) : null}
               </View>
 
@@ -247,10 +331,10 @@ export function ActiveJourneyScreen({
 
           <View style={styles.statsGrid}>
             {[
-              ["Elapsed", "12 min"],
-              ["Expected finish", "2:30 PM"],
-              ["Check-in", "2:35 PM"],
-              ["Time remaining", "18 min"],
+              ["Elapsed", elapsedDisplay],
+              ["Expected finish", timeFormatter.format(expectedFinish)],
+              ["Check-in", timeFormatter.format(checkInTime)],
+              ["Time remaining", remainingDisplay],
             ].map(([label, value]) => (
               <View key={label} style={styles.statCard}>
                 <Text style={styles.statLabel}>{label}</Text>
@@ -531,6 +615,9 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 8 },
     elevation: 4,
   },
+  mapEndJourneyPulseWrap: {
+    borderRadius: 20,
+  },
   mapEndJourneyButtonPressed: {
     opacity: 0.82,
   },
@@ -620,7 +707,7 @@ const styles = StyleSheet.create({
     color: theme.colors.textSoft,
   },
   section: {
-    backgroundColor: "rgba(255,253,251,0.98)",
+    backgroundColor: "rgb(255, 255, 255)",
     borderRadius: 28,
     padding: 20,
     gap: 14,

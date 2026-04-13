@@ -11,7 +11,10 @@ import ProfileScreen from "../screens/ProfileScreen";
 import SettingsScreen from "../screens/SettingsScreen";
 import StatisticsScreen from "../screens/StatisticsScreen";
 import { ActiveJourneyScreen } from "../screens/ActiveJourneyScreen";
-import { StartJourneyScreen } from "../screens/StartJourneyScreen";
+import {
+  StartJourneyScreen,
+  type StartJourneyConfig,
+} from "../screens/StartJourneyScreen";
 
 // Import the team's theme and the AppScreen type
 import { theme, AppScreen } from "../styles/theme"; 
@@ -19,6 +22,8 @@ import { theme, AppScreen } from "../styles/theme";
 export function AppNavigator() {
   // 2. Create the State to track the active screen (defaults to "home")
   const [currentScreen, setCurrentScreen] = useState<AppScreen>("home");
+  const [activeJourneyConfig, setActiveJourneyConfig] =
+    useState<StartJourneyConfig | null>(null);
 
   // 3. Create a router function to swap the UI based on the state
   const renderScreen = () => {
@@ -40,12 +45,15 @@ export function AppNavigator() {
       case "startJourney":
         return (
           <StartJourneyScreen
-            onStartJourney={() => setCurrentScreen("activeJourney")}
+            onStartJourney={(journeyConfig) => {
+              setActiveJourneyConfig(journeyConfig);
+              setCurrentScreen("activeJourney");
+            }}
             onOpenProfile={() => setCurrentScreen("profile")}
           />
         );
       case "activeJourney":
-        return <ActiveJourneyScreen />;
+        return <ActiveJourneyScreen journeyConfig={activeJourneyConfig} />;
       // If "routes" or "startJourney" is clicked before they are built, 
       // safely fallback to home so the app doesn't crash!
       default:
