@@ -5,16 +5,18 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { Header } from "../components/Header";
+import MapView, { Marker, Polyline } from "react-native-maps";
 import { theme } from "../styles/theme";
 
 type JourneyState = "active" | "offRoute" | "late" | "complete";
 
 type ActiveJourneyScreenProps = {
   onJourneyComplete?: () => void;
+  onOpenAlerts?: () => void;
 };
 
 const readyLimeLight = "#CFE17A";
@@ -29,9 +31,31 @@ const contactStatuses = [
   { name: "Trusted Contact 2", status: "Connected" },
 ];
 
+const journeyRoute = [
+  { latitude: 29.4246, longitude: -98.4898 },
+  { latitude: 29.4256, longitude: -98.4883 },
+  { latitude: 29.4265, longitude: -98.4867 },
+  { latitude: 29.4271, longitude: -98.4852 },
+  { latitude: 29.4263, longitude: -98.4838 },
+  { latitude: 29.4249, longitude: -98.4832 },
+  { latitude: 29.4235, longitude: -98.4838 },
+  { latitude: 29.4226, longitude: -98.4855 },
+  { latitude: 29.4231, longitude: -98.4874 },
+  { latitude: 29.4246, longitude: -98.4898 },
+] as const;
+
+const journeyRegion = {
+  latitude: 29.4249,
+  longitude: -98.486,
+  latitudeDelta: 0.006,
+  longitudeDelta: 0.006,
+};
+
 export function ActiveJourneyScreen({
   onJourneyComplete,
+  onOpenAlerts,
 }: ActiveJourneyScreenProps) {
+  const { height: windowHeight } = useWindowDimensions();
   const [journeyState, setJourneyState] = useState<JourneyState>("active");
   const [showCompletionModal, setShowCompletionModal] = useState(false);
 
@@ -115,46 +139,59 @@ export function ActiveJourneyScreen({
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <Header
-          title="WayPoint"
-          subtitle="Enjoy your crafted journey, safe and confident."
-          tagline="Go with confidence, Every step of the way"
-        />
-
         <View style={styles.mapShell}>
           <View style={styles.heroShell}>
-            <View style={styles.hero}>
-              <View style={styles.skyBlob} />
-              <View style={styles.grassBlob} />
-              <View style={styles.grassBlobTwo} />
-              <View style={styles.routeLinePrimary} />
-              <View style={styles.routeNodeLeft} />
-              <View style={styles.routeNodeRight} />
-              <View style={styles.pinWrap}>
-                <View style={styles.pinCircleOuter}>
-                  <View style={styles.pinCircleInner} />
-                </View>
-                <View style={styles.pinTail} />
-              </View>
-              <View style={styles.waveOne} />
-              <View style={styles.waveTwo} />
-              <View style={styles.waveThree} />
-              <View style={styles.mapCard} />
-              {!isComplete ? (
+            <View style={[styles.hero, { minHeight: windowHeight - 180 }]}>
+              <MapView
+                style={styles.mapView}
+                initialRegion={journeyRegion}
+                scrollEnabled
+                zoomEnabled
+                pitchEnabled
+                rotateEnabled
+                showsCompass
+                showsScale
+                toolbarEnabled={false}
+              >
+                <Polyline
+                  coordinates={[...journeyRoute]}
+                  strokeColor="#675EF2"
+                  strokeWidth={5}
+                  lineCap="round"
+                  lineJoin="round"
+                />
+                <Marker coordinate={journeyRoute[0]} title="Start" />
+                <Marker coordinate={journeyRoute[4]} title="Current position" />
+              </MapView>
+              <View style={styles.mapTint} />
+              <View style={styles.mapTopControls}>
                 <Pressable
                   style={({ pressed }) => [
-                    styles.mapEndJourneyButton,
-                    pressed && styles.mapEndJourneyButtonPressed,
+                    styles.mapAlertButton,
+                    pressed && styles.mapAlertButtonPressed,
                   ]}
-                  onPress={() => {
-                    setJourneyState("complete");
-                    setShowCompletionModal(true);
-                    onJourneyComplete?.();
-                  }}
+                  accessibilityRole="button"
+                  onPress={onOpenAlerts}
                 >
-                  <Text style={styles.mapEndJourneyText}>End Journey</Text>
+                  <Text style={styles.mapAlertIcon}>◠</Text>
+                  <View style={styles.mapAlertDot} />
                 </Pressable>
-              ) : null}
+                {!isComplete ? (
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.mapEndJourneyButton,
+                      pressed && styles.mapEndJourneyButtonPressed,
+                    ]}
+                    onPress={() => {
+                      setJourneyState("complete");
+                      setShowCompletionModal(true);
+                      onJourneyComplete?.();
+                    }}
+                  >
+                    <Text style={styles.mapEndJourneyText}>End Journey</Text>
+                  </Pressable>
+                ) : null}
+              </View>
 
               <View style={styles.heroStatusCard}>
                 <View style={styles.heroStatusRow}>
@@ -410,15 +447,18 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 18,
-    paddingTop: 18,
+    paddingTop: 0,
     paddingBottom: 180,
     gap: 18,
   },
   mapShell: {
+    marginHorizontal: -18,
+    marginTop: -2,
     gap: 14,
   },
   heroShell: {
-    borderRadius: 32,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
     overflow: "hidden",
     backgroundColor: theme.colors.heroSky,
     shadowColor: theme.colors.brandDeep,
@@ -428,174 +468,86 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   hero: {
-    minHeight: 640,
     overflow: "hidden",
-    borderRadius: 32,
     backgroundColor: theme.colors.heroSkySoft,
   },
-  skyBlob: {
-    position: "absolute",
-    right: -24,
-    top: -18,
-    width: 240,
-    height: 240,
-    borderRadius: 120,
-    backgroundColor: theme.colors.heroSky,
+  mapView: {
+    ...StyleSheet.absoluteFillObject,
   },
-  grassBlob: {
-    position: "absolute",
-    left: -32,
-    bottom: 102,
-    width: 320,
-    height: 180,
-    borderRadius: 100,
-    backgroundColor: theme.colors.heroGrass,
-    transform: [{ rotate: "-10deg" }],
+  mapTint: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(255,250,247,0.08)",
   },
-  grassBlobTwo: {
+  mapTopControls: {
     position: "absolute",
-    left: -20,
-    bottom: -20,
-    width: 300,
-    height: 180,
-    borderRadius: 100,
-    backgroundColor: theme.colors.heroGrassDeep,
-    opacity: 0.6,
-  },
-  routeLinePrimary: {
-    position: "absolute",
-    left: 118,
-    top: 258,
-    width: 220,
-    height: 12,
-    borderRadius: 999,
-    backgroundColor: "#6D73F1",
-    transform: [{ rotate: "15deg" }],
-  },
-  routeNodeLeft: {
-    position: "absolute",
-    left: 96,
-    top: 286,
-    width: 30,
-    height: 30,
-    borderRadius: 999,
-    backgroundColor: "#6D73F1",
-    borderWidth: 5,
-    borderColor: "rgba(255,255,255,0.9)",
-  },
-  routeNodeRight: {
-    position: "absolute",
-    right: 92,
-    top: 308,
-    width: 30,
-    height: 30,
-    borderRadius: 999,
-    backgroundColor: "#6D73F1",
-    borderWidth: 5,
-    borderColor: "rgba(255,255,255,0.9)",
-  },
-  pinWrap: {
-    position: "absolute",
-    left: "50%",
-    top: 206,
-    marginLeft: -44,
+    top: 22,
+    right: 22,
+    flexDirection: "row",
     alignItems: "center",
+    gap: 10,
   },
-  pinCircleOuter: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    backgroundColor: "#675EF2",
+  mapAlertButton: {
+    minWidth: 68,
+    minHeight: 50,
+    paddingHorizontal: 10,
+    paddingVertical: 12,
+    borderRadius: 20,
+    backgroundColor: warningPeach,
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    gap: 8,
+    shadowColor: theme.colors.ink,
+    shadowOpacity: 0.08,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 4,
   },
-  pinCircleInner: {
-    width: 28,
-    height: 28,
+  mapAlertButtonPressed: {
+    opacity: 0.82,
+  },
+  mapAlertIcon: {
+    fontSize: 24,
+    color: warningOrange,
+  },
+  mapAlertDot: {
+    width: 10,
+    height: 10,
     borderRadius: 999,
-    backgroundColor: theme.colors.white,
-    borderWidth: 8,
-    borderColor: "#675EF2",
-  },
-  pinTail: {
-    marginTop: -4,
-    width: 0,
-    height: 0,
-    borderLeftWidth: 28,
-    borderRightWidth: 28,
-    borderTopWidth: 34,
-    borderLeftColor: "transparent",
-    borderRightColor: "transparent",
-    borderTopColor: "#675EF2",
-  },
-  waveOne: {
-    position: "absolute",
-    left: -60,
-    top: 176,
-    width: 520,
-    height: 24,
-    borderRadius: 999,
-    backgroundColor: "rgba(255,255,255,0.88)",
-    transform: [{ rotate: "9deg" }],
-  },
-  waveTwo: {
-    position: "absolute",
-    left: 70,
-    top: 46,
-    width: 360,
-    height: 18,
-    borderRadius: 999,
-    backgroundColor: "rgba(255,255,255,0.8)",
-    transform: [{ rotate: "-8deg" }],
-  },
-  waveThree: {
-    position: "absolute",
-    left: 150,
-    bottom: 96,
-    width: 330,
-    height: 20,
-    borderRadius: 999,
-    backgroundColor: "rgba(255,255,255,0.82)",
-    transform: [{ rotate: "-8deg" }],
-  },
-  mapCard: {
-    position: "absolute",
-    right: 58,
-    top: 108,
-    width: 80,
-    height: 44,
-    borderRadius: 14,
-    backgroundColor: "rgba(255,255,255,0.54)",
+    backgroundColor: theme.colors.brand,
   },
   mapEndJourneyButton: {
-    position: "absolute",
-    right: 22,
-    top: 22,
+    minWidth: 128,
+    minHeight: 50,
     paddingHorizontal: 16,
-    paddingVertical: 11,
-    borderRadius: theme.radius.pill,
+    paddingVertical: 12,
+    borderRadius: 20,
     backgroundColor: readyLime,
+    alignItems: "center",
+    justifyContent: "center",
     shadowColor: "#92A93A",
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 3,
+    shadowOpacity: 0.08,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 4,
   },
   mapEndJourneyButtonPressed: {
     opacity: 0.82,
   },
   mapEndJourneyText: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "800",
     color: readyLimeText,
   },
   heroStatusCard: {
-    margin: 16,
-    alignSelf: "flex-start",
+    position: "absolute",
+    top: 22,
+    left: 16,
+    minHeight: 50,
     borderRadius: 20,
-    backgroundColor: theme.colors.overlay,
+    backgroundColor: theme.colors.white,
     paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingVertical: 9,
     shadowColor: theme.colors.ink,
     shadowOpacity: 0.08,
     shadowRadius: 18,
@@ -628,7 +580,7 @@ const styles = StyleSheet.create({
     right: 16,
     bottom: 16,
     borderRadius: 20,
-    backgroundColor: theme.colors.overlay,
+    backgroundColor: theme.colors.white,
     paddingHorizontal: 14,
     paddingVertical: 11,
     flexDirection: "row",
