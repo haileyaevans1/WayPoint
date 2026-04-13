@@ -16,9 +16,29 @@ type NavBarProps = {
   onNavigate: (screen: AppScreen) => void;
 };
 
-export function NavBar({ activeScreen, onNavigate }: NavBarProps) {
-  const isJourneyScreen =
-    activeScreen === "startJourney" || activeScreen === "activeJourney";
+export function NavBar({
+  activeScreen,
+  hasActiveJourney = false,
+  onNavigate,
+}: NavBarProps) {
+  const isJourneyScreen = activeScreen === "startJourney";
+  const isActiveJourneyScreen = activeScreen === "activeJourney";
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  const centerTarget =
+    activeScreen === "startJourney"
+      ? "activeJourney"
+      : hasActiveJourney
+        ? "activeJourney"
+        : "startJourney";
+
+  const centerTopLabel = isActiveJourneyScreen
+    ? "Home"
+    : hasActiveJourney
+      ? "Active"
+      : "Start";
+
+  const centerBottomLabel = isActiveJourneyScreen ? "" : "Journey";
 
   return (
     <View style={styles.wrapper}>
@@ -30,10 +50,20 @@ export function NavBar({ activeScreen, onNavigate }: NavBarProps) {
               style={styles.navItem}
               onPress={() => onNavigate(item.key)}
             >
-              <Text style={[styles.navIcon, activeScreen === item.key && styles.navIconActive]}>
+              <Text
+                style={[
+                  styles.navIcon,
+                  activeScreen === item.key && styles.navIconActive,
+                ]}
+              >
                 {item.icon}
               </Text>
-              <Text style={[styles.navLabel, activeScreen === item.key && styles.navLabelActive]}>
+              <Text
+                style={[
+                  styles.navLabel,
+                  activeScreen === item.key && styles.navLabelActive,
+                ]}
+              >
                 {item.label}
               </Text>
             </Pressable>
@@ -43,7 +73,9 @@ export function NavBar({ activeScreen, onNavigate }: NavBarProps) {
         <View style={styles.centerWrap}>
           <Pressable
             style={styles.centerButtonShell}
-            onPress={() => onNavigate(isJourneyScreen ? "home" : "startJourney")}
+            onPress={() =>
+              onNavigate(isJourneyScreen ? "home" : "startJourney")
+            }
           >
             <LinearGradient
               colors={[theme.colors.brandBright, theme.colors.brand]}
@@ -52,7 +84,9 @@ export function NavBar({ activeScreen, onNavigate }: NavBarProps) {
               style={styles.centerButton}
             >
               <View style={styles.centerInnerRing} />
-              <Text style={styles.centerIcon}>{isJourneyScreen ? "✓" : "➤"}</Text>
+              <Text style={styles.centerIcon}>
+                {isJourneyScreen ? "✓" : "➤"}
+              </Text>
             </LinearGradient>
           </Pressable>
           <Text style={styles.centerLabelTop}>
@@ -68,10 +102,20 @@ export function NavBar({ activeScreen, onNavigate }: NavBarProps) {
               style={styles.navItem}
               onPress={() => onNavigate(item.key)}
             >
-              <Text style={[styles.navIcon, activeScreen === item.key && styles.navIconActive]}>
+              <Text
+                style={[
+                  styles.navIcon,
+                  activeScreen === item.key && styles.navIconActive,
+                ]}
+              >
                 {item.icon}
               </Text>
-              <Text style={[styles.navLabel, activeScreen === item.key && styles.navLabelActive]}>
+              <Text
+                style={[
+                  styles.navLabel,
+                  activeScreen === item.key && styles.navLabelActive,
+                ]}
+              >
                 {item.label}
               </Text>
             </Pressable>
