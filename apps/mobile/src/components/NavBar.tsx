@@ -40,6 +40,34 @@ export function NavBar({
 
   const centerBottomLabel = isActiveJourneyScreen ? "" : "Journey";
 
+  useEffect(() => {
+    if (isJourneyScreen) {
+      const pulse = Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, {
+            toValue: 1.08,
+            duration: 850,
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseAnim, {
+            toValue: 1,
+            duration: 850,
+            useNativeDriver: true,
+          }),
+        ]),
+      );
+
+      pulse.start();
+
+      return () => {
+        pulse.stop();
+        pulseAnim.setValue(1);
+      };
+    }
+
+    pulseAnim.setValue(1);
+  }, [isJourneyScreen, pulseAnim]);
+
   return (
     <View style={styles.wrapper}>
       <View style={styles.bar}>
