@@ -61,8 +61,10 @@ export function ActiveJourneyScreen({
 }: ActiveJourneyScreenProps) {
   const { height: windowHeight } = useWindowDimensions();
   const endJourneyPulse = useRef(new Animated.Value(1)).current;
+  const safetyPulse = useRef(new Animated.Value(1)).current;
   const [journeyState, setJourneyState] = useState<JourneyState>("active");
   const [showCompletionModal, setShowCompletionModal] = useState(false);
+  const [showSafetyModal, setShowSafetyModal] = useState(false);
   const [now, setNow] = useState(Date.now());
 
   const isComplete = journeyState === "complete";
@@ -113,10 +115,12 @@ export function ActiveJourneyScreen({
     if (isComplete) {
       endJourneyPulse.stopAnimation();
       endJourneyPulse.setValue(1);
+      safetyPulse.stopAnimation();
+      safetyPulse.setValue(1);
       return;
     }
 
-    const pulseLoop = Animated.loop(
+    const endJourneyPulseLoop = Animated.loop(
       Animated.sequence([
         Animated.timing(endJourneyPulse, {
           toValue: 1.06,
@@ -130,15 +134,33 @@ export function ActiveJourneyScreen({
         }),
       ]),
     );
+    const safetyPulseLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(safetyPulse, {
+          toValue: 1.05,
+          duration: 950,
+          useNativeDriver: true,
+        }),
+        Animated.timing(safetyPulse, {
+          toValue: 1,
+          duration: 950,
+          useNativeDriver: true,
+        }),
+      ]),
+    );
 
-    pulseLoop.start();
+    endJourneyPulseLoop.start();
+    safetyPulseLoop.start();
 
     return () => {
-      pulseLoop.stop();
+      endJourneyPulseLoop.stop();
       endJourneyPulse.stopAnimation();
       endJourneyPulse.setValue(1);
+      safetyPulseLoop.stop();
+      safetyPulse.stopAnimation();
+      safetyPulse.setValue(1);
     };
-  }, [endJourneyPulse, isComplete]);
+  }, [endJourneyPulse, isComplete, safetyPulse]);
 
   useEffect(() => {
     if (isComplete) {
@@ -242,6 +264,30 @@ export function ActiveJourneyScreen({
               </MapView>
               <View style={styles.mapTint} />
               <View style={styles.mapTopControls}>
+                {!isComplete ? (
+                  <Animated.View
+                    style={[
+                      styles.mapSafetyPulseWrap,
+                      { transform: [{ scale: safetyPulse }] },
+                    ]}
+                  >
+                    <Pressable
+                      style={styles.mapSafetyButton}
+                      onPress={() => setShowSafetyModal(true)}
+                    >
+                      <Text style={styles.mapSafetyEyebrow}>Quick check</Text>
+                      <Text style={styles.mapSafetyText}>Safe?</Text>
+                    </Pressable>
+                  </Animated.View>
+                ) : null}
+                <View style={styles.heroStatusCard}>
+                  <View style={styles.heroStatusRow}>
+                    <View>
+                      <Text style={styles.heroStatusLabel}>Status</Text>
+                      <Text style={styles.heroStatusValue}>{statusLabel}</Text>
+                    </View>
+                  </View>
+                </View>
                 <Pressable
                   style={({ pressed }) => [
                     styles.mapAlertButton,
@@ -275,21 +321,6 @@ export function ActiveJourneyScreen({
                     </Pressable>
                   </Animated.View>
                 ) : null}
-              </View>
-
-              <View style={styles.heroStatusCard}>
-                <View style={styles.heroStatusRow}>
-                  <View
-                    style={[
-                      styles.heroStatusDot,
-                      { backgroundColor: statusAccent },
-                    ]}
-                  />
-                  <View>
-                    <Text style={styles.heroStatusLabel}>Status</Text>
-                    <Text style={styles.heroStatusValue}>{statusLabel}</Text>
-                  </View>
-                </View>
               </View>
 
               <View style={styles.heroLocationCard}>
@@ -343,29 +374,6 @@ export function ActiveJourneyScreen({
             ))}
           </View>
         </View>
-
-        {!isComplete ? (
-          <View style={styles.section}>
-            <Text style={styles.sectionEyebrow}>Are you safe?</Text>
-            <Text style={styles.sectionTitle}>Check in quickly if you need to</Text>
-
-            <View style={styles.safetyPromptGrid}>
-              <Pressable style={[styles.safetyAction, styles.safeAction]}>
-                <Text style={styles.safeActionLabel}>Yes, I’m safe</Text>
-              </Pressable>
-              <Pressable style={styles.secondarySafetyAction}>
-                <Text style={styles.secondarySafetyActionLabel}>
-                  Send location to trusted contact
-                </Text>
-              </Pressable>
-              <Pressable style={styles.emergencyAction}>
-                <Text style={styles.emergencyActionLabel}>
-                  Call emergency services
-                </Text>
-              </Pressable>
-            </View>
-          </View>
-        ) : null}
 
         <LinearGradient
           colors={["rgba(255,255,255,0.98)", "rgba(255,251,247,0.95)"]}
@@ -517,6 +525,39 @@ export function ActiveJourneyScreen({
           </LinearGradient>
         </View>
       </Modal>
+
+      <Modal visible={showSafetyModal} transparent animationType="slide">
+        <Pressable
+          style={styles.safetyOverlay}
+          onPress={() => setShowSafetyModal(false)}
+        >
+          <Pressable style={styles.safetySheet} onPress={() => {}}>
+            <Text style={styles.sectionEyebrow}>Are you safe?</Text>
+            <Text style={styles.sectionTitle}>Check in quickly if you need to</Text>
+            <View style={styles.safetyPromptGrid}>
+              <Pressable style={[styles.safetyAction, styles.safeAction]}>
+                <Text style={styles.safeActionLabel}>Yes, I’m safe</Text>
+              </Pressable>
+              <Pressable style={styles.secondarySafetyAction}>
+                <Text style={styles.secondarySafetyActionLabel}>
+                  Send location to trusted contact
+                </Text>
+              </Pressable>
+              <Pressable style={styles.emergencyAction}>
+                <Text style={styles.emergencyActionLabel}>
+                  Call emergency services
+                </Text>
+              </Pressable>
+            </View>
+            <Pressable
+              style={styles.safetyCloseButton}
+              onPress={() => setShowSafetyModal(false)}
+            >
+              <Text style={styles.safetyCloseButtonText}>Close</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </LinearGradient>
   );
 }
@@ -571,10 +612,10 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   mapAlertButton: {
-    minWidth: 68,
-    minHeight: 50,
+    minWidth: 64,
+    minHeight: 46,
     paddingHorizontal: 10,
-    paddingVertical: 12,
+    paddingVertical: 11,
     borderRadius: 20,
     backgroundColor: warningPeach,
     flexDirection: "row",
@@ -591,20 +632,20 @@ const styles = StyleSheet.create({
     opacity: 0.82,
   },
   mapAlertIcon: {
-    fontSize: 24,
+    fontSize: 23,
     color: warningOrange,
   },
   mapAlertDot: {
-    width: 10,
-    height: 10,
+    width: 8,
+    height: 8,
     borderRadius: 999,
     backgroundColor: theme.colors.brand,
   },
   mapEndJourneyButton: {
-    minWidth: 128,
-    minHeight: 50,
+    minWidth: 120,
+    minHeight: 46,
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 11,
     borderRadius: 20,
     backgroundColor: readyLime,
     alignItems: "center",
@@ -627,14 +668,11 @@ const styles = StyleSheet.create({
     color: readyLimeText,
   },
   heroStatusCard: {
-    position: "absolute",
-    top: 22,
-    left: 16,
-    minHeight: 50,
+    minHeight: 44,
     borderRadius: 20,
     backgroundColor: theme.colors.white,
     paddingHorizontal: 14,
-    paddingVertical: 9,
+    paddingVertical: 7,
     shadowColor: theme.colors.ink,
     shadowOpacity: 0.08,
     shadowRadius: 18,
@@ -644,12 +682,7 @@ const styles = StyleSheet.create({
   heroStatusRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-  },
-  heroStatusDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 999,
+    gap: 0,
   },
   heroStatusLabel: {
     fontSize: 11,
@@ -657,9 +690,35 @@ const styles = StyleSheet.create({
   },
   heroStatusValue: {
     marginTop: 2,
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "700",
     color: theme.colors.text,
+  },
+  mapSafetyButton: {
+    minWidth: 92,
+    minHeight: 46,
+    borderRadius: 20,
+    backgroundColor: warningOrange,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    shadowColor: warningOrange,
+    shadowOpacity: 0.18,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 4,
+  },
+  mapSafetyPulseWrap: {
+    borderRadius: 20,
+  },
+  mapSafetyEyebrow: {
+    fontSize: 11,
+    color: "rgba(255,255,255,0.82)",
+  },
+  mapSafetyText: {
+    marginTop: 2,
+    fontSize: 15,
+    fontWeight: "700",
+    color: theme.colors.white,
   },
   heroLocationCard: {
     position: "absolute",
@@ -924,6 +983,33 @@ const styles = StyleSheet.create({
   },
   warningSecondaryActionText: {
     fontSize: 15,
+    fontWeight: "700",
+    color: theme.colors.text,
+  },
+  safetyOverlay: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(41,34,28,0.32)",
+  },
+  safetySheet: {
+    backgroundColor: theme.colors.white,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 30,
+    gap: 14,
+  },
+  safetyCloseButton: {
+    alignSelf: "center",
+    marginTop: 4,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    borderRadius: theme.radius.pill,
+    backgroundColor: theme.colors.surfaceSoft,
+  },
+  safetyCloseButtonText: {
+    fontSize: 14,
     fontWeight: "700",
     color: theme.colors.text,
   },
