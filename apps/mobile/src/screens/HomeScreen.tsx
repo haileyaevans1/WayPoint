@@ -154,10 +154,7 @@ export function HomeScreen({
             <View style={styles.routeOrbSaved} />
             <Text style={styles.routeTitle}>Saved{"\n"}Routes</Text>
             <Text style={styles.routeSubtitle}>12 favorites</Text>
-            <Pressable
-              onPress={onOpenSavedRoutes}
-              style={({ pressed }) => pressed && styles.routePressablePressed}
-            >
+            <Pressable onPress={onOpenSavedRoutes} style={({ pressed }) => pressed && styles.routePressablePressed}>
               {({ pressed }) => (
                 <View style={[styles.routeActionPill, pressed && styles.routeActionPillPressed]}>
                   <Text style={styles.routeAction}>View all →</Text>
@@ -165,7 +162,6 @@ export function HomeScreen({
               )}
             </Pressable>
           </LinearGradient>
-
           <LinearGradient
             colors={[theme.colors.accentPeach, "#EA9358", "#D27645"]}
             locations={[0, 0.58, 1]}
@@ -177,10 +173,7 @@ export function HomeScreen({
             <View style={styles.routeOrb} />
             <Text style={styles.routeTitle}>Popular Routes</Text>
             <Text style={styles.routeSubtitle}>Trending now</Text>
-            <Pressable
-              onPress={onOpenPopularRoutes}
-              style={({ pressed }) => pressed && styles.routePressablePressed}
-            >
+            <Pressable onPress={onOpenPopularRoutes} style={({ pressed }) => pressed && styles.routePressablePressed}>
               {({ pressed }) => (
                 <View style={[styles.routeActionPill, pressed && styles.routeActionPillPressed]}>
                   <Text style={styles.routeAction}>Explore →</Text>
@@ -190,13 +183,20 @@ export function HomeScreen({
           </LinearGradient>
         </View>
 
-        <View style={styles.analyticsShell}>
+        <LinearGradient
+          colors={["#CFE17A", "#DCEE93"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.analyticsShell}
+        >
+          <View style={styles.analyticsGlowOne} />
+          <View style={styles.analyticsGlowTwo} />
+          <View style={styles.analyticsGlowThree} />
           <Text style={styles.analyticsEyebrow}>Your progress</Text>
           <Text style={styles.analyticsTitle}>Daily analytics</Text>
 
           <View style={styles.analyticsGrid}>
             {[
-              ["Steps", "8.2k"],
               ["Streak", "14d"],
               ["Distance", "6.4 mi"],
               ["Individual Routes", "16"],
@@ -204,14 +204,11 @@ export function HomeScreen({
             ].map(([label, value]) => (
               <Pressable
                 key={label}
-                style={({ pressed }) => [
-                  styles.analyticsPressable,
-                  pressed && styles.analyticsPressablePressed,
-                ]}
+                style={({ pressed }) => [styles.analyticsPressable, pressed && styles.analyticsPressablePressed]}
               >
                 {({ pressed }) => (
                   <LinearGradient
-                    colors={["#E8CBB7", "#F4DED0", "#FFF8F3"]}
+                    colors={["rgba(255,255,255,0.98)", "rgba(255,253,248,0.95)"]}
                     locations={[0, 0.45, 1]}
                     start={{ x: 0.5, y: 0 }}
                     end={{ x: 0.5, y: 1 }}
@@ -224,7 +221,7 @@ export function HomeScreen({
               </Pressable>
             ))}
           </View>
-        </View>
+        </LinearGradient>
       </ScrollView>
     </LinearGradient>
   );
@@ -252,7 +249,7 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   hero: {
-    minHeight: 540,
+    minHeight: 388,
     overflow: "hidden",
     borderRadius: 32,
     backgroundColor: theme.colors.heroSkySoft,
@@ -261,17 +258,17 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: -24,
     top: -18,
-    width: 240,
-    height: 240,
-    borderRadius: 120,
+    width: 204,
+    height: 204,
+    borderRadius: 102,
     backgroundColor: theme.colors.heroSky,
   },
   grassBlob: {
     position: "absolute",
     left: -32,
-    bottom: 102,
-    width: 320,
-    height: 180,
+    bottom: 58,
+    width: 296,
+    height: 164,
     borderRadius: 100,
     backgroundColor: theme.colors.heroGrass,
     transform: [{ rotate: "-10deg" }],
@@ -280,8 +277,8 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: -20,
     bottom: -20,
-    width: 300,
-    height: 180,
+    width: 260,
+    height: 150,
     borderRadius: 100,
     backgroundColor: theme.colors.heroGrassDeep,
     opacity: 0.6,
@@ -289,8 +286,8 @@ const styles = StyleSheet.create({
   routeLinePrimary: {
     position: "absolute",
     left: 118,
-    top: 258,
-    width: 220,
+    top: 188,
+    width: 184,
     height: 12,
     borderRadius: 999,
     backgroundColor: "#6D73F1",
@@ -299,9 +296,9 @@ const styles = StyleSheet.create({
   routeNodeLeft: {
     position: "absolute",
     left: 96,
-    top: 286,
-    width: 30,
-    height: 30,
+    top: 212,
+    width: 24,
+    height: 24,
     borderRadius: 999,
     backgroundColor: "#6D73F1",
     borderWidth: 5,
@@ -310,9 +307,9 @@ const styles = StyleSheet.create({
   routeNodeRight: {
     position: "absolute",
     right: 92,
-    top: 308,
-    width: 30,
-    height: 30,
+    top: 230,
+    width: 24,
+    height: 24,
     borderRadius: 999,
     backgroundColor: "#6D73F1",
     borderWidth: 5,
@@ -321,33 +318,33 @@ const styles = StyleSheet.create({
   pinWrap: {
     position: "absolute",
     left: "50%",
-    top: 206,
-    marginLeft: -44,
+    top: 142,
+    marginLeft: -36,
     alignItems: "center",
   },
   pinCircleOuter: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
     backgroundColor: "#675EF2",
     alignItems: "center",
     justifyContent: "center",
   },
   pinCircleInner: {
-    width: 28,
-    height: 28,
+    width: 24,
+    height: 24,
     borderRadius: 999,
     backgroundColor: theme.colors.white,
-    borderWidth: 8,
+    borderWidth: 7,
     borderColor: "#675EF2",
   },
   pinTail: {
     marginTop: -4,
     width: 0,
     height: 0,
-    borderLeftWidth: 28,
-    borderRightWidth: 28,
-    borderTopWidth: 34,
+    borderLeftWidth: 21,
+    borderRightWidth: 21,
+    borderTopWidth: 26,
     borderLeftColor: "transparent",
     borderRightColor: "transparent",
     borderTopColor: "#675EF2",
@@ -355,8 +352,8 @@ const styles = StyleSheet.create({
   waveOne: {
     position: "absolute",
     left: -60,
-    top: 176,
-    width: 520,
+    top: 124,
+    width: 470,
     height: 24,
     borderRadius: 999,
     backgroundColor: "rgba(255,255,255,0.88)",
@@ -366,7 +363,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 70,
     top: 46,
-    width: 360,
+    width: 304,
     height: 18,
     borderRadius: 999,
     backgroundColor: "rgba(255,255,255,0.8)",
@@ -375,8 +372,8 @@ const styles = StyleSheet.create({
   waveThree: {
     position: "absolute",
     left: 150,
-    bottom: 96,
-    width: 330,
+    bottom: 60,
+    width: 276,
     height: 20,
     borderRadius: 999,
     backgroundColor: "rgba(255,255,255,0.82)",
@@ -385,14 +382,14 @@ const styles = StyleSheet.create({
   mapCard: {
     position: "absolute",
     right: 58,
-    top: 108,
-    width: 80,
-    height: 44,
+    top: 74,
+    width: 66,
+    height: 36,
     borderRadius: 14,
     backgroundColor: "rgba(255,255,255,0.54)",
   },
   statusCard: {
-    margin: 20,
+    margin: 14,
     alignSelf: "flex-start",
     borderRadius: 24,
     backgroundColor: theme.colors.overlay,
@@ -421,7 +418,7 @@ const styles = StyleSheet.create({
   },
   statusValue: {
     marginTop: 3,
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "700",
     color: theme.colors.text,
   },
@@ -429,11 +426,11 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 20,
     right: 20,
-    bottom: 20,
+    bottom: 14,
     borderRadius: 24,
     backgroundColor: theme.colors.overlay,
     paddingHorizontal: 16,
-    paddingVertical: 13,
+    paddingVertical: 10,
     flexDirection: "row",
     justifyContent: "space-between",
     shadowColor: theme.colors.ink,
@@ -448,7 +445,7 @@ const styles = StyleSheet.create({
   },
   locationValue: {
     marginTop: 5,
-    fontSize: 20,
+    fontSize: 17,
     fontWeight: "700",
     color: theme.colors.text,
   },
@@ -463,13 +460,13 @@ const styles = StyleSheet.create({
   },
   weatherValue: {
     marginTop: 5,
-    fontSize: 20,
+    fontSize: 17,
     fontWeight: "700",
     color: theme.colors.text,
   },
   weatherText: {
     marginTop: 3,
-    fontSize: 12,
+    fontSize: 11,
     color: theme.colors.textSoft,
   },
   routeGrid: {
@@ -498,10 +495,10 @@ const styles = StyleSheet.create({
   },
   routeSavedWash: {
     position: "absolute",
-    left: -68,
-    top: -8,
+    left: -96,
+    top: 8,
     bottom: 0,
-    width: 250,
+    width: 180,
     borderRadius: 999,
     backgroundColor: "rgba(255,236,234,0.12)",
   },
@@ -571,8 +568,9 @@ const styles = StyleSheet.create({
     transform: [{ scale: 1.03 }],
   },
   analyticsShell: {
+    position: "relative",
+    overflow: "hidden",
     borderRadius: 30,
-    backgroundColor: "#FFFCFA",
     paddingHorizontal: 18,
     paddingVertical: 18,
     shadowColor: theme.colors.brandDeep,
@@ -581,17 +579,45 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 10 },
     elevation: 4,
   },
+  analyticsGlowOne: {
+    position: "absolute",
+    top: -70,
+    right: -54,
+    width: 280,
+    height: 280,
+    borderRadius: 999,
+    backgroundColor: "rgba(255,255,255,0.14)",
+  },
+  analyticsGlowTwo: {
+    position: "absolute",
+    left: -88,
+    bottom: -96,
+    width: 320,
+    height: 320,
+    borderRadius: 999,
+    backgroundColor: "rgba(175,203,70,0.1)",
+  },
+  analyticsGlowThree: {
+    position: "absolute",
+    right: 24,
+    top: 56,
+    width: 340,
+    height: 88,
+    borderRadius: 999,
+    backgroundColor: "rgba(255,255,255,0.12)",
+    transform: [{ rotate: "-12deg" }],
+  },
   analyticsEyebrow: {
     fontSize: 12,
     letterSpacing: 1.8,
     textTransform: "uppercase",
-    color: theme.colors.textMuted,
+    color: readyLimeText,
   },
   analyticsTitle: {
     marginTop: 8,
     fontSize: 28,
     fontWeight: "700",
-    color: theme.colors.text,
+    color: readyLimeTextDark,
   },
   analyticsGrid: {
     marginTop: 16,
@@ -610,14 +636,14 @@ const styles = StyleSheet.create({
     width: "100%",
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: "rgba(202,116,73,0.14)",
+    borderColor: "rgba(175,203,70,0.2)",
     paddingHorizontal: 14,
     paddingVertical: 16,
     alignItems: "center",
     shadowColor: theme.colors.ink,
-    shadowOpacity: 0.12,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 5 },
     elevation: 3,
   },
   analyticsCardPressed: {
@@ -631,7 +657,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     letterSpacing: 1.4,
     textTransform: "uppercase",
-    color: "#7A6058",
+    color: readyLimeText,
     fontWeight: "700",
     textAlign: "center",
   },
