@@ -3,6 +3,8 @@ import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { AppScreen, theme } from "../styles/theme";
 
+const endJourneyOrange = "#E58B5B";
+
 const navItems = [
   { key: "routes", label: "Routes", icon: "□" },
   { key: "stats", label: "Stats", icon: "◇" },
@@ -26,8 +28,10 @@ export function NavBar({
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
   const centerTarget =
-    activeScreen === "startJourney"
-      ? "activeJourney"
+    activeScreen === "activeJourney"
+      ? "home"
+      : activeScreen === "startJourney"
+        ? "activeJourney"
       : hasActiveJourney
         ? "activeJourney"
         : "startJourney";
@@ -110,7 +114,7 @@ export function NavBar({
               onPress={() => onNavigate(centerTarget)}
             >
               <LinearGradient
-                colors={[theme.colors.brandBright, theme.colors.brand]}
+                colors={[endJourneyOrange, endJourneyOrange]}
                 start={{ x: 0.5, y: 0 }}
                 end={{ x: 0.5, y: 1 }}
                 style={styles.centerButton}
@@ -222,10 +226,8 @@ const styles = StyleSheet.create({
     width: 68,
     height: 68,
     borderRadius: 999,
-    borderWidth: 4,
-    borderColor: "rgba(255,250,247,0.92)",
     overflow: "hidden",
-    shadowColor: theme.colors.brand,
+    shadowColor: endJourneyOrange,
     shadowOpacity: 0.34,
     shadowRadius: 22,
     shadowOffset: { width: 0, height: 10 },
@@ -251,9 +253,9 @@ const styles = StyleSheet.create({
   },
   centerLabelTop: {
     marginTop: 7,
-    fontSize: 8,
+    fontSize: 11,
     fontWeight: "700",
-    letterSpacing: 2.4,
+    letterSpacing: 2.8,
     textTransform: "uppercase",
     color: "rgba(255,255,255,0.9)",
   },

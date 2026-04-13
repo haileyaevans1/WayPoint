@@ -692,29 +692,6 @@ export function StartJourneyScreen({
               ),
             )}
           </View>
-          <Pressable
-            style={({ pressed }) => [
-              styles.readyButton,
-              pressed && styles.readyButtonPressed,
-            ]}
-            onPress={() =>
-              onStartJourney?.({
-                journeyLabel: selectedJourney?.label ?? "Journey",
-                measureType,
-                plannedDurationMinutes,
-                tripSetupLabel,
-                locationSummary,
-                routeShape,
-                contactNames: [...previewPeople],
-                contactLabel: groupJourneyEnabled
-                  ? "Group status"
-                  : "Trusted contact status",
-                startedAt: new Date().toISOString(),
-              })
-            }
-          >
-            <Text style={styles.readyButtonText}>Start journey</Text>
-          </Pressable>
         </LinearGradient>
       </ScrollView>
     </LinearGradient>

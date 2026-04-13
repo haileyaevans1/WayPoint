@@ -53,7 +53,15 @@ export function AppNavigator() {
           />
         );
       case "activeJourney":
-        return <ActiveJourneyScreen journeyConfig={activeJourneyConfig} />;
+        return (
+          <ActiveJourneyScreen
+            journeyConfig={activeJourneyConfig}
+            onJourneyComplete={() => {
+              setActiveJourneyConfig(null);
+              setCurrentScreen("home");
+            }}
+          />
+        );
       // If "routes" or "startJourney" is clicked before they are built, 
       // safely fallback to home so the app doesn't crash!
       default:
@@ -79,6 +87,7 @@ export function AppNavigator() {
             and what to do when a new button is pressed */}
         <NavBar 
           activeScreen={currentScreen} 
+          hasActiveJourney={Boolean(activeJourneyConfig)}
           onNavigate={(screen) => setCurrentScreen(screen)} 
         />
         

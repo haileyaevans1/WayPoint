@@ -297,7 +297,6 @@ export function ActiveJourneyScreen({
                     onPress={() => {
                       setJourneyState("complete");
                       setShowCompletionModal(true);
-                      onJourneyComplete?.();
                     }}
                   >
                     <Text style={styles.mapEndJourneyEyebrow}>All done?</Text>
@@ -467,11 +466,10 @@ export function ActiveJourneyScreen({
             </Text>
             <View style={styles.warningActionRow}>
               <Pressable
-                style={styles.warningPrimaryAction}
+              style={styles.warningPrimaryAction}
                 onPress={() => {
                   setJourneyState("complete");
                   setShowCompletionModal(true);
-                  onJourneyComplete?.();
                 }}
               >
                 <Text style={styles.warningPrimaryActionText}>
@@ -523,7 +521,10 @@ export function ActiveJourneyScreen({
             </Text>
             <Pressable
               style={styles.completionButton}
-              onPress={() => setShowCompletionModal(false)}
+              onPress={() => {
+                setShowCompletionModal(false);
+                onJourneyComplete?.();
+              }}
             >
               <Text style={styles.completionButtonText}>Close</Text>
             </Pressable>
