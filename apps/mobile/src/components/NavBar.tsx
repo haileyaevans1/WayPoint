@@ -4,6 +4,9 @@ import { LinearGradient } from "expo-linear-gradient";
 import { AppScreen, theme } from "../styles/theme";
 
 const endJourneyOrange = "#E58B5B";
+const navPeach = "#D78B67";
+const centerGreen = "#AFCB46";
+const centerGreenDeep = "#92A93A";
 
 const navItems = [
   { key: "routes", label: "Routes", icon: "□" },
@@ -114,7 +117,7 @@ export function NavBar({
               onPress={() => onNavigate(centerTarget)}
             >
               <LinearGradient
-                colors={[endJourneyOrange, endJourneyOrange]}
+                colors={[centerGreen, centerGreen]}
                 start={{ x: 0.5, y: 0 }}
                 end={{ x: 0.5, y: 1 }}
                 style={styles.centerButton}
@@ -175,15 +178,15 @@ const styles = StyleSheet.create({
   bar: {
     borderTopLeftRadius: theme.radius.pill,
     borderTopRightRadius: theme.radius.pill,
-    backgroundColor: "#778093",
+    backgroundColor: navPeach,
     paddingHorizontal: 24,
     height: 76,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    shadowColor: theme.colors.ink,
-    shadowOpacity: 0.16,
-    shadowRadius: 14,
+    shadowColor: navPeach,
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
     shadowOffset: { width: 0, height: 6 },
     elevation: 12,
   },
@@ -200,13 +203,13 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   navIcon: {
-    color: "rgba(255,255,255,0.92)",
+    color: "rgba(255,255,255,0.9)",
     fontSize: 22,
   },
   navLabel: {
-    color: "rgba(255,255,255,0.94)",
+    color: "rgba(255,255,255,0.92)",
     fontSize: 14,
-    fontWeight: "500",
+    fontWeight: "600",
   },
   navIconActive: {
     color: theme.colors.white,
@@ -227,7 +230,7 @@ const styles = StyleSheet.create({
     height: 68,
     borderRadius: 999,
     overflow: "hidden",
-    shadowColor: endJourneyOrange,
+    shadowColor: centerGreenDeep,
     shadowOpacity: 0.34,
     shadowRadius: 22,
     shadowOffset: { width: 0, height: 10 },

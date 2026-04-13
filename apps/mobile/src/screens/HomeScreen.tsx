@@ -49,53 +49,53 @@ const heroStateByMode: Record<
   {
     statusText: string;
     statusDotColor: string;
+    chipText: string;
     locationLabel: string;
     locationValue: string;
     weatherValue: string;
     weatherText: string;
     showRoute: boolean;
-    routeOpacity: number;
   }
 > = {
   idle: {
     statusText: "Ready to find a journey",
     statusDotColor: theme.colors.success,
+    chipText: "Live location",
     locationLabel: "Current Location",
     locationValue: "Downtown Area",
     weatherValue: "72°F",
     weatherText: "Sunny",
     showRoute: false,
-    routeOpacity: 0,
   },
   active: {
     statusText: "Current journey",
     statusDotColor: theme.colors.success,
+    chipText: "Active route",
     locationLabel: "Current Journey",
     locationValue: "Riverwalk Loop",
     weatherValue: "72°F",
     weatherText: "Sunny",
     showRoute: true,
-    routeOpacity: 1,
   },
   off_route: {
     statusText: "Deviated from route",
     statusDotColor: theme.colors.brand,
+    chipText: "Off route",
     locationLabel: "Current Location",
     locationValue: "Near Pine Street",
     weatherValue: "71°F",
     weatherText: "Cloudy",
     showRoute: true,
-    routeOpacity: 1,
   },
   complete: {
     statusText: "Journey complete",
     statusDotColor: theme.colors.brandBright,
+    chipText: "Completed",
     locationLabel: "Current Location",
     locationValue: "Downtown Area",
     weatherValue: "70°F",
     weatherText: "Clear",
     showRoute: true,
-    routeOpacity: 0.45,
   },
 };
 
@@ -161,31 +161,29 @@ export function HomeScreen({
               style={styles.mapTint}
             />
 
-            <View style={styles.mapBadge}>
-              <Text style={styles.mapBadgeLabel}>
-                {heroState.showRoute ? "Active route" : "Live location"}
+            <View style={styles.mapStatusChip}>
+              <View
+                style={[
+                  styles.mapStatusDot,
+                  { backgroundColor: heroState.statusDotColor },
+                ]}
+              />
+              <Text style={styles.mapStatusChipLabel}>
+                {heroState.chipText}
               </Text>
-            </View>
-
-            <View style={styles.statusCard}>
-              <View style={styles.statusRow}>
-                <View style={[styles.statusDot, { backgroundColor: heroState.statusDotColor }]} />
-                <View>
-                  <Text style={styles.statusLabel}>Status</Text>
-                  <Text style={styles.statusValue}>{heroState.statusText}</Text>
-                </View>
-              </View>
             </View>
 
             <View style={styles.locationCard}>
               <View>
                 <Text style={styles.locationLabel}>{heroState.locationLabel}</Text>
                 <Text style={styles.locationValue}>{heroState.locationValue}</Text>
+                {journeyMode !== "idle" ? (
+                  <Text style={styles.locationMeta}>{heroState.statusText}</Text>
+                ) : null}
               </View>
               <View style={styles.weatherWrap}>
-                <Text style={styles.weatherLabel}>Weather</Text>
+                <Text style={styles.weatherLabel}>{heroState.weatherText}</Text>
                 <Text style={styles.weatherValue}>{heroState.weatherValue}</Text>
-                <Text style={styles.weatherText}>{heroState.weatherText}</Text>
               </View>
             </View>
           </View>
@@ -193,7 +191,7 @@ export function HomeScreen({
 
         <View style={styles.routeGrid}>
           <LinearGradient
-            colors={["#F6CBB9", "#EEAD92", "#E79A7B"]}
+            colors={["#F6CBB9", "#EEAD92", "#D97F5E"]}
             locations={[0, 0.62, 1]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
@@ -235,7 +233,7 @@ export function HomeScreen({
         </View>
 
         <LinearGradient
-          colors={["#CFE17A", "#DCEE93"]}
+          colors={["#D8E89A", "#EAF4B8"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.analyticsShell}
@@ -284,10 +282,10 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background,
   },
   content: {
-    paddingHorizontal: 18,
-    paddingTop: 18,
+    paddingHorizontal: 16,
+    paddingTop: 16,
     paddingBottom: 180,
-    gap: 18,
+    gap: 16,
   },
   heroShell: {
     borderRadius: 32,
@@ -300,7 +298,7 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   hero: {
-    minHeight: 388,
+    minHeight: 404,
     overflow: "hidden",
     borderRadius: 32,
     backgroundColor: theme.colors.heroSkySoft,
@@ -310,106 +308,82 @@ const styles = StyleSheet.create({
   },
   mapTint: {
     ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(255,250,247,0.08)",
   },
-  mapBadge: {
+  mapStatusChip: {
     position: "absolute",
-    right: 16,
     top: 16,
-    borderRadius: 16,
-    backgroundColor: "rgba(255,250,247,0.92)",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    shadowColor: theme.colors.ink,
-    shadowOpacity: 0.08,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 4,
-  },
-  mapBadgeLabel: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: theme.colors.text,
-  },
-  statusCard: {
-    margin: 14,
-    alignSelf: "flex-start",
-    borderRadius: 24,
-    backgroundColor: theme.colors.overlay,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    shadowColor: theme.colors.ink,
-    shadowOpacity: 0.08,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 4,
-  },
-  statusRow: {
+    left: 16,
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: 8,
+    borderRadius: 20,
+    backgroundColor: "rgba(255,255,255,0.92)",
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    shadowColor: theme.colors.ink,
+    shadowOpacity: 0.08,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 4,
   },
-  statusDot: {
-    width: 12,
-    height: 12,
+  mapStatusDot: {
+    width: 8,
+    height: 8,
     borderRadius: 999,
-    backgroundColor: theme.colors.success,
   },
-  statusLabel: {
-    fontSize: 12,
-    color: theme.colors.textMuted,
-  },
-  statusValue: {
-    marginTop: 3,
-    fontSize: 16,
+  mapStatusChipLabel: {
+    fontSize: 11,
     fontWeight: "700",
+    letterSpacing: 0.6,
+    textTransform: "uppercase",
     color: theme.colors.text,
   },
   locationCard: {
     position: "absolute",
-    left: 20,
-    right: 20,
-    bottom: 14,
-    borderRadius: 24,
-    backgroundColor: theme.colors.overlay,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    left: 16,
+    right: 16,
+    bottom: 16,
+    borderRadius: 22,
+    backgroundColor: "rgba(255,255,255,0.95)",
+    paddingHorizontal: 18,
+    paddingVertical: 14,
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
     shadowColor: theme.colors.ink,
-    shadowOpacity: 0.08,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 4,
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 5,
   },
   locationLabel: {
-    fontSize: 12,
+    fontSize: 13,
     color: theme.colors.textMuted,
   },
   locationValue: {
-    marginTop: 5,
-    fontSize: 17,
+    marginTop: 3,
+    fontSize: 19,
     fontWeight: "700",
     color: theme.colors.text,
+  },
+  locationMeta: {
+    marginTop: 4,
+    fontSize: 12,
+    color: theme.colors.textSoft,
   },
   weatherWrap: {
     alignItems: "flex-end",
   },
   weatherLabel: {
-    fontSize: 10,
-    letterSpacing: 1.8,
-    textTransform: "uppercase",
+    fontSize: 13,
     color: theme.colors.textMuted,
   },
   weatherValue: {
-    marginTop: 5,
-    fontSize: 17,
+    marginTop: 3,
+    fontSize: 18,
     fontWeight: "700",
     color: theme.colors.text,
-  },
-  weatherText: {
-    marginTop: 3,
-    fontSize: 11,
-    color: theme.colors.textSoft,
   },
   routeGrid: {
     flexDirection: "row",
@@ -425,15 +399,16 @@ const styles = StyleSheet.create({
     minHeight: 172,
     justifyContent: "flex-end",
     shadowColor: theme.colors.brandDeep,
-    shadowOpacity: 0.2,
-    shadowRadius: 18,
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
     shadowOffset: { width: 0, height: 10 },
-    elevation: 6,
+    elevation: 8,
+    opacity: 0.96,
   },
   savedCard: {},
   popularCard: {},
   routePressablePressed: {
-    transform: [{ translateY: -1 }],
+    transform: [{ scale: 1.02 }],
   },
   routeSavedWash: {
     position: "absolute",
@@ -483,14 +458,15 @@ const styles = StyleSheet.create({
   },
   routeTitle: {
     fontSize: 24,
-    fontWeight: "700",
+    fontWeight: "800",
     color: theme.colors.white,
   },
   routeSubtitle: {
     marginTop: 8,
-    fontSize: 16,
-    fontWeight: "600",
+    fontSize: 15,
+    fontWeight: "500",
     color: "rgba(255,255,255,0.88)",
+    opacity: 0.9,
   },
   routeAction: {
     fontSize: 16,
@@ -501,7 +477,7 @@ const styles = StyleSheet.create({
     marginTop: 22,
     alignSelf: "flex-start",
     borderRadius: 999,
-    backgroundColor: "rgba(255,255,255,0.18)",
+    backgroundColor: "rgba(255,255,255,0.28)",
     paddingHorizontal: 14,
     paddingVertical: 10,
   },
@@ -514,7 +490,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     borderRadius: 30,
     paddingHorizontal: 18,
-    paddingVertical: 18,
+    paddingVertical: 16,
     shadowColor: theme.colors.brandDeep,
     shadowOpacity: 0.08,
     shadowRadius: 20,
@@ -529,6 +505,7 @@ const styles = StyleSheet.create({
     height: 280,
     borderRadius: 999,
     backgroundColor: "rgba(255,255,255,0.14)",
+    opacity: 0.08,
   },
   analyticsGlowTwo: {
     position: "absolute",
@@ -538,6 +515,7 @@ const styles = StyleSheet.create({
     height: 320,
     borderRadius: 999,
     backgroundColor: "rgba(175,203,70,0.1)",
+    opacity: 0.06,
   },
   analyticsGlowThree: {
     position: "absolute",
@@ -548,6 +526,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     backgroundColor: "rgba(255,255,255,0.12)",
     transform: [{ rotate: "-12deg" }],
+    opacity: 0.08,
   },
   analyticsEyebrow: {
     fontSize: 12,
@@ -586,7 +565,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 5 },
-    elevation: 3,
+    elevation: 4,
   },
   analyticsCardPressed: {
     transform: [{ scale: 1.03 }],
@@ -600,7 +579,8 @@ const styles = StyleSheet.create({
     letterSpacing: 1.4,
     textTransform: "uppercase",
     color: readyLimeText,
-    fontWeight: "700",
+    fontWeight: "600",
+    opacity: 0.7,
     textAlign: "center",
   },
   analyticsValue: {

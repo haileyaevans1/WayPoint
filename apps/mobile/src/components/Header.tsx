@@ -33,7 +33,14 @@ export function Header({
       <View style={styles.content}>
         <View style={styles.copy}>
           <Text style={styles.title} adjustsFontSizeToFit numberOfLines={1}>
-            {title}
+            {title === "WayPoint" ? (
+              <>
+                <Text style={styles.titleWay}>Way</Text>
+                <Text style={styles.titlePoint}>Point</Text>
+              </>
+            ) : (
+              title
+            )}
           </Text>
           <View style={styles.taglineWrap}>
             <Text style={styles.tagline}>{taglineTop || "Journey Smart"}</Text>
@@ -113,8 +120,8 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 20,
-    paddingTop: 18,
-    paddingBottom: 18,
+    paddingTop: 14,
+    paddingBottom: 14,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -135,8 +142,13 @@ const styles = StyleSheet.create({
     fontSize: 28,
     lineHeight: 28,
     fontWeight: "900",
-    color: theme.colors.white,
     letterSpacing: -1,
+  },
+  titleWay: {
+    color: theme.colors.white,
+  },
+  titlePoint: {
+    color: theme.colors.success,
   },
   subtitle: {
     marginTop: 8,
