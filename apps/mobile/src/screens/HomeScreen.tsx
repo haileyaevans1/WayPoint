@@ -78,7 +78,7 @@ export function HomeScreen({
   journeyMode = "idle",
 }: HomeScreenProps) {
   const heroState = heroStateByMode[journeyMode];
-  
+
   return (
     <LinearGradient
       colors={[theme.colors.background, theme.colors.backgroundAlt, theme.colors.backgroundDeep]}
@@ -142,8 +142,8 @@ export function HomeScreen({
 
         <View style={styles.routeGrid}>
           <LinearGradient
-            colors={[theme.colors.inkSoft, "#A8B27F", "#DF9059"]}
-            locations={[0, 0.28, 1]}
+            colors={["#F6CBB9", "#EEAD92", "#E79A7B"]}
+            locations={[0, 0.62, 1]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={[styles.routeCard, styles.savedCard]}
@@ -152,9 +152,12 @@ export function HomeScreen({
             <View style={styles.routeSavedWarmWash} />
             <View style={styles.routeOrb} />
             <View style={styles.routeOrbSaved} />
-            <Text style={styles.routeTitle}>Saved Routes</Text>
+            <Text style={styles.routeTitle}>Saved{"\n"}Routes</Text>
             <Text style={styles.routeSubtitle}>12 favorites</Text>
-            <Pressable onPress={onOpenSavedRoutes} style={({ pressed }) => pressed && styles.routePressablePressed}>
+            <Pressable
+              onPress={onOpenSavedRoutes}
+              style={({ pressed }) => pressed && styles.routePressablePressed}
+            >
               {({ pressed }) => (
                 <View style={[styles.routeActionPill, pressed && styles.routeActionPillPressed]}>
                   <Text style={styles.routeAction}>View all →</Text>
@@ -162,6 +165,7 @@ export function HomeScreen({
               )}
             </Pressable>
           </LinearGradient>
+
           <LinearGradient
             colors={[theme.colors.accentPeach, "#EA9358", "#D27645"]}
             locations={[0, 0.58, 1]}
@@ -173,7 +177,10 @@ export function HomeScreen({
             <View style={styles.routeOrb} />
             <Text style={styles.routeTitle}>Popular Routes</Text>
             <Text style={styles.routeSubtitle}>Trending now</Text>
-            <Pressable onPress={onOpenPopularRoutes} style={({ pressed }) => pressed && styles.routePressablePressed}>
+            <Pressable
+              onPress={onOpenPopularRoutes}
+              style={({ pressed }) => pressed && styles.routePressablePressed}
+            >
               {({ pressed }) => (
                 <View style={[styles.routeActionPill, pressed && styles.routeActionPillPressed]}>
                   <Text style={styles.routeAction}>Explore →</Text>
@@ -197,7 +204,10 @@ export function HomeScreen({
             ].map(([label, value]) => (
               <Pressable
                 key={label}
-                style={({ pressed }) => [styles.analyticsPressable, pressed && styles.analyticsPressablePressed]}
+                style={({ pressed }) => [
+                  styles.analyticsPressable,
+                  pressed && styles.analyticsPressablePressed,
+                ]}
               >
                 {({ pressed }) => (
                   <LinearGradient
@@ -463,15 +473,17 @@ const styles = StyleSheet.create({
     color: theme.colors.textSoft,
   },
   routeGrid: {
-    gap: 14,
+    flexDirection: "row",
+    gap: 12,
   },
   routeCard: {
     position: "relative",
     overflow: "hidden",
+    flex: 1,
     borderRadius: 30,
-    paddingHorizontal: 24,
-    paddingVertical: 24,
-    minHeight: 186,
+    paddingHorizontal: 18,
+    paddingVertical: 20,
+    minHeight: 172,
     justifyContent: "flex-end",
     shadowColor: theme.colors.brandDeep,
     shadowOpacity: 0.2,
@@ -491,34 +503,35 @@ const styles = StyleSheet.create({
     bottom: 0,
     width: 250,
     borderRadius: 999,
-    backgroundColor: theme.colors.savedTint,
+    backgroundColor: "rgba(255,236,234,0.12)",
   },
   routeSavedWarmWash: {
     position: "absolute",
-    right: -74,
-    bottom: -70,
-    width: 310,
-    height: 310,
+    right: -110,
+    bottom: -120,
+    width: 250,
+    height: 250,
     borderRadius: 999,
-    backgroundColor: theme.colors.savedWarmWash,
+    backgroundColor: "rgba(244,208,199,0.1)",
   },
   routeOrb: {
     position: "absolute",
-    right: -58,
-    top: -54,
-    width: 205,
-    height: 205,
+    right: -64,
+    top: -50,
+    width: 170,
+    height: 170,
     borderRadius: 999,
     backgroundColor: theme.colors.popularOrb,
   },
   routeOrbSaved: {
     position: "absolute",
-    left: 62,
-    bottom: -98,
-    width: 278,
-    height: 278,
+    right: -108,
+    top: -84,
+    width: 172,
+    height: 172,
     borderRadius: 999,
-    backgroundColor: theme.colors.savedOrb,
+    backgroundColor: "rgba(255,239,238,0.05)",
+    opacity: 0.12,
   },
   routePopularWarmWash: {
     position: "absolute",
@@ -530,13 +543,13 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.popularWarmWash,
   },
   routeTitle: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: "700",
     color: theme.colors.white,
   },
   routeSubtitle: {
-    marginTop: 10,
-    fontSize: 18,
+    marginTop: 8,
+    fontSize: 16,
     fontWeight: "600",
     color: "rgba(255,255,255,0.88)",
   },
@@ -546,7 +559,7 @@ const styles = StyleSheet.create({
     color: theme.colors.white,
   },
   routeActionPill: {
-    marginTop: 28,
+    marginTop: 22,
     alignSelf: "flex-start",
     borderRadius: 999,
     backgroundColor: "rgba(255,255,255,0.18)",
