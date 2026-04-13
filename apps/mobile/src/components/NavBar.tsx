@@ -164,21 +164,18 @@ export function NavBar({
 const styles = StyleSheet.create({
   wrapper: {
     position: "absolute",
-    left: 18,
-    right: 18,
-    bottom: 8,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   bar: {
     borderTopLeftRadius: theme.radius.pill,
     borderTopRightRadius: theme.radius.pill,
-    borderBottomLeftRadius: theme.radius.pill,
-    borderBottomRightRadius: theme.radius.pill,
     backgroundColor: "#778093",
-    paddingHorizontal: 28,
-    paddingTop: 12,
-    paddingBottom: 18,
+    paddingHorizontal: 24,
+    height: 76,
     flexDirection: "row",
-    alignItems: "flex-end",
+    alignItems: "center",
     justifyContent: "space-between",
     shadowColor: theme.colors.ink,
     shadowOpacity: 0.16,
@@ -190,10 +187,12 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "row",
     justifyContent: "space-evenly",
+    alignItems: "center",
   },
   navItem: {
     minWidth: 58,
     alignItems: "center",
+    justifyContent: "center",
     gap: 3,
   },
   navIcon: {
@@ -213,8 +212,11 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   centerWrap: {
-    marginTop: -30,
+    marginTop: -34,
     alignItems: "center",
+  },
+  centerPulseWrap: {
+    borderRadius: 999,
   },
   centerButtonShell: {
     width: 68,
