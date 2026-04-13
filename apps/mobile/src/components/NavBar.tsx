@@ -99,28 +99,35 @@ export function NavBar({
         </View>
 
         <View style={styles.centerWrap}>
-          <Pressable
-            style={styles.centerButtonShell}
-            onPress={() =>
-              onNavigate(isJourneyScreen ? "home" : "startJourney")
-            }
+          <Animated.View
+            style={[
+              styles.centerPulseWrap,
+              { transform: [{ scale: pulseAnim }] },
+            ]}
           >
-            <LinearGradient
-              colors={[theme.colors.brandBright, theme.colors.brand]}
-              start={{ x: 0.5, y: 0 }}
-              end={{ x: 0.5, y: 1 }}
-              style={styles.centerButton}
+            <Pressable
+              style={styles.centerButtonShell}
+              onPress={() => onNavigate(centerTarget)}
             >
-              <View style={styles.centerInnerRing} />
-              <Text style={styles.centerIcon}>
-                {isJourneyScreen ? "✓" : "➤"}
-              </Text>
-            </LinearGradient>
-          </Pressable>
-          <Text style={styles.centerLabelTop}>
-            {isJourneyScreen ? "Complete" : "Start"}
-          </Text>
-          <Text style={styles.centerLabelBottom}>Journey</Text>
+              <LinearGradient
+                colors={[theme.colors.brandBright, theme.colors.brand]}
+                start={{ x: 0.5, y: 0 }}
+                end={{ x: 0.5, y: 1 }}
+                style={styles.centerButton}
+              >
+                <View style={styles.centerInnerRing} />
+                <Text style={styles.centerIcon}>
+                  {isActiveJourneyScreen ? "⌂" : isJourneyScreen ? "✓" : "➤"}
+                </Text>
+              </LinearGradient>
+            </Pressable>
+          </Animated.View>
+
+          <Text style={styles.centerLabelTop}>{centerTopLabel}</Text>
+
+          {centerBottomLabel ? (
+            <Text style={styles.centerLabelBottom}>{centerBottomLabel}</Text>
+          ) : null}
         </View>
 
         <View style={styles.sideGroup}>
