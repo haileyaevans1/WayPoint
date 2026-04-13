@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useEffect, useRef } from "react";
+import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { AppScreen, theme } from "../styles/theme";
 
@@ -11,6 +12,7 @@ const navItems = [
 
 type NavBarProps = {
   activeScreen: AppScreen;
+  hasActiveJourney?: boolean;
   onNavigate: (screen: AppScreen) => void;
 };
 
