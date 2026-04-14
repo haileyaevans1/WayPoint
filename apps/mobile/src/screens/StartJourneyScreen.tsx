@@ -89,7 +89,6 @@ const journeyTypes: Array<{
   },
 ];
 
-const trustedContacts: string[] = [];
 const initialTrustedContacts: EditableContact[] = [
   { id: "maya", firstName: "Maya", lastName: "Lopez", phone: "(918) 555-0143", note: "Mom" },
   { id: "jordan", firstName: "Jordan", lastName: "Reed", phone: "(918) 555-0188", note: "Best friend" },
@@ -220,6 +219,13 @@ export function StartJourneyScreen({
           5,
           Math.round((distanceInMiles / journeySpeedMph[journeyType]) * 60) || 0,
         );
+  const trustedContactNames = trustedContactList.map((contact) =>
+    `${contact.firstName} ${contact.lastName}`.trim(),
+  );
+  const journeyLabel =
+    locationMode === "custom" && destinationLocation.trim().length > 0
+      ? destinationLocation.trim()
+      : `${selectedJourney?.label ?? "Journey"} ${routeShape === "loop" ? "Loop" : "Route"}`;
 
   function openContactEditor(contact: EditableContact, isGroupContact: boolean) {
     setEditingContact({ ...contact });
@@ -385,6 +391,22 @@ export function StartJourneyScreen({
     safetyScrollRef.current?.scrollTo({
       x: nextX,
       animated: true,
+    });
+  }
+
+  function handleStartJourney() {
+    onStartJourney?.({
+      journeyLabel,
+      measureType,
+      plannedDurationMinutes,
+      tripSetupLabel,
+      locationSummary,
+      routeShape,
+      contactNames: trustedContactNames,
+      primaryContactName:
+        selectedTrustedContactName || trustedContactNames[0] || "Trusted contact",
+      contactLabel: "Trusted contact status",
+      startedAt: new Date().toISOString(),
     });
   }
 
@@ -739,7 +761,7 @@ export function StartJourneyScreen({
               </Text>
             </View>
             <View style={styles.contactsCountBadge}>
-              <Text style={styles.contactsCountValue}>{trustedContacts.length}</Text>
+              <Text style={styles.contactsCountValue}>{previewPeople.length}</Text>
               <Text style={styles.contactsCountLabel}>selected</Text>
             </View>
           </View>
@@ -778,19 +800,6 @@ export function StartJourneyScreen({
                 : "Trusted contacts will be the people monitoring your trip and safety updates."}
             </Text>
           </View>
-
-          {trustedContacts.length > 0 ? (
-            <View style={styles.contactRow}>
-              {trustedContacts.map((contact) => (
-                <View key={contact} style={styles.contactChip}>
-                  <View style={styles.contactAvatar}>
-                    <Text style={styles.contactAvatarText}>{contact[0]}</Text>
-                  </View>
-                  <Text style={styles.contactChipLabel}>{contact}</Text>
-                </View>
-              ))}
-            </View>
-          ) : null}
 
           <View style={styles.contactsActionGrid}>
             <Pressable style={styles.contactActionCard} onPress={onOpenProfile}>
@@ -913,31 +922,33 @@ export function StartJourneyScreen({
           </View>
         </View>
 
-        <LinearGradient
-          colors={[readyLimeLight, readyLime]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.readyCard}
-        >
-          <Text style={styles.readyEyebrow}>Ready to start?</Text>
-          <Text style={styles.readyTitle}>{readySummaryTopLine}</Text>
-          <Text style={styles.readyTitle}>{readySummaryBottomLine}</Text>
-          <View style={styles.readySummaryRow}>
-            {[locationSummary, peopleSummary, `${totalSafetySettings}/4 safety settings`].map(
-              (item, index, list) => (
-                <View key={item} style={styles.readySummaryItem}>
-                  {index === 0 || item === `${totalSafetySettings}/4 safety settings` ? (
-                    <Text style={styles.readySummaryDot}>•</Text>
-                  ) : null}
-                  <Text style={styles.readySummaryText}>{item}</Text>
-                  {index < list.length - 1 || item === `${totalSafetySettings}/4 safety settings` ? (
-                    <Text style={styles.readySummaryDot}>•</Text>
-                  ) : null}
-                </View>
-              ),
-            )}
-          </View>
-        </LinearGradient>
+        <Pressable onPress={handleStartJourney} style={({ pressed }) => pressed && styles.readyCardPressed}>
+          <LinearGradient
+            colors={[readyLimeLight, readyLime]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.readyCard}
+          >
+            <Text style={styles.readyEyebrow}>Ready to start?</Text>
+            <Text style={styles.readyTitle}>{readySummaryTopLine}</Text>
+            <Text style={styles.readyTitle}>{readySummaryBottomLine}</Text>
+            <View style={styles.readySummaryRow}>
+              {[locationSummary, peopleSummary, `${totalSafetySettings}/4 safety settings`].map(
+                (item, index, list) => (
+                  <View key={item} style={styles.readySummaryItem}>
+                    {index === 0 || item === `${totalSafetySettings}/4 safety settings` ? (
+                      <Text style={styles.readySummaryDot}>•</Text>
+                    ) : null}
+                    <Text style={styles.readySummaryText}>{item}</Text>
+                    {index < list.length - 1 || item === `${totalSafetySettings}/4 safety settings` ? (
+                      <Text style={styles.readySummaryDot}>•</Text>
+                    ) : null}
+                  </View>
+                ),
+              )}
+            </View>
+          </LinearGradient>
+        </Pressable>
       </ScrollView>
 
       <Modal
@@ -1954,6 +1965,9 @@ const styles = StyleSheet.create({
     shadowRadius: 18,
     shadowOffset: { width: 0, height: 10 },
     elevation: 8,
+  },
+  readyCardPressed: {
+    opacity: 0.92,
   },
   readyEyebrow: {
     fontSize: 11,
