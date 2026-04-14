@@ -10,6 +10,8 @@ import { HomeScreen } from "../screens/HomeScreen";
 import ProfileScreen from "../screens/ProfileScreen"; 
 import SettingsScreen from "../screens/SettingsScreen";
 import StatisticsScreen from "../screens/StatisticsScreen";
+import { RoutesScreen } from "../screens/RoutesScreen";
+import { AlertsScreen } from "../screens/AlertsScreen";
 import { ActiveJourneyScreen } from "../screens/ActiveJourneyScreen";
 import {
   StartJourneyScreen,
@@ -31,10 +33,18 @@ export function AppNavigator() {
       case "home":
         return (
           <HomeScreen
-            onOpenSavedRoutes={() => {}}
-            onOpenPopularRoutes={() => {}}
-            onOpenAlerts={() => {}}
+            onOpenSavedRoutes={() => setCurrentScreen("routes")}
+            onOpenPopularRoutes={() => setCurrentScreen("routes")}
+            onOpenAlerts={() => setCurrentScreen("alerts")}
+            onOpenStartJourney={() => setCurrentScreen("startJourney")}
             journeyMode={activeJourneyConfig ? "active" : "idle"}
+          />
+        );
+      case "routes":
+        return (
+          <RoutesScreen
+            onAlertPress={() => setCurrentScreen("alerts")}
+            onStartRoute={() => setCurrentScreen("startJourney")}
           />
         );
       case "profile":
@@ -43,6 +53,15 @@ export function AppNavigator() {
         return <SettingsScreen />;
       case "stats":
         return <StatisticsScreen />;
+      case "alerts":
+        return (
+          <AlertsScreen
+            onAlertPress={() => {}}
+            onViewJourney={() =>
+              setCurrentScreen(activeJourneyConfig ? "activeJourney" : "home")
+            }
+          />
+        );
       case "startJourney":
         return (
           <StartJourneyScreen
@@ -68,9 +87,10 @@ export function AppNavigator() {
       default:
         return (
           <HomeScreen
-            onOpenSavedRoutes={() => {}}
-            onOpenPopularRoutes={() => {}}
-            onOpenAlerts={() => {}}
+            onOpenSavedRoutes={() => setCurrentScreen("routes")}
+            onOpenPopularRoutes={() => setCurrentScreen("routes")}
+            onOpenAlerts={() => setCurrentScreen("alerts")}
+            onOpenStartJourney={() => setCurrentScreen("startJourney")}
             journeyMode={activeJourneyConfig ? "active" : "idle"}
           />
         ); 

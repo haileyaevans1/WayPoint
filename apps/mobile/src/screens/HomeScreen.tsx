@@ -39,6 +39,7 @@ type HomeScreenProps = {
   onOpenSavedRoutes: () => void;
   onOpenPopularRoutes: () => void;
   onOpenAlerts: () => void;
+  onOpenStartJourney: () => void;
   journeyMode?: JourneyMode;
 };
 
@@ -86,6 +87,7 @@ export function HomeScreen({
   onOpenSavedRoutes,
   onOpenPopularRoutes,
   onOpenAlerts,
+  onOpenStartJourney,
   journeyMode = "idle",
 }: HomeScreenProps) {
   const heroState = heroStateByMode[journeyMode];
@@ -163,7 +165,10 @@ export function HomeScreen({
 
         <View style={styles.contentStack}>
           <View style={styles.sectionCard}>
-            <Pressable style={({ pressed }) => [styles.searchCard, pressed && styles.cardPressed]}>
+            <Pressable
+              onPress={onOpenStartJourney}
+              style={({ pressed }) => [styles.searchCard, pressed && styles.cardPressed]}
+            >
               <Text style={styles.searchIcon}>⌕</Text>
               <View style={styles.searchCopy}>
                 <Text style={styles.searchTitle}>Where do you want to go?</Text>

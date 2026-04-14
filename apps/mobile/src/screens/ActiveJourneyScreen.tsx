@@ -129,6 +129,8 @@ export function ActiveJourneyScreen({
       syncedContactStatuses[0]?.name ??
       "",
   );
+  const heroJourneyLabel = journeyConfig?.journeyLabel ?? "Riverwalk Loop";
+  const heroJourneyContext = journeyConfig?.locationSummary ?? "Current location";
 
   useEffect(() => {
     setActiveContactName(
@@ -267,7 +269,8 @@ export function ActiveJourneyScreen({
               <View style={styles.heroLocationCard}>
                 <View>
                   <Text style={styles.heroLocationLabel}>Current Journey</Text>
-                  <Text style={styles.heroLocationValue}>Riverwalk Loop</Text>
+                  <Text style={styles.heroLocationValue}>{heroJourneyLabel}</Text>
+                  <Text style={styles.weatherText}>{heroJourneyContext}</Text>
                 </View>
                 <View style={styles.weatherWrap}>
                   <Text style={styles.weatherLabel}>Sunny</Text>
