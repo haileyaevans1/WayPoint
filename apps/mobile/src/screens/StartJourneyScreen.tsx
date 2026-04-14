@@ -28,6 +28,11 @@ type EditableContact = {
   phone: string;
   note: string;
 };
+type SafetyFeature = {
+  id: string;
+  label: string;
+  description: string;
+};
 
 export type StartJourneyConfig = {
   journeyLabel: string;
@@ -94,6 +99,28 @@ const initialGroupMembers: EditableContact[] = [
   { id: "noah", name: "Noah", icon: "N", phone: "(918) 555-0190", note: "Meeting downtown" },
   { id: "lena", name: "Lena", icon: "L", phone: "(918) 555-0176", note: "Bike partner" },
 ];
+const safetyFeatures: SafetyFeature[] = [
+  {
+    id: "off-route",
+    label: "Off-route alerts",
+    description: "Let trusted contacts know if the journey goes off the planned path.",
+  },
+  {
+    id: "missed-check-in",
+    label: "Missed check-in alerts",
+    description: "Send an alert if a check-in window is missed during the journey.",
+  },
+  {
+    id: "emergency",
+    label: "Emergency action",
+    description: "Keep a quick emergency action available during the trip.",
+  },
+  {
+    id: "check-ins",
+    label: "Safety check-ins",
+    description: "Prompt for check-ins during longer or more sensitive journeys.",
+  },
+];
 
 const journeySpeedMph: Record<JourneyType, number> = {
   walk: 3,
@@ -116,23 +143,26 @@ export function StartJourneyScreen({
   const [locationMode, setLocationMode] = useState<LocationMode>("current");
   const [routeShape, setRouteShape] = useState<RouteShape>("oneWay");
   const [groupJourneyEnabled, setGroupJourneyEnabled] = useState(false);
-  const [offRouteEnabled, setOffRouteEnabled] = useState(true);
-  const [missedCheckInEnabled, setMissedCheckInEnabled] = useState(true);
-  const [safetyPromptsEnabled, setSafetyPromptsEnabled] = useState(true);
   const [trustedContactList, setTrustedContactList] =
     useState<EditableContact[]>(initialTrustedContacts);
   const [groupMemberList, setGroupMemberList] =
     useState<EditableContact[]>(initialGroupMembers);
+  const [includedSafetyIds, setIncludedSafetyIds] =
+    useState<string[]>(["off-route", "missed-check-in", "emergency", "check-ins"]);
   const [contactEditorVisible, setContactEditorVisible] = useState(false);
   const [editingContact, setEditingContact] = useState<EditableContact | null>(null);
   const [editingGroupContact, setEditingGroupContact] = useState(false);
+  const [safetyEditorVisible, setSafetyEditorVisible] = useState(false);
+  const [selectedSafetyFeature, setSelectedSafetyFeature] = useState<SafetyFeature | null>(null);
+  const [safetyEditorMode, setSafetyEditorMode] = useState<"feature" | "add">("feature");
 
-  const enabledSafetySettings = [
-    offRouteEnabled,
-    missedCheckInEnabled,
-    safetyPromptsEnabled,
-  ].filter(Boolean).length;
-  const totalSafetySettings = enabledSafetySettings + 1;
+  const includedSafetyFeatures = safetyFeatures.filter((feature) =>
+    includedSafetyIds.includes(feature.id),
+  );
+  const availableSafetyFeatures = safetyFeatures.filter(
+    (feature) => !includedSafetyIds.includes(feature.id),
+  );
+  const totalSafetySettings = includedSafetyFeatures.length;
   const selectedJourney = journeyTypes.find((item) => item.key === journeyType);
   const previewPeople = groupJourneyEnabled ? groupMemberList : trustedContactList;
   const locationSummary =
@@ -251,6 +281,41 @@ export function StartJourneyScreen({
     }
 
     closeContactEditor();
+  }
+
+  function openSafetyEditor(item: SafetyFeature) {
+    setSelectedSafetyFeature(item);
+    setSafetyEditorMode("feature");
+    setSafetyEditorVisible(true);
+  }
+
+  function openNewSafetyEditor() {
+    setSelectedSafetyFeature(null);
+    setSafetyEditorMode("add");
+    setSafetyEditorVisible(true);
+  }
+
+  function closeSafetyEditor() {
+    setSafetyEditorVisible(false);
+    setSelectedSafetyFeature(null);
+  }
+
+  function includeSafetyFeature(featureId: string) {
+    setIncludedSafetyIds((current) =>
+      current.includes(featureId) ? current : [...current, featureId],
+    );
+    closeSafetyEditor();
+  }
+
+  function removeSafetyItem() {
+    if (!selectedSafetyFeature) {
+      return;
+    }
+
+    setIncludedSafetyIds((current) =>
+      current.filter((item) => item !== selectedSafetyFeature.id),
+    );
+    closeSafetyEditor();
   }
 
   return (
@@ -708,43 +773,33 @@ export function StartJourneyScreen({
         </LinearGradient>
 
         <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionEyebrow}>Safety settings</Text>
-            <Text style={styles.sectionTitle}>What safety support should stay on?</Text>
-            <Text style={styles.sectionText}>
-              Your saved safety settings live in Profile. Here’s what is currently selected
-              for this journey.
-            </Text>
-          </View>
-
           <View style={styles.safetySummaryHeader}>
-            <View style={styles.safetySummaryCard}>
-              <Text style={styles.safetySummaryValue}>4/4</Text>
-              <Text style={styles.safetySummaryLabel}>Safety options enabled</Text>
+            <View style={styles.safetySummaryIntro}>
+              <Text style={styles.sectionEyebrow}>Safety settings</Text>
+              <Text style={styles.safetySummaryTitle}>Control your safety support</Text>
             </View>
-            <Pressable style={styles.contactActionButton} onPress={onOpenProfile}>
-              <Text style={styles.contactActionButtonText}>Edit</Text>
-            </Pressable>
           </View>
 
-          <View style={styles.safetyChecklist}>
-            {[
-              "Off-route alerts",
-              "Missed check-in alerts",
-              "Emergency action",
-              "Safety check-ins",
-            ].map((item, index, list) => (
-              <View key={item} style={styles.safetyChecklistItem}>
-                {index === 0 || index === 2 ? (
-                  <Text style={styles.safetyChecklistDot}>•</Text>
-                ) : null}
-                <Text style={styles.safetyChecklistLabel}>{item}</Text>
-                {index < list.length - 1 || index === list.length - 1 ? (
-                  <Text style={styles.safetyChecklistDot}>•</Text>
-                ) : null}
-              </View>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.safetyChecklist}
+          >
+            {includedSafetyFeatures.map((item) => (
+              <Pressable
+                key={item.id}
+                onPress={() => openSafetyEditor(item)}
+                style={styles.safetyChip}
+              >
+                <Text style={styles.safetyChipText}>{item.label}</Text>
+              </Pressable>
             ))}
-          </View>
+            {availableSafetyFeatures.length > 0 ? (
+              <Pressable onPress={openNewSafetyEditor} style={styles.safetyAddChip}>
+                <Text style={styles.safetyAddChipText}>+ Add</Text>
+              </Pressable>
+            ) : null}
+          </ScrollView>
         </View>
 
         <LinearGradient
@@ -846,6 +901,63 @@ export function StartJourneyScreen({
                 <Text style={styles.contactModalSaveText}>Save</Text>
               </Pressable>
             </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      <Modal
+        transparent
+        visible={safetyEditorVisible}
+        animationType="fade"
+        onRequestClose={closeSafetyEditor}
+      >
+        <Pressable style={styles.contactModalBackdrop} onPress={closeSafetyEditor}>
+          <Pressable style={styles.contactModalCard} onPress={() => {}}>
+            <Text style={styles.contactModalEyebrow}>Safety settings</Text>
+            <Text style={styles.contactModalTitle}>
+              {safetyEditorMode === "add" ? "Add safety support" : selectedSafetyFeature?.label}
+            </Text>
+            {safetyEditorMode === "add" ? (
+              <View style={styles.safetyModalList}>
+                {availableSafetyFeatures.length > 0 ? (
+                  availableSafetyFeatures.map((feature) => (
+                    <Pressable
+                      key={feature.id}
+                      onPress={() => includeSafetyFeature(feature.id)}
+                      style={styles.safetyModalListItem}
+                    >
+                      <View style={styles.safetyModalListCopy}>
+                        <Text style={styles.safetyModalListTitle}>{feature.label}</Text>
+                        <Text style={styles.safetyModalListText}>{feature.description}</Text>
+                      </View>
+                      <Text style={styles.safetyModalListAdd}>Add</Text>
+                    </Pressable>
+                  ))
+                ) : (
+                  <Text style={styles.contactModalBody}>All safety features are already included.</Text>
+                )}
+              </View>
+            ) : (
+              <>
+                <Text style={styles.contactModalBody}>
+                  {selectedSafetyFeature?.description}
+                </Text>
+                <View style={styles.contactModalActions}>
+                  <Pressable
+                    onPress={removeSafetyItem}
+                    style={[styles.contactModalButton, styles.contactModalRemoveButton]}
+                  >
+                    <Text style={styles.contactModalRemoveText}>Remove</Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={closeSafetyEditor}
+                    style={[styles.contactModalButton, styles.contactModalSaveButton]}
+                  >
+                    <Text style={styles.contactModalSaveText}>Done</Text>
+                  </Pressable>
+                </View>
+              </>
+            )}
           </Pressable>
         </Pressable>
       </Modal>
@@ -1377,18 +1489,18 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   contactPreviewAvatarWarm: {
-    backgroundColor: "rgba(240,174,141,0.34)",
+    backgroundColor: "#E6A07B",
   },
   contactPreviewAvatarCool: {
-    backgroundColor: "rgba(183,205,235,0.42)",
+    backgroundColor: "#9AB8DB",
   },
   contactPreviewAvatarSoft: {
-    backgroundColor: "rgba(207,225,122,0.3)",
+    backgroundColor: "#B8CF5C",
   },
   contactPreviewAvatarText: {
     fontSize: 18,
     fontWeight: "800",
-    color: theme.colors.text,
+    color: theme.colors.white,
   },
   contactPreviewName: {
     fontSize: 12,
@@ -1401,15 +1513,15 @@ const styles = StyleSheet.create({
     borderRadius: 26,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(240,174,141,0.34)",
+    backgroundColor: "#E58B5B",
     borderWidth: 1,
-    borderColor: "rgba(222,133,88,0.2)",
+    borderColor: "#E58B5B",
   },
   contactPreviewAddText: {
     fontSize: 24,
     lineHeight: 24,
     fontWeight: "800",
-    color: theme.colors.brandDeep,
+    color: theme.colors.white,
   },
   contactActionButton: {
     paddingHorizontal: 14,
@@ -1479,6 +1591,41 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: theme.colors.text,
+  },
+  contactModalBody: {
+    fontSize: 14,
+    lineHeight: 21,
+    color: theme.colors.textSoft,
+  },
+  safetyModalList: {
+    gap: 10,
+  },
+  safetyModalListItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 14,
+    borderRadius: 18,
+    backgroundColor: theme.colors.surfaceSoft,
+  },
+  safetyModalListCopy: {
+    flex: 1,
+    gap: 4,
+  },
+  safetyModalListTitle: {
+    fontSize: 15,
+    fontWeight: "800",
+    color: theme.colors.text,
+  },
+  safetyModalListText: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: theme.colors.textSoft,
+  },
+  safetyModalListAdd: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: theme.colors.brandDeep,
   },
   contactModalActions: {
     flexDirection: "row",
@@ -1553,42 +1700,80 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 12,
   },
+  safetySummaryIntro: {
+    flex: 1,
+    gap: 4,
+  },
+  safetySummaryTitle: {
+    fontSize: 20,
+    lineHeight: 24,
+    fontWeight: "800",
+    color: theme.colors.text,
+  },
+  safetySummaryRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  safetyDetailsButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: theme.radius.pill,
+    backgroundColor: theme.colors.surfaceSoft,
+  },
+  safetyDetailsButtonText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: theme.colors.text,
+  },
   safetySummaryCard: {
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    minWidth: 72,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     borderRadius: 20,
     backgroundColor: theme.colors.white,
+    alignItems: "center",
   },
   safetySummaryValue: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: "900",
     color: readyLime,
   },
   safetySummaryLabel: {
     marginTop: 2,
-    fontSize: 13,
+    fontSize: 11,
     fontWeight: "700",
     color: theme.colors.textSoft,
   },
   safetyChecklist: {
     flexDirection: "row",
-    flexWrap: "wrap",
     alignItems: "center",
-    gap: 12,
+    gap: 10,
+    paddingRight: 8,
   },
-  safetyChecklistItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+  safetyChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: theme.radius.pill,
+    backgroundColor: "rgba(229,139,91,0.14)",
+    borderWidth: 1,
+    borderColor: "rgba(202,116,73,0.16)",
   },
-  safetyChecklistDot: {
-    fontSize: 16,
-    color: readyLime,
-  },
-  safetyChecklistLabel: {
+  safetyChipText: {
     fontSize: 13,
     fontWeight: "700",
-    color: theme.colors.text,
+    color: theme.colors.brandDeep,
+  },
+  safetyAddChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: theme.radius.pill,
+    backgroundColor: "rgba(229,139,91,0.1)",
+  },
+  safetyAddChipText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: theme.colors.brandDeep,
   },
   readyCard: {
     borderRadius: 30,
