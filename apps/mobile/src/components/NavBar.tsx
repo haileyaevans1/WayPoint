@@ -4,13 +4,15 @@ import { LinearGradient } from "expo-linear-gradient";
 import { AppScreen, theme } from "../styles/theme";
 
 const endJourneyOrange = "#E58B5B";
-const navPeach = "#D78B67";
+const navPeach = "#778093";
 const centerGreen = "#AFCB46";
 const centerGreenDeep = "#92A93A";
+const logoLightPeach = "#F3C8A2";
+const logoDarkPeach = "#E99573";
 
 const navItems = [
   { key: "routes", label: "Routes", icon: "□" },
-  { key: "stats", label: "Stats", icon: "◇" },
+  { key: "stats", label: "Stats", icon: "◆" },
   { key: "profile", label: "Profile", icon: "○" },
   { key: "settings", label: "Settings", icon: "⋯" },
 ] as const;
@@ -179,6 +181,8 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: theme.radius.pill,
     borderTopRightRadius: theme.radius.pill,
     backgroundColor: navPeach,
+    borderWidth: 2,
+    borderColor: logoDarkPeach,
     paddingHorizontal: 24,
     height: 76,
     flexDirection: "row",
@@ -203,13 +207,14 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   navIcon: {
-    color: "rgba(255,255,255,0.9)",
-    fontSize: 22,
+    color: logoLightPeach,
+    fontSize: 24,
+    fontWeight: "800",
   },
   navLabel: {
-    color: "rgba(255,255,255,0.92)",
+    color: theme.colors.white,
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: "700",
   },
   navIconActive: {
     color: theme.colors.white,
