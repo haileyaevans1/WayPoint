@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   Modal,
   Pressable,
@@ -23,8 +23,8 @@ type LocationMode = "current" | "custom";
 export type RouteShape = "oneWay" | "loop";
 type EditableContact = {
   id: string;
-  name: string;
-  icon: string;
+  firstName: string;
+  lastName: string;
   phone: string;
   note: string;
 };
@@ -42,6 +42,7 @@ export type StartJourneyConfig = {
   locationSummary: string;
   routeShape: RouteShape;
   contactNames: string[];
+  primaryContactName: string;
   contactLabel: string;
   startedAt: string;
 };
@@ -90,14 +91,14 @@ const journeyTypes: Array<{
 
 const trustedContacts: string[] = [];
 const initialTrustedContacts: EditableContact[] = [
-  { id: "maya", name: "Maya", icon: "M", phone: "(918) 555-0143", note: "Mom" },
-  { id: "jordan", name: "Jordan", icon: "J", phone: "(918) 555-0188", note: "Best friend" },
-  { id: "chris", name: "Chris", icon: "C", phone: "(918) 555-0121", note: "Emergency contact" },
+  { id: "maya", firstName: "Maya", lastName: "Lopez", phone: "(918) 555-0143", note: "Mom" },
+  { id: "jordan", firstName: "Jordan", lastName: "Reed", phone: "(918) 555-0188", note: "Best friend" },
+  { id: "chris", firstName: "Chris", lastName: "Parker", phone: "(918) 555-0121", note: "Emergency contact" },
 ];
 const initialGroupMembers: EditableContact[] = [
-  { id: "ava", name: "Ava", icon: "A", phone: "(918) 555-0102", note: "Walking together" },
-  { id: "noah", name: "Noah", icon: "N", phone: "(918) 555-0190", note: "Meeting downtown" },
-  { id: "lena", name: "Lena", icon: "L", phone: "(918) 555-0176", note: "Bike partner" },
+  { id: "ava", firstName: "Ava", lastName: "Stone", phone: "(918) 555-0102", note: "Walking together" },
+  { id: "noah", firstName: "Noah", lastName: "Brooks", phone: "(918) 555-0190", note: "Meeting downtown" },
+  { id: "lena", firstName: "Lena", lastName: "Cole", phone: "(918) 555-0176", note: "Bike partner" },
 ];
 const safetyFeatures: SafetyFeature[] = [
   {
@@ -133,6 +134,7 @@ export function StartJourneyScreen({
   onStartJourney,
   onOpenProfile,
 }: StartJourneyScreenProps) {
+  const safetyScrollRef = useRef<ScrollView | null>(null);
   const [journeyType, setJourneyType] = useState<JourneyType>("walk");
   const [measureType, setMeasureType] = useState<TripMeasure>("distance");
   const [distanceValue, setDistanceValue] = useState("2");
@@ -149,9 +151,19 @@ export function StartJourneyScreen({
     useState<EditableContact[]>(initialGroupMembers);
   const [includedSafetyIds, setIncludedSafetyIds] =
     useState<string[]>(["off-route", "missed-check-in", "emergency", "check-ins"]);
+  const [selectedTrustedContactName, setSelectedTrustedContactName] =
+    useState(
+      initialTrustedContacts[0]
+        ? `${initialTrustedContacts[0].firstName} ${initialTrustedContacts[0].lastName}`.trim()
+        : "",
+    );
+  const [safetyScrollX, setSafetyScrollX] = useState(0);
+  const [safetyViewportWidth, setSafetyViewportWidth] = useState(0);
+  const [safetyContentWidth, setSafetyContentWidth] = useState(0);
   const [contactEditorVisible, setContactEditorVisible] = useState(false);
   const [editingContact, setEditingContact] = useState<EditableContact | null>(null);
   const [editingGroupContact, setEditingGroupContact] = useState(false);
+  const [isEditingContactFields, setIsEditingContactFields] = useState(false);
   const [safetyEditorVisible, setSafetyEditorVisible] = useState(false);
   const [selectedSafetyFeature, setSelectedSafetyFeature] = useState<SafetyFeature | null>(null);
   const [safetyEditorMode, setSafetyEditorMode] = useState<"feature" | "add">("feature");
@@ -163,8 +175,18 @@ export function StartJourneyScreen({
     (feature) => !includedSafetyIds.includes(feature.id),
   );
   const totalSafetySettings = includedSafetyFeatures.length;
+  const maxSafetyScrollX = Math.max(0, safetyContentWidth - safetyViewportWidth);
+  const canScrollSafetyLeft = safetyScrollX > 4;
+  const canScrollSafetyRight = safetyScrollX < maxSafetyScrollX - 4;
   const selectedJourney = journeyTypes.find((item) => item.key === journeyType);
   const previewPeople = groupJourneyEnabled ? groupMemberList : trustedContactList;
+  const selectedTrustedContact =
+    trustedContactList.find(
+      (contact) =>
+        `${contact.firstName} ${contact.lastName}`.trim() === selectedTrustedContactName,
+    ) ??
+    trustedContactList[0] ??
+    null;
   const locationSummary =
     locationMode === "current"
       ? "Current location"
@@ -202,24 +224,27 @@ export function StartJourneyScreen({
   function openContactEditor(contact: EditableContact, isGroupContact: boolean) {
     setEditingContact({ ...contact });
     setEditingGroupContact(isGroupContact);
+    setIsEditingContactFields(false);
     setContactEditorVisible(true);
   }
 
   function openNewContactEditor() {
     setEditingContact({
       id: `contact-${Date.now()}`,
-      name: "",
-      icon: "+",
+      firstName: "",
+      lastName: "",
       phone: "",
       note: "",
     });
     setEditingGroupContact(groupJourneyEnabled);
+    setIsEditingContactFields(true);
     setContactEditorVisible(true);
   }
 
   function closeContactEditor() {
     setContactEditorVisible(false);
     setEditingContact(null);
+    setIsEditingContactFields(false);
   }
 
   function updateEditingContact(field: keyof EditableContact, value: string) {
@@ -240,8 +265,8 @@ export function StartJourneyScreen({
 
     const normalizedContact: EditableContact = {
       ...editingContact,
-      name: editingContact.name.trim() || "New contact",
-      icon: editingContact.icon.trim().slice(0, 2) || "•",
+      firstName: editingContact.firstName.trim() || "New",
+      lastName: editingContact.lastName.trim() || "Contact",
       phone: editingContact.phone.trim(),
       note: editingContact.note.trim(),
     };
@@ -259,7 +284,24 @@ export function StartJourneyScreen({
     if (editingGroupContact) {
       setGroupMemberList((current) => updateList(current));
     } else {
-      setTrustedContactList((current) => updateList(current));
+      setTrustedContactList((current) => {
+        const updatedContacts = updateList(current);
+        const savedContact = updatedContacts.find(
+          (contact) => contact.id === normalizedContact.id,
+        );
+
+        if (
+          savedContact &&
+          selectedTrustedContactName ===
+            `${editingContact.firstName} ${editingContact.lastName}`.trim()
+        ) {
+          setSelectedTrustedContactName(
+            `${savedContact.firstName} ${savedContact.lastName}`.trim(),
+          );
+        }
+
+        return updatedContacts;
+      });
     }
 
     closeContactEditor();
@@ -275,9 +317,24 @@ export function StartJourneyScreen({
         current.filter((contact) => contact.id !== editingContact.id),
       );
     } else {
-      setTrustedContactList((current) =>
-        current.filter((contact) => contact.id !== editingContact.id),
-      );
+      setTrustedContactList((current) => {
+        const updatedContacts = current.filter(
+          (contact) => contact.id !== editingContact.id,
+        );
+
+        if (
+          selectedTrustedContactName ===
+          `${editingContact.firstName} ${editingContact.lastName}`.trim()
+        ) {
+          setSelectedTrustedContactName(
+            updatedContacts[0]
+              ? `${updatedContacts[0].firstName} ${updatedContacts[0].lastName}`.trim()
+              : "",
+          );
+        }
+
+        return updatedContacts;
+      });
     }
 
     closeContactEditor();
@@ -316,6 +373,19 @@ export function StartJourneyScreen({
       current.filter((item) => item !== selectedSafetyFeature.id),
     );
     closeSafetyEditor();
+  }
+
+  function scrollSafetyRow(direction: "left" | "right") {
+    const scrollDistance = Math.max(140, safetyViewportWidth * 0.72);
+    const nextX =
+      direction === "left"
+        ? Math.max(0, safetyScrollX - scrollDistance)
+        : Math.min(maxSafetyScrollX, safetyScrollX + scrollDistance);
+
+    safetyScrollRef.current?.scrollTo({
+      x: nextX,
+      animated: true,
+    });
   }
 
   return (
@@ -744,7 +814,14 @@ export function StartJourneyScreen({
                   <Pressable
                     key={contact.id}
                     style={styles.contactPreviewItem}
-                    onPress={() => openContactEditor(contact, groupJourneyEnabled)}
+                    onPress={() => {
+                      if (!groupJourneyEnabled) {
+                        setSelectedTrustedContactName(
+                          `${contact.firstName} ${contact.lastName}`.trim(),
+                        );
+                      }
+                      openContactEditor(contact, groupJourneyEnabled);
+                    }}
                   >
                     <View
                       style={[
@@ -756,9 +833,13 @@ export function StartJourneyScreen({
                             : styles.contactPreviewAvatarSoft,
                       ]}
                     >
-                      <Text style={styles.contactPreviewAvatarText}>{contact.icon}</Text>
+                      <Text style={styles.contactPreviewAvatarText}>
+                        {contact.firstName.charAt(0)}
+                      </Text>
                     </View>
-                    <Text style={styles.contactPreviewName}>{contact.name}</Text>
+                    <Text style={styles.contactPreviewName}>
+                      {`${contact.firstName} ${contact.lastName}`.trim()}
+                    </Text>
                   </Pressable>
                 ))}
                 <Pressable style={styles.contactPreviewAddItem} onPress={openNewContactEditor}>
@@ -780,26 +861,56 @@ export function StartJourneyScreen({
             </View>
           </View>
 
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.safetyChecklist}
-          >
-            {includedSafetyFeatures.map((item) => (
-              <Pressable
-                key={item.id}
-                onPress={() => openSafetyEditor(item)}
-                style={styles.safetyChip}
-              >
-                <Text style={styles.safetyChipText}>{item.label}</Text>
-              </Pressable>
-            ))}
-            {availableSafetyFeatures.length > 0 ? (
-              <Pressable onPress={openNewSafetyEditor} style={styles.safetyAddChip}>
-                <Text style={styles.safetyAddChipText}>+ Add</Text>
-              </Pressable>
-            ) : null}
-          </ScrollView>
+          <View style={styles.safetyScrollerRow}>
+            <Pressable
+              onPress={() => scrollSafetyRow("left")}
+              style={[
+                styles.safetyScrollArrow,
+                !canScrollSafetyLeft && styles.safetyScrollArrowDisabled,
+              ]}
+            >
+              <Text style={styles.safetyScrollArrowText}>‹</Text>
+            </Pressable>
+            <ScrollView
+              ref={safetyScrollRef}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              onLayout={(event) =>
+                setSafetyViewportWidth(event.nativeEvent.layout.width)
+              }
+              onContentSizeChange={(width) => setSafetyContentWidth(width)}
+              onScroll={(event) =>
+                setSafetyScrollX(event.nativeEvent.contentOffset.x)
+              }
+              scrollEventThrottle={16}
+              contentContainerStyle={styles.safetyChecklist}
+              style={styles.safetyScrollView}
+            >
+              {includedSafetyFeatures.map((item) => (
+                <Pressable
+                  key={item.id}
+                  onPress={() => openSafetyEditor(item)}
+                  style={styles.safetyChip}
+                >
+                  <Text style={styles.safetyChipText}>{item.label}</Text>
+                </Pressable>
+              ))}
+              {availableSafetyFeatures.length > 0 ? (
+                <Pressable onPress={openNewSafetyEditor} style={styles.safetyAddChip}>
+                  <Text style={styles.safetyAddChipText}>+ Add</Text>
+                </Pressable>
+              ) : null}
+            </ScrollView>
+            <Pressable
+              onPress={() => scrollSafetyRow("right")}
+              style={[
+                styles.safetyScrollArrow,
+                !canScrollSafetyRight && styles.safetyScrollArrowDisabled,
+              ]}
+            >
+              <Text style={styles.safetyScrollArrowText}>›</Text>
+            </Pressable>
+          </View>
         </View>
 
         <LinearGradient
@@ -843,23 +954,32 @@ export function StartJourneyScreen({
             <Text style={styles.contactModalTitle}>Edit contact</Text>
 
             <View style={styles.contactModalFieldRow}>
-              <View style={styles.contactModalIconField}>
-                <Text style={styles.contactModalLabel}>Icon</Text>
+              <View style={styles.contactModalNameField}>
+                <Text style={styles.contactModalLabel}>First name</Text>
                 <TextInput
-                  value={editingContact?.icon ?? ""}
-                  onChangeText={(value) => updateEditingContact("icon", value)}
-                  maxLength={2}
-                  style={styles.contactModalInput}
+                  value={editingContact?.firstName ?? ""}
+                  onChangeText={(value) => updateEditingContact("firstName", value)}
+                  placeholder="First name"
+                  placeholderTextColor={theme.colors.textMuted}
+                  editable={isEditingContactFields}
+                  style={[
+                    styles.contactModalInput,
+                    !isEditingContactFields && styles.contactModalInputReadOnly,
+                  ]}
                 />
               </View>
               <View style={styles.contactModalNameField}>
-                <Text style={styles.contactModalLabel}>Name</Text>
+                <Text style={styles.contactModalLabel}>Last name</Text>
                 <TextInput
-                  value={editingContact?.name ?? ""}
-                  onChangeText={(value) => updateEditingContact("name", value)}
-                  placeholder="Contact name"
+                  value={editingContact?.lastName ?? ""}
+                  onChangeText={(value) => updateEditingContact("lastName", value)}
+                  placeholder="Last name"
                   placeholderTextColor={theme.colors.textMuted}
-                  style={styles.contactModalInput}
+                  editable={isEditingContactFields}
+                  style={[
+                    styles.contactModalInput,
+                    !isEditingContactFields && styles.contactModalInputReadOnly,
+                  ]}
                 />
               </View>
             </View>
@@ -872,7 +992,11 @@ export function StartJourneyScreen({
                 placeholder="(555) 555-5555"
                 placeholderTextColor={theme.colors.textMuted}
                 keyboardType="phone-pad"
-                style={styles.contactModalInput}
+                editable={isEditingContactFields}
+                style={[
+                  styles.contactModalInput,
+                  !isEditingContactFields && styles.contactModalInputReadOnly,
+                ]}
               />
             </View>
 
@@ -883,7 +1007,11 @@ export function StartJourneyScreen({
                 onChangeText={(value) => updateEditingContact("note", value)}
                 placeholder="Mom, friend, roommate..."
                 placeholderTextColor={theme.colors.textMuted}
-                style={styles.contactModalInput}
+                editable={isEditingContactFields}
+                style={[
+                  styles.contactModalInput,
+                  !isEditingContactFields && styles.contactModalInputReadOnly,
+                ]}
               />
             </View>
 
@@ -893,6 +1021,12 @@ export function StartJourneyScreen({
                 style={[styles.contactModalButton, styles.contactModalRemoveButton]}
               >
                 <Text style={styles.contactModalRemoveText}>Remove</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => setIsEditingContactFields(true)}
+                style={[styles.contactModalButton, styles.contactModalEditButton]}
+              >
+                <Text style={styles.contactModalEditText}>Edit</Text>
               </Pressable>
               <Pressable
                 onPress={saveEditingContact}
@@ -1592,6 +1726,9 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: theme.colors.text,
   },
+  contactModalInputReadOnly: {
+    opacity: 0.82,
+  },
   contactModalBody: {
     fontSize: 14,
     lineHeight: 21,
@@ -1642,6 +1779,9 @@ const styles = StyleSheet.create({
   contactModalRemoveButton: {
     backgroundColor: "rgba(229,139,91,0.14)",
   },
+  contactModalEditButton: {
+    backgroundColor: theme.colors.surfaceSoft,
+  },
   contactModalSaveButton: {
     backgroundColor: theme.colors.ink,
   },
@@ -1649,6 +1789,11 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "800",
     color: theme.colors.brandDeep,
+  },
+  contactModalEditText: {
+    fontSize: 15,
+    fontWeight: "800",
+    color: theme.colors.text,
   },
   contactModalSaveText: {
     fontSize: 15,
@@ -1748,30 +1893,55 @@ const styles = StyleSheet.create({
   safetyChecklist: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: 8,
     paddingRight: 8,
   },
+  safetyScrollerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  safetyScrollView: {
+    flex: 1,
+  },
+  safetyScrollArrow: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(229,139,91,0.12)",
+  },
+  safetyScrollArrowDisabled: {
+    opacity: 0.35,
+  },
+  safetyScrollArrowText: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: theme.colors.brandDeep,
+    marginTop: -1,
+  },
   safetyChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
     borderRadius: theme.radius.pill,
     backgroundColor: "rgba(229,139,91,0.14)",
     borderWidth: 1,
     borderColor: "rgba(202,116,73,0.16)",
   },
   safetyChipText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "700",
     color: theme.colors.brandDeep,
   },
   safetyAddChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
     borderRadius: theme.radius.pill,
     backgroundColor: "rgba(229,139,91,0.1)",
   },
   safetyAddChipText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "700",
     color: theme.colors.brandDeep,
   },

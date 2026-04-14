@@ -64,6 +64,7 @@ export function ActiveJourneyScreen({
   const [journeyState, setJourneyState] = useState<JourneyState>("active");
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [showSafetyModal, setShowSafetyModal] = useState(false);
+  const [showContactModal, setShowContactModal] = useState(false);
   const [now, setNow] = useState(Date.now());
 
   const isComplete = journeyState === "complete";
@@ -124,8 +125,18 @@ export function ActiveJourneyScreen({
         }))
       : fallbackContactStatuses;
   const [activeContactName, setActiveContactName] = useState(
-    syncedContactStatuses[0]?.name ?? "",
+    journeyConfig?.primaryContactName ??
+      syncedContactStatuses[0]?.name ??
+      "",
   );
+
+  useEffect(() => {
+    setActiveContactName(
+      journeyConfig?.primaryContactName ??
+        syncedContactStatuses[0]?.name ??
+        "",
+    );
+  }, [journeyConfig?.primaryContactName, syncedContactStatuses]);
 
   useEffect(() => {
     if (isComplete) {
@@ -178,58 +189,6 @@ export function ActiveJourneyScreen({
       end={{ x: 0.55, y: 1 }}
       style={styles.screen}
     >
-      <View style={styles.pageConfettiBackdrop}>
-        {[
-          styles.pageConfettiOne,
-          styles.pageConfettiTwo,
-          styles.pageConfettiThree,
-          styles.pageConfettiFour,
-          styles.pageConfettiFive,
-          styles.pageConfettiSix,
-          styles.pageConfettiSeven,
-          styles.pageConfettiEight,
-          styles.pageConfettiNine,
-          styles.pageConfettiTen,
-          styles.pageConfettiEleven,
-          styles.pageConfettiTwelve,
-          styles.pageConfettiThirteen,
-          styles.pageConfettiFourteen,
-          styles.pageConfettiFifteen,
-          styles.pageConfettiSixteen,
-          styles.pageConfettiSeventeen,
-          styles.pageConfettiEighteen,
-          styles.pageConfettiNineteen,
-          styles.pageConfettiTwenty,
-          styles.pageConfettiTwentyOne,
-          styles.pageConfettiTwentyTwo,
-          styles.pageConfettiTwentyThree,
-          styles.pageConfettiTwentyFour,
-          styles.pageConfettiTwentyFive,
-          styles.pageConfettiTwentySix,
-          styles.pageConfettiTwentySeven,
-          styles.pageConfettiTwentyEight,
-          styles.pageConfettiTwentyNine,
-          styles.pageConfettiThirty,
-          styles.pageConfettiThirtyOne,
-          styles.pageConfettiThirtyTwo,
-          styles.pageConfettiThirtyThree,
-          styles.pageConfettiThirtyFour,
-          styles.pageConfettiThirtyFive,
-          styles.pageConfettiThirtySix,
-          styles.pageConfettiThirtySeven,
-          styles.pageConfettiThirtyEight,
-          styles.pageConfettiThirtyNine,
-          styles.pageConfettiForty,
-          styles.pageConfettiFortyOne,
-          styles.pageConfettiFortyTwo,
-          styles.pageConfettiFortyThree,
-          styles.pageConfettiFortyFour,
-          styles.pageConfettiFortyFive,
-          styles.pageConfettiFortySix,
-        ].map((style, index) => (
-          <View key={`page-confetti-${index}`} style={style} />
-        ))}
-      </View>
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
@@ -397,7 +356,10 @@ export function ActiveJourneyScreen({
                   activeContactName === contact.name &&
                     styles.contactPreviewItemActive,
                 ]}
-                onPress={() => setActiveContactName(contact.name)}
+                onPress={() => {
+                  setActiveContactName(contact.name);
+                  setShowContactModal(true);
+                }}
               >
                 <View
                   style={[
@@ -414,13 +376,6 @@ export function ActiveJourneyScreen({
                   </Text>
                 </View>
                 <Text style={styles.contactPreviewName}>{contact.name}</Text>
-              </Pressable>
-            ))}
-          </View>
-          <View style={styles.contactActionRow}>
-            {["Message", "Share location", "Call"].map((action) => (
-              <Pressable key={action} style={styles.contactActionButton}>
-                <Text style={styles.contactActionButtonText}>{action}</Text>
               </Pressable>
             ))}
           </View>
@@ -560,6 +515,52 @@ export function ActiveJourneyScreen({
               onPress={() => setShowSafetyModal(false)}
             >
               <Text style={styles.safetyCloseButtonText}>Close</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      <Modal visible={showContactModal} transparent animationType="slide">
+        <Pressable
+          style={styles.safetyOverlay}
+          onPress={() => setShowContactModal(false)}
+        >
+          <Pressable style={styles.contactSheet} onPress={() => {}}>
+            <View style={styles.contactSheetHeader}>
+              <View style={styles.contactSheetAvatar}>
+                <Text style={styles.contactSheetAvatarText}>
+                  {activeContactName.charAt(0)}
+                </Text>
+              </View>
+              <View style={styles.contactSheetCopy}>
+                <Text style={styles.sectionEyebrow}>Trusted contact</Text>
+                <Text style={styles.contactSheetTitle}>{activeContactName}</Text>
+                <Text style={styles.contactSheetText}>
+                  Reach out or send an update without leaving your journey.
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.contactSheetActions}>
+              {[
+                { label: "Message", icon: "✉" },
+                { label: "Share location", icon: "↗" },
+                { label: "Call", icon: "◔" },
+              ].map((action) => (
+                <Pressable key={action.label} style={styles.contactSheetActionCard}>
+                  <View style={styles.contactSheetActionIconWrap}>
+                    <Text style={styles.contactSheetActionIcon}>{action.icon}</Text>
+                  </View>
+                  <Text style={styles.contactSheetActionLabel}>{action.label}</Text>
+                </Pressable>
+              ))}
+            </View>
+
+            <Pressable
+              style={styles.contactSheetCloseButton}
+              onPress={() => setShowContactModal(false)}
+            >
+              <Text style={styles.contactSheetCloseButtonText}>Close</Text>
             </Pressable>
           </Pressable>
         </Pressable>
@@ -963,23 +964,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: theme.colors.textSoft,
   },
-  contactActionRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-    marginTop: 8,
-  },
-  contactActionButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: theme.radius.pill,
-    backgroundColor: theme.colors.surfaceSoft,
-  },
-  contactActionButtonText: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: theme.colors.text,
-  },
   warningActionRow: {
     gap: 10,
   },
@@ -1020,6 +1004,94 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 30,
     gap: 14,
+  },
+  contactSheet: {
+    backgroundColor: "rgba(255,252,249,0.99)",
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    paddingHorizontal: 20,
+    paddingTop: 22,
+    paddingBottom: 30,
+    gap: 18,
+  },
+  contactSheetHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+  },
+  contactSheetAvatar: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: warningPeach,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  contactSheetAvatarText: {
+    fontSize: 24,
+    fontWeight: "900",
+    color: warningOrange,
+  },
+  contactSheetCopy: {
+    flex: 1,
+    gap: 4,
+  },
+  contactSheetTitle: {
+    fontSize: 24,
+    lineHeight: 28,
+    fontWeight: "800",
+    color: theme.colors.text,
+  },
+  contactSheetText: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: theme.colors.textSoft,
+  },
+  contactSheetActions: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  contactSheetActionCard: {
+    flex: 1,
+    borderRadius: 22,
+    backgroundColor: theme.colors.surfaceSoft,
+    paddingHorizontal: 10,
+    paddingVertical: 16,
+    alignItems: "center",
+    gap: 10,
+  },
+  contactSheetActionIconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    backgroundColor: "rgba(229,139,91,0.16)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  contactSheetActionIcon: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: warningOrange,
+  },
+  contactSheetActionLabel: {
+    fontSize: 13,
+    lineHeight: 16,
+    fontWeight: "700",
+    color: theme.colors.text,
+    textAlign: "center",
+  },
+  contactSheetCloseButton: {
+    alignSelf: "center",
+    marginTop: 2,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    borderRadius: theme.radius.pill,
+    backgroundColor: "rgba(229,139,91,0.14)",
+  },
+  contactSheetCloseButtonText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: warningOrange,
   },
   safetyCloseButton: {
     alignSelf: "center",
