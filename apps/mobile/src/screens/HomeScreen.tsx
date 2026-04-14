@@ -98,32 +98,6 @@ export function HomeScreen({
       end={{ x: 0.5, y: 1 }}
       style={styles.screen}
     >
-      <View style={styles.pageConfettiBackdrop}>
-        {[
-          styles.pageConfettiOne,
-          styles.pageConfettiTwo,
-          styles.pageConfettiThree,
-          styles.pageConfettiFour,
-          styles.pageConfettiFive,
-          styles.pageConfettiSix,
-          styles.pageConfettiSeven,
-          styles.pageConfettiEight,
-          styles.pageConfettiNine,
-          styles.pageConfettiTen,
-          styles.pageConfettiEleven,
-          styles.pageConfettiTwelve,
-          styles.pageConfettiThirteen,
-          styles.pageConfettiFourteen,
-          styles.pageConfettiFifteen,
-          styles.pageConfettiSixteen,
-          styles.pageConfettiSeventeen,
-          styles.pageConfettiEighteen,
-          styles.pageConfettiNineteen,
-          styles.pageConfettiTwenty,
-        ].map((style, index) => (
-          <View key={`home-confetti-${index}`} style={style} />
-        ))}
-      </View>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.mapShell}>
         <View style={styles.mapHero}>
@@ -215,28 +189,72 @@ export function HomeScreen({
 
           <View style={styles.sectionCard}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Suggested Route</Text>
-              <Pressable onPress={onOpenPopularRoutes}>
-                <Text style={styles.sectionAction}>See all</Text>
-              </Pressable>
+              <Text style={styles.sectionTitle}>Suggested Routes</Text>
             </View>
 
-            <Pressable onPress={onOpenPopularRoutes} style={({ pressed }) => [styles.featureCard, pressed && styles.cardPressed]}>
-              <View style={styles.featureBadge}>
-                <Text style={styles.featureBadgeText}>Best match</Text>
-              </View>
-              <Text style={styles.featureTitle}>Sunset Riverwalk</Text>
-              <Text style={styles.featureSubtitle}>
-                Well-lit, easy to follow, and popular for evening walks.
-              </Text>
-              <View style={styles.featureMetaRow}>
-                {["2.4 mi", "34 min", "Low risk"].map((item) => (
-                  <View key={item} style={styles.featureMetaPill}>
-                    <Text style={styles.featureMetaText}>{item}</Text>
-                  </View>
-                ))}
-              </View>
-            </Pressable>
+            <View style={styles.favoriteRoutesRow}>
+              {[
+                {
+                  title: "Riverwalk",
+                  subtitle: "Bike loop • 5k",
+                  icon: "↗",
+                  onPress: onOpenPopularRoutes,
+                  tone: "warm" as const,
+                },
+                {
+                  title: "School → Home",
+                  subtitle: "Walk • 1.2 mi",
+                  icon: "⌂",
+                  onPress: onOpenSavedRoutes,
+                  tone: "cool" as const,
+                },
+                {
+                  title: "Add",
+                  subtitle: "Favorite",
+                  icon: "+",
+                  onPress: onOpenSavedRoutes,
+                  tone: "add" as const,
+                },
+              ].map((item) => (
+                <Pressable
+                  key={item.title}
+                  onPress={item.onPress}
+                  style={({ pressed }) => [
+                    styles.favoriteRouteItem,
+                    pressed && styles.cardPressed,
+                  ]}
+                >
+                  <LinearGradient
+                    colors={
+                      item.tone === "warm"
+                        ? ["#F7D9C9", "#F1B08F"]
+                        : item.tone === "cool"
+                          ? ["#D8E59C", "#B9CD62"]
+                          : ["#F6D2BE", "#EFA06F"]
+                    }
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={[
+                      styles.favoriteRouteIcon,
+                      item.tone === "add" && styles.favoriteRouteIconAdd,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.favoriteRouteIconText,
+                        item.tone === "add" && styles.favoriteRouteIconTextAdd,
+                      ]}
+                    >
+                      {item.icon}
+                    </Text>
+                  </LinearGradient>
+                  <Text style={styles.favoriteRouteTitle} numberOfLines={1}>
+                    {item.title}
+                  </Text>
+                  <Text style={styles.favoriteRouteSubtitle}>{item.subtitle}</Text>
+                </Pressable>
+              ))}
+            </View>
           </View>
 
           <View style={styles.sectionCard}>
@@ -320,11 +338,6 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: theme.colors.background,
-  },
-  pageConfettiBackdrop: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 0,
-    pointerEvents: "none",
   },
   content: {
     paddingHorizontal: 18,
@@ -445,7 +458,7 @@ const styles = StyleSheet.create({
   },
   contentStack: {
     marginTop: -34,
-    marginHorizontal: 14,
+    marginHorizontal: 0,
     gap: 16,
   },
   sectionCard: {
@@ -532,60 +545,51 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: theme.colors.brandDeep,
   },
-  featureCard: {
-    borderRadius: 22,
-    backgroundColor: theme.colors.surfaceSoft,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: "rgba(239,167,116,0.16)",
-  },
   cardPressed: {
     transform: [{ scale: 1.01 }],
   },
-  featureBadge: {
-    alignSelf: "flex-start",
-    borderRadius: 999,
-    backgroundColor: "rgba(191,214,90,0.16)",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+  favoriteRoutesRow: {
+    flexDirection: "row",
+    gap: 14,
   },
-  featureBadgeText: {
-    fontSize: 11,
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 0.6,
-    color: "#617228",
+  favoriteRouteItem: {
+    flex: 1,
+    alignItems: "center",
   },
-  featureTitle: {
-    marginTop: 14,
-    fontSize: 24,
+  favoriteRouteIcon: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: theme.colors.brandDeep,
+    shadowOpacity: 0.08,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 3,
+  },
+  favoriteRouteIconAdd: {
+    borderWidth: 1,
+    borderColor: "rgba(119,128,147,0.12)",
+  },
+  favoriteRouteIconText: {
+    fontSize: 28,
     fontWeight: "800",
     color: theme.colors.text,
   },
-  featureSubtitle: {
-    marginTop: 6,
-    fontSize: 14,
-    lineHeight: 20,
-    color: theme.colors.textSoft,
+  favoriteRouteIconTextAdd: {
+    color: "#B26035",
   },
-  featureMetaRow: {
-    marginTop: 16,
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
+  favoriteRouteTitle: {
+    marginTop: 8,
+    fontSize: 15,
+    fontWeight: "800",
+    color: theme.colors.text,
   },
-  featureMetaPill: {
-    borderRadius: 999,
-    backgroundColor: "rgba(222,133,88,0.18)",
-    borderWidth: 1,
-    borderColor: "rgba(202,116,73,0.18)",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  featureMetaText: {
+  favoriteRouteSubtitle: {
+    marginTop: 2,
     fontSize: 13,
-    fontWeight: "700",
-    color: theme.colors.brandDeep,
+    color: theme.colors.textSoft,
   },
   listCard: {
     borderRadius: 22,
@@ -664,198 +668,5 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     color: "#4F5A22",
     textAlign: "center",
-  },
-  pageConfettiOne: {
-    position: "absolute",
-    top: "8%",
-    left: "6%",
-    width: 16,
-    height: 16,
-    borderRadius: 999,
-    backgroundColor: "rgba(175,203,70,0.24)",
-  },
-  pageConfettiTwo: {
-    position: "absolute",
-    top: "12%",
-    right: "8%",
-    width: 14,
-    height: 14,
-    borderRadius: 6,
-    backgroundColor: "rgba(245,160,87,0.24)",
-    transform: [{ rotate: "-18deg" }],
-  },
-  pageConfettiThree: {
-    position: "absolute",
-    top: "22%",
-    left: "3%",
-    width: 9,
-    height: 28,
-    borderRadius: 999,
-    backgroundColor: "rgba(229,139,91,0.22)",
-    transform: [{ rotate: "-24deg" }],
-  },
-  pageConfettiFour: {
-    position: "absolute",
-    top: "28%",
-    right: "4%",
-    width: 18,
-    height: 18,
-    borderRadius: 999,
-    backgroundColor: "rgba(247,217,201,0.34)",
-  },
-  pageConfettiFive: {
-    position: "absolute",
-    top: "43%",
-    left: "7%",
-    width: 14,
-    height: 14,
-    borderRadius: 5,
-    backgroundColor: "rgba(175,203,70,0.22)",
-    transform: [{ rotate: "28deg" }],
-  },
-  pageConfettiSix: {
-    position: "absolute",
-    top: "56%",
-    right: "6%",
-    width: 10,
-    height: 34,
-    borderRadius: 999,
-    backgroundColor: "rgba(245,160,87,0.2)",
-    transform: [{ rotate: "-18deg" }],
-  },
-  pageConfettiSeven: {
-    position: "absolute",
-    bottom: "28%",
-    left: "8%",
-    width: 18,
-    height: 18,
-    borderRadius: 999,
-    backgroundColor: "rgba(229,139,91,0.22)",
-  },
-  pageConfettiEight: {
-    position: "absolute",
-    bottom: "22%",
-    right: "22%",
-    width: 14,
-    height: 14,
-    borderRadius: 4,
-    backgroundColor: "rgba(247,217,201,0.32)",
-    transform: [{ rotate: "-16deg" }],
-  },
-  pageConfettiNine: {
-    position: "absolute",
-    bottom: "14%",
-    right: "10%",
-    width: 10,
-    height: 34,
-    borderRadius: 999,
-    backgroundColor: "rgba(175,203,70,0.2)",
-    transform: [{ rotate: "32deg" }],
-  },
-  pageConfettiTen: {
-    position: "absolute",
-    bottom: "8%",
-    left: "18%",
-    width: 12,
-    height: 12,
-    borderRadius: 999,
-    backgroundColor: "rgba(245,160,87,0.22)",
-  },
-  pageConfettiEleven: {
-    position: "absolute",
-    top: "18%",
-    left: "18%",
-    width: 12,
-    height: 32,
-    borderRadius: 999,
-    backgroundColor: "rgba(175,203,70,0.2)",
-    transform: [{ rotate: "26deg" }],
-  },
-  pageConfettiTwelve: {
-    position: "absolute",
-    top: "34%",
-    right: "16%",
-    width: 16,
-    height: 16,
-    borderRadius: 999,
-    backgroundColor: "rgba(245,160,87,0.24)",
-  },
-  pageConfettiThirteen: {
-    position: "absolute",
-    top: "48%",
-    left: "16%",
-    width: 14,
-    height: 14,
-    borderRadius: 4,
-    backgroundColor: "rgba(247,217,201,0.32)",
-    transform: [{ rotate: "22deg" }],
-  },
-  pageConfettiFourteen: {
-    position: "absolute",
-    top: "64%",
-    left: "26%",
-    width: 10,
-    height: 30,
-    borderRadius: 999,
-    backgroundColor: "rgba(229,139,91,0.22)",
-    transform: [{ rotate: "-28deg" }],
-  },
-  pageConfettiFifteen: {
-    position: "absolute",
-    bottom: "18%",
-    right: "32%",
-    width: 18,
-    height: 18,
-    borderRadius: 999,
-    backgroundColor: "rgba(175,203,70,0.2)",
-  },
-  pageConfettiSixteen: {
-    position: "absolute",
-    bottom: "10%",
-    right: "4%",
-    width: 14,
-    height: 36,
-    borderRadius: 999,
-    backgroundColor: "rgba(245,160,87,0.2)",
-    transform: [{ rotate: "20deg" }],
-  },
-  pageConfettiSeventeen: {
-    position: "absolute",
-    top: "10%",
-    left: "34%",
-    width: 22,
-    height: 22,
-    borderRadius: 999,
-    backgroundColor: "rgba(229,139,91,0.22)",
-  },
-  pageConfettiEighteen: {
-    position: "absolute",
-    top: "36%",
-    left: "26%",
-    width: 16,
-    height: 44,
-    borderRadius: 999,
-    backgroundColor: "rgba(175,203,70,0.22)",
-    transform: [{ rotate: "24deg" }],
-  },
-  pageConfettiNineteen: {
-    position: "absolute",
-    top: "58%",
-    right: "20%",
-    width: 20,
-    height: 20,
-    borderRadius: 5,
-    backgroundColor: "rgba(245,160,87,0.24)",
-    transform: [{ rotate: "-18deg" }],
-  },
-  pageConfettiTwenty: {
-    position: "absolute",
-    bottom: "32%",
-    right: "6%",
-    width: 14,
-    height: 40,
-    borderRadius: 999,
-    backgroundColor: "rgba(247,217,201,0.36)",
-    transform: [{ rotate: "30deg" }],
   },
 });
