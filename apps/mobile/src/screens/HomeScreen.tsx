@@ -1,12 +1,10 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import MapView, { Marker, Polyline } from "react-native-maps";
-import { Header } from "../components/Header";
+import AnimatedWayPointLogo from "../components/AnimatedWayPointLogo";
 import { theme } from "../styles/theme";
 
-const readyLimeLight = "#CFE17A";
 const readyLimeTextDark = "#4F5A22";
-const readyLimeText = "#566126";
 
 const previewRoute = [
   { latitude: 29.4246, longitude: -98.4898 },
@@ -47,52 +45,37 @@ type HomeScreenProps = {
 const heroStateByMode: Record<
   JourneyMode,
   {
-    statusText: string;
-    statusDotColor: string;
-    chipText: string;
-    locationLabel: string;
     locationValue: string;
+    routeValue: string;
     weatherValue: string;
     weatherText: string;
     showRoute: boolean;
   }
 > = {
   idle: {
-    statusText: "Ready to find a journey",
-    statusDotColor: theme.colors.success,
-    chipText: "Live location",
-    locationLabel: "Current Location",
     locationValue: "Downtown Area",
+    routeValue: "No route started",
     weatherValue: "72°F",
     weatherText: "Sunny",
     showRoute: false,
   },
   active: {
-    statusText: "Current journey",
-    statusDotColor: theme.colors.success,
-    chipText: "Active route",
-    locationLabel: "Current Journey",
-    locationValue: "Riverwalk Loop",
+    locationValue: "Downtown Area",
+    routeValue: "Riverwalk Loop",
     weatherValue: "72°F",
     weatherText: "Sunny",
     showRoute: true,
   },
   off_route: {
-    statusText: "Deviated from route",
-    statusDotColor: theme.colors.brand,
-    chipText: "Off route",
-    locationLabel: "Current Location",
     locationValue: "Near Pine Street",
+    routeValue: "Riverwalk Loop",
     weatherValue: "71°F",
     weatherText: "Cloudy",
     showRoute: true,
   },
   complete: {
-    statusText: "Journey complete",
-    statusDotColor: theme.colors.brandBright,
-    chipText: "Completed",
-    locationLabel: "Current Location",
     locationValue: "Downtown Area",
+    routeValue: "Completed route",
     weatherValue: "70°F",
     weatherText: "Clear",
     showRoute: true,
@@ -109,168 +92,225 @@ export function HomeScreen({
 
   return (
     <LinearGradient
-      colors={[theme.colors.background, theme.colors.backgroundAlt, theme.colors.backgroundDeep]}
+      colors={[theme.colors.background, "#F2E8DD", theme.colors.backgroundDeep]}
       locations={[0, 0.48, 1]}
       start={{ x: 0.5, y: 0 }}
       end={{ x: 0.5, y: 1 }}
       style={styles.screen}
     >
-      <ScrollView
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        <Header onAlertPress={onOpenAlerts} />
+      <View style={styles.pageConfettiBackdrop}>
+        {[
+          styles.pageConfettiOne,
+          styles.pageConfettiTwo,
+          styles.pageConfettiThree,
+          styles.pageConfettiFour,
+          styles.pageConfettiFive,
+          styles.pageConfettiSix,
+          styles.pageConfettiSeven,
+          styles.pageConfettiEight,
+          styles.pageConfettiNine,
+          styles.pageConfettiTen,
+          styles.pageConfettiEleven,
+          styles.pageConfettiTwelve,
+          styles.pageConfettiThirteen,
+          styles.pageConfettiFourteen,
+          styles.pageConfettiFifteen,
+          styles.pageConfettiSixteen,
+          styles.pageConfettiSeventeen,
+          styles.pageConfettiEighteen,
+          styles.pageConfettiNineteen,
+          styles.pageConfettiTwenty,
+        ].map((style, index) => (
+          <View key={`home-confetti-${index}`} style={style} />
+        ))}
+      </View>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <View style={styles.mapShell}>
+        <View style={styles.mapHero}>
+          <MapView
+            style={styles.mapView}
+            initialRegion={heroState.showRoute ? activeRouteRegion : liveLocationRegion}
+            showsUserLocation={!heroState.showRoute}
+            followsUserLocation={!heroState.showRoute}
+            scrollEnabled={false}
+            zoomEnabled={false}
+            pitchEnabled={false}
+            rotateEnabled={false}
+            toolbarEnabled={false}
+            showsCompass={false}
+            pointerEvents="none"
+          >
+            {heroState.showRoute ? (
+              <>
+                <Polyline
+                  coordinates={[...previewRoute]}
+                  strokeColor="#675EF2"
+                  strokeWidth={5}
+                  lineCap="round"
+                  lineJoin="round"
+                />
+                <Marker coordinate={previewRoute[0]} title="Start" />
+                <Marker
+                  coordinate={previewRoute[Math.min(4, previewRoute.length - 1)]}
+                  title="Current position"
+                  pinColor={theme.colors.brand}
+                />
+              </>
+            ) : null}
+          </MapView>
+          <LinearGradient
+            colors={["rgba(255,255,255,0.05)", "rgba(255,250,247,0.18)"]}
+            start={{ x: 0.2, y: 0 }}
+            end={{ x: 0.8, y: 1 }}
+            style={styles.mapTint}
+          />
 
-        <View style={styles.heroShell}>
-          <View style={styles.hero}>
-            <MapView
-              style={styles.mapView}
-              initialRegion={heroState.showRoute ? activeRouteRegion : liveLocationRegion}
-              showsUserLocation={!heroState.showRoute}
-              followsUserLocation={!heroState.showRoute}
-              scrollEnabled={false}
-              zoomEnabled={false}
-              pitchEnabled={false}
-              rotateEnabled={false}
-              toolbarEnabled={false}
-              showsCompass={false}
-              pointerEvents="none"
-            >
-              {heroState.showRoute ? (
-                <>
-                  <Polyline
-                    coordinates={[...previewRoute]}
-                    strokeColor="#675EF2"
-                    strokeWidth={5}
-                    lineCap="round"
-                    lineJoin="round"
-                  />
-                  <Marker coordinate={previewRoute[0]} title="Start" />
-                  <Marker
-                    coordinate={previewRoute[Math.min(4, previewRoute.length - 1)]}
-                    title="Current position"
-                    pinColor={theme.colors.brand}
-                  />
-                </>
-              ) : null}
-            </MapView>
-            <LinearGradient
-              colors={["rgba(255,255,255,0.06)", "rgba(255,250,247,0.16)"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.mapTint}
-            />
-
-            <View style={styles.mapStatusChip}>
-              <View
-                style={[
-                  styles.mapStatusDot,
-                  { backgroundColor: heroState.statusDotColor },
-                ]}
-              />
-              <Text style={styles.mapStatusChipLabel}>
-                {heroState.chipText}
-              </Text>
+          <View style={styles.mapTopRow}>
+            <View style={styles.mapBrand}>
+              <View style={styles.mapBrandLogoWrap}>
+                <AnimatedWayPointLogo size={92} />
+              </View>
+              <View style={styles.mapBrandCopy}>
+                <Text style={styles.mapBrandTitle}>
+                  <Text style={styles.mapBrandTitleWay}>Way</Text>
+                  <Text style={styles.mapBrandTitlePoint}>Point</Text>
+                </Text>
+              </View>
             </View>
 
-            <View style={styles.locationCard}>
+            <Pressable onPress={onOpenAlerts} style={({ pressed }) => [styles.alertButton, pressed && styles.alertPressed]}>
+              <Text style={styles.alertIcon}>◠</Text>
+              <View style={styles.alertDot} />
+            </Pressable>
+          </View>
+
+        </View>
+        </View>
+
+        <View style={styles.contentStack}>
+          <View style={styles.sectionCard}>
+            <Pressable style={({ pressed }) => [styles.searchCard, pressed && styles.cardPressed]}>
+              <Text style={styles.searchIcon}>⌕</Text>
+              <View style={styles.searchCopy}>
+                <Text style={styles.searchTitle}>Where do you want to go?</Text>
+                <Text style={styles.searchSubtitle}>Find a safe route nearby</Text>
+              </View>
+            </Pressable>
+
+            <View style={styles.mapInfoCard}>
               <View>
-                <Text style={styles.locationLabel}>{heroState.locationLabel}</Text>
-                <Text style={styles.locationValue}>{heroState.locationValue}</Text>
-                {journeyMode !== "idle" ? (
-                  <Text style={styles.locationMeta}>{heroState.statusText}</Text>
-                ) : null}
+                <Text style={styles.mapInfoLabel}>
+                  {heroState.showRoute ? "Current Journey" : "Current Location"}
+                </Text>
+                <Text style={styles.mapInfoValue}>
+                  {heroState.showRoute ? heroState.routeValue : heroState.locationValue}
+                </Text>
               </View>
-              <View style={styles.weatherWrap}>
-                <Text style={styles.weatherLabel}>{heroState.weatherText}</Text>
-                <Text style={styles.weatherValue}>{heroState.weatherValue}</Text>
+              <View style={styles.mapWeatherWrap}>
+                <Text style={styles.mapWeatherLabel}>{heroState.weatherText}</Text>
+                <Text style={styles.mapWeatherValue}>{heroState.weatherValue}</Text>
               </View>
             </View>
           </View>
-        </View>
 
-        <View style={styles.routeGrid}>
-          <LinearGradient
-            colors={["#F6CBB9", "#EEAD92", "#D97F5E"]}
-            locations={[0, 0.62, 1]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={[styles.routeCard, styles.savedCard]}
-          >
-            <View style={styles.routeSavedWash} />
-            <View style={styles.routeSavedWarmWash} />
-            <View style={styles.routeOrb} />
-            <View style={styles.routeOrbSaved} />
-            <Text style={styles.routeTitle}>Saved{"\n"}Routes</Text>
-            <Text style={styles.routeSubtitle}>12 favorites</Text>
-            <Pressable onPress={onOpenSavedRoutes} style={({ pressed }) => pressed && styles.routePressablePressed}>
-              {({ pressed }) => (
-                <View style={[styles.routeActionPill, pressed && styles.routeActionPillPressed]}>
-                  <Text style={styles.routeAction}>View all →</Text>
-                </View>
-              )}
-            </Pressable>
-          </LinearGradient>
-          <LinearGradient
-            colors={[theme.colors.accentPeach, "#EA9358", "#D27645"]}
-            locations={[0, 0.58, 1]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={[styles.routeCard, styles.popularCard]}
-          >
-            <View style={styles.routePopularWarmWash} />
-            <View style={styles.routeOrb} />
-            <Text style={styles.routeTitle}>Popular Routes</Text>
-            <Text style={styles.routeSubtitle}>Trending now</Text>
-            <Pressable onPress={onOpenPopularRoutes} style={({ pressed }) => pressed && styles.routePressablePressed}>
-              {({ pressed }) => (
-                <View style={[styles.routeActionPill, pressed && styles.routeActionPillPressed]}>
-                  <Text style={styles.routeAction}>Explore →</Text>
-                </View>
-              )}
-            </Pressable>
-          </LinearGradient>
-        </View>
-
-        <LinearGradient
-          colors={["#D8E89A", "#EAF4B8"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.analyticsShell}
-        >
-          <View style={styles.analyticsGlowOne} />
-          <View style={styles.analyticsGlowTwo} />
-          <View style={styles.analyticsGlowThree} />
-          <Text style={styles.analyticsEyebrow}>Your progress</Text>
-          <Text style={styles.analyticsTitle}>Daily analytics</Text>
-
-          <View style={styles.analyticsGrid}>
-            {[
-              ["Streak", "14d"],
-              ["Distance", "6.4 mi"],
-              ["Individual Routes", "16"],
-              ["Group Routes", "7"],
-            ].map(([label, value]) => (
-              <Pressable
-                key={label}
-                style={({ pressed }) => [styles.analyticsPressable, pressed && styles.analyticsPressablePressed]}
-              >
-                {({ pressed }) => (
-                  <LinearGradient
-                    colors={["rgba(255,255,255,0.98)", "rgba(255,253,248,0.95)"]}
-                    locations={[0, 0.45, 1]}
-                    start={{ x: 0.5, y: 0 }}
-                    end={{ x: 0.5, y: 1 }}
-                    style={[styles.analyticsCard, pressed && styles.analyticsCardPressed]}
-                  >
-                    <Text style={styles.analyticsLabel}>{label}</Text>
-                    <Text style={styles.analyticsValue}>{value}</Text>
-                  </LinearGradient>
-                )}
+          <View style={styles.sectionCard}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Suggested Route</Text>
+              <Pressable onPress={onOpenPopularRoutes}>
+                <Text style={styles.sectionAction}>See all</Text>
               </Pressable>
-            ))}
+            </View>
+
+            <Pressable onPress={onOpenPopularRoutes} style={({ pressed }) => [styles.featureCard, pressed && styles.cardPressed]}>
+              <View style={styles.featureBadge}>
+                <Text style={styles.featureBadgeText}>Best match</Text>
+              </View>
+              <Text style={styles.featureTitle}>Sunset Riverwalk</Text>
+              <Text style={styles.featureSubtitle}>
+                Well-lit, easy to follow, and popular for evening walks.
+              </Text>
+              <View style={styles.featureMetaRow}>
+                {["2.4 mi", "34 min", "Low risk"].map((item) => (
+                  <View key={item} style={styles.featureMetaPill}>
+                    <Text style={styles.featureMetaText}>{item}</Text>
+                  </View>
+                ))}
+              </View>
+            </Pressable>
           </View>
-        </LinearGradient>
+
+          <View style={styles.sectionCard}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Quick Access</Text>
+            </View>
+
+            <View style={styles.listCard}>
+              {[
+                {
+                  title: "Saved routes",
+                  subtitle: "Open your favorite places fast",
+                  icon: "⌂",
+                  onPress: onOpenSavedRoutes,
+                  tone: "warm" as const,
+                },
+                {
+                  title: "Popular routes",
+                  subtitle: "See routes people love nearby",
+                  icon: "↗",
+                  onPress: onOpenPopularRoutes,
+                  tone: "cool" as const,
+                },
+              ].map((item, index) => (
+                <Pressable
+                  key={item.title}
+                  onPress={item.onPress}
+                  style={({ pressed }) => [
+                    styles.listRow,
+                    index === 0 && styles.listRowDivider,
+                    pressed && styles.listRowPressed,
+                  ]}
+                >
+                  <LinearGradient
+                    colors={
+                      item.tone === "warm"
+                        ? ["#F7D9C9", "#F1B08F"]
+                        : ["#D8E59C", "#B9CD62"]
+                    }
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.listIcon}
+                  >
+                    <Text style={styles.listIconText}>{item.icon}</Text>
+                  </LinearGradient>
+                  <View style={styles.listCopy}>
+                    <Text style={styles.listTitle}>{item.title}</Text>
+                    <Text style={styles.listSubtitle}>{item.subtitle}</Text>
+                  </View>
+                  <Text style={styles.listChevron}>›</Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.sectionCard}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Today</Text>
+            </View>
+
+            <View style={styles.progressRow}>
+              {[
+                ["Streak", "14d"],
+                ["Distance", "6.4 mi"],
+                ["Routes", "16"],
+              ].map(([label, value]) => (
+                <View key={label} style={styles.progressTile}>
+                  <Text style={styles.progressLabel}>{label}</Text>
+                  <Text style={styles.progressValue}>{value}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        </View>
       </ScrollView>
     </LinearGradient>
   );
@@ -281,313 +321,541 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
-  content: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 180,
-    gap: 16,
+  pageConfettiBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 0,
+    pointerEvents: "none",
   },
-  heroShell: {
-    borderRadius: 32,
+  content: {
+    paddingHorizontal: 18,
+    paddingTop: 0,
+    paddingBottom: 180,
+    zIndex: 1,
+  },
+  mapShell: {
+    marginHorizontal: -18,
+    marginTop: -2,
+  },
+  mapHero: {
+    height: 300,
     overflow: "hidden",
     backgroundColor: theme.colors.heroSky,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
     shadowColor: theme.colors.brandDeep,
     shadowOpacity: 0.16,
     shadowRadius: 24,
     shadowOffset: { width: 0, height: 12 },
     elevation: 10,
   },
-  hero: {
-    minHeight: 404,
-    overflow: "hidden",
-    borderRadius: 32,
-    backgroundColor: theme.colors.heroSkySoft,
-  },
   mapView: {
     ...StyleSheet.absoluteFillObject,
   },
   mapTint: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(255,250,247,0.08)",
   },
-  mapStatusChip: {
-    position: "absolute",
-    top: 16,
-    left: 16,
+  mapTopRow: {
+    paddingHorizontal: 18,
+    paddingTop: 16,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  mapBrand: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    height: 46,
+    paddingLeft: 4,
+    paddingRight: 14,
     borderRadius: 20,
-    backgroundColor: "rgba(255,255,255,0.92)",
-    paddingHorizontal: 12,
-    paddingVertical: 9,
+    backgroundColor: "rgba(119,128,147,0.88)",
+    borderWidth: 1,
+    borderColor: "rgba(243,200,162,0.16)",
+    shadowColor: "#778093",
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
+    minWidth: 0,
+  },
+  mapBrandLogoWrap: {
+    marginTop: -22,
+    marginBottom: -22,
+    marginLeft: -8,
+  },
+  mapBrandCopy: {
+    marginLeft: -10,
+    flexShrink: 1,
+    alignItems: "center",
+  },
+  mapBrandTitle: {
+    fontSize: 28,
+    fontWeight: "900",
+    letterSpacing: -0.8,
+    color: theme.colors.white,
+  },
+  mapBrandTitleWay: {
+    color: "#F3C8A2",
+    fontSize: 28,
+    fontWeight: "800",
+    letterSpacing: -0.5,
+  },
+  mapBrandTitlePoint: {
+    color: theme.colors.success,
+  },
+  mapBrandSubtitle: {
+    marginTop: 2,
+    fontSize: 13,
+    color: "rgba(255,255,255,0.82)",
+    textAlign: "center",
+  },
+  alertButton: {
+    minWidth: 60,
+    minHeight: 46,
+    paddingHorizontal: 8,
+    paddingVertical: 11,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    gap: 8,
+    backgroundColor: "#F7D9C9",
     shadowColor: theme.colors.ink,
     shadowOpacity: 0.08,
     shadowRadius: 18,
     shadowOffset: { width: 0, height: 8 },
     elevation: 4,
   },
-  mapStatusDot: {
+  alertPressed: {
+    opacity: 0.9,
+  },
+  alertIcon: {
+    fontSize: 22,
+    color: "#E58B5B",
+  },
+  alertDot: {
+    position: "absolute",
+    top: 10,
+    right: 10,
     width: 8,
     height: 8,
     borderRadius: 999,
+    backgroundColor: theme.colors.brand,
   },
-  mapStatusChipLabel: {
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 0.6,
-    textTransform: "uppercase",
-    color: theme.colors.text,
+  contentStack: {
+    marginTop: -34,
+    marginHorizontal: 14,
+    gap: 16,
   },
-  locationCard: {
-    position: "absolute",
-    left: 16,
-    right: 16,
-    bottom: 16,
-    borderRadius: 22,
-    backgroundColor: "rgba(255,255,255,0.95)",
-    paddingHorizontal: 18,
-    paddingVertical: 14,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    shadowColor: theme.colors.ink,
+  sectionCard: {
+    backgroundColor: "rgb(255, 255, 255)",
+    borderRadius: 28,
+    padding: 18,
+    gap: 14,
+    shadowColor: theme.colors.brandDeep,
     shadowOpacity: 0.1,
     shadowRadius: 20,
     shadowOffset: { width: 0, height: 10 },
     elevation: 5,
   },
-  locationLabel: {
+  searchCard: {
+    borderRadius: 24,
+    backgroundColor: theme.colors.surfaceSoft,
+    paddingHorizontal: 16,
+    paddingVertical: 15,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  searchIcon: {
+    fontSize: 22,
+    color: theme.colors.textMuted,
+  },
+  searchCopy: {
+    flex: 1,
+  },
+  searchTitle: {
+    fontSize: 17,
+    fontWeight: "800",
+    color: theme.colors.text,
+  },
+  searchSubtitle: {
+    marginTop: 2,
+    fontSize: 13,
+    color: theme.colors.textSoft,
+  },
+  mapInfoCard: {
+    borderRadius: 22,
+    backgroundColor: theme.colors.surfaceSoft,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  mapInfoLabel: {
     fontSize: 13,
     color: theme.colors.textMuted,
   },
-  locationValue: {
+  mapInfoValue: {
     marginTop: 3,
     fontSize: 19,
     fontWeight: "700",
     color: theme.colors.text,
   },
-  locationMeta: {
-    marginTop: 4,
-    fontSize: 12,
-    color: theme.colors.textSoft,
-  },
-  weatherWrap: {
+  mapWeatherWrap: {
     alignItems: "flex-end",
   },
-  weatherLabel: {
+  mapWeatherLabel: {
     fontSize: 13,
     color: theme.colors.textMuted,
   },
-  weatherValue: {
+  mapWeatherValue: {
     marginTop: 3,
     fontSize: 18,
     fontWeight: "700",
     color: theme.colors.text,
   },
-  routeGrid: {
+  sectionHeader: {
     flexDirection: "row",
-    gap: 12,
+    alignItems: "center",
+    justifyContent: "space-between",
   },
-  routeCard: {
-    position: "relative",
-    overflow: "hidden",
-    flex: 1,
-    borderRadius: 30,
-    paddingHorizontal: 18,
-    paddingVertical: 20,
-    minHeight: 172,
-    justifyContent: "flex-end",
-    shadowColor: theme.colors.brandDeep,
-    shadowOpacity: 0.25,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 10 },
-    elevation: 8,
-    opacity: 0.96,
-  },
-  savedCard: {},
-  popularCard: {},
-  routePressablePressed: {
-    transform: [{ scale: 1.02 }],
-  },
-  routeSavedWash: {
-    position: "absolute",
-    left: -96,
-    top: 8,
-    bottom: 0,
-    width: 180,
-    borderRadius: 999,
-    backgroundColor: "rgba(255,236,234,0.12)",
-  },
-  routeSavedWarmWash: {
-    position: "absolute",
-    right: -110,
-    bottom: -120,
-    width: 250,
-    height: 250,
-    borderRadius: 999,
-    backgroundColor: "rgba(244,208,199,0.1)",
-  },
-  routeOrb: {
-    position: "absolute",
-    right: -64,
-    top: -50,
-    width: 170,
-    height: 170,
-    borderRadius: 999,
-    backgroundColor: theme.colors.popularOrb,
-  },
-  routeOrbSaved: {
-    position: "absolute",
-    right: -108,
-    top: -84,
-    width: 172,
-    height: 172,
-    borderRadius: 999,
-    backgroundColor: "rgba(255,239,238,0.05)",
-    opacity: 0.12,
-  },
-  routePopularWarmWash: {
-    position: "absolute",
-    left: -22,
-    bottom: -96,
-    width: 350,
-    height: 290,
-    borderRadius: 999,
-    backgroundColor: theme.colors.popularWarmWash,
-  },
-  routeTitle: {
-    fontSize: 24,
+  sectionTitle: {
+    fontSize: 22,
+    lineHeight: 26,
     fontWeight: "800",
-    color: theme.colors.white,
+    color: theme.colors.text,
   },
-  routeSubtitle: {
-    marginTop: 8,
-    fontSize: 15,
-    fontWeight: "500",
-    color: "rgba(255,255,255,0.88)",
-    opacity: 0.9,
-  },
-  routeAction: {
-    fontSize: 16,
+  sectionAction: {
+    fontSize: 14,
     fontWeight: "700",
-    color: theme.colors.white,
+    color: theme.colors.brandDeep,
   },
-  routeActionPill: {
-    marginTop: 22,
+  featureCard: {
+    borderRadius: 22,
+    backgroundColor: theme.colors.surfaceSoft,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "rgba(239,167,116,0.16)",
+  },
+  cardPressed: {
+    transform: [{ scale: 1.01 }],
+  },
+  featureBadge: {
     alignSelf: "flex-start",
     borderRadius: 999,
-    backgroundColor: "rgba(255,255,255,0.28)",
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    backgroundColor: "rgba(191,214,90,0.16)",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
-  routeActionPillPressed: {
-    backgroundColor: "rgba(255,255,255,0.28)",
-    transform: [{ scale: 1.03 }],
-  },
-  analyticsShell: {
-    position: "relative",
-    overflow: "hidden",
-    borderRadius: 30,
-    paddingHorizontal: 18,
-    paddingVertical: 16,
-    shadowColor: theme.colors.brandDeep,
-    shadowOpacity: 0.08,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 10 },
-    elevation: 4,
-  },
-  analyticsGlowOne: {
-    position: "absolute",
-    top: -70,
-    right: -54,
-    width: 280,
-    height: 280,
-    borderRadius: 999,
-    backgroundColor: "rgba(255,255,255,0.14)",
-    opacity: 0.08,
-  },
-  analyticsGlowTwo: {
-    position: "absolute",
-    left: -88,
-    bottom: -96,
-    width: 320,
-    height: 320,
-    borderRadius: 999,
-    backgroundColor: "rgba(175,203,70,0.1)",
-    opacity: 0.06,
-  },
-  analyticsGlowThree: {
-    position: "absolute",
-    right: 24,
-    top: 56,
-    width: 340,
-    height: 88,
-    borderRadius: 999,
-    backgroundColor: "rgba(255,255,255,0.12)",
-    transform: [{ rotate: "-12deg" }],
-    opacity: 0.08,
-  },
-  analyticsEyebrow: {
-    fontSize: 12,
-    letterSpacing: 1.8,
-    textTransform: "uppercase",
-    color: readyLimeText,
-  },
-  analyticsTitle: {
-    marginTop: 8,
-    fontSize: 28,
+  featureBadgeText: {
+    fontSize: 11,
     fontWeight: "700",
-    color: readyLimeTextDark,
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
+    color: "#617228",
   },
-  analyticsGrid: {
+  featureTitle: {
+    marginTop: 14,
+    fontSize: 24,
+    fontWeight: "800",
+    color: theme.colors.text,
+  },
+  featureSubtitle: {
+    marginTop: 6,
+    fontSize: 14,
+    lineHeight: 20,
+    color: theme.colors.textSoft,
+  },
+  featureMetaRow: {
     marginTop: 16,
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 12,
-    justifyContent: "space-between",
+    gap: 8,
   },
-  analyticsPressable: {
-    width: "47.8%",
-  },
-  analyticsPressablePressed: {
-    transform: [{ translateY: -2 }],
-  },
-  analyticsCard: {
-    width: "100%",
-    borderRadius: 18,
+  featureMetaPill: {
+    borderRadius: 999,
+    backgroundColor: "rgba(222,133,88,0.18)",
     borderWidth: 1,
-    borderColor: "rgba(175,203,70,0.2)",
-    paddingHorizontal: 14,
+    borderColor: "rgba(202,116,73,0.18)",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  featureMetaText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: theme.colors.brandDeep,
+  },
+  listCard: {
+    borderRadius: 22,
+    backgroundColor: theme.colors.surfaceSoft,
+    overflow: "hidden",
+  },
+  listRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 15,
+  },
+  listRowDivider: {
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(88,80,93,0.06)",
+  },
+  listRowPressed: {
+    opacity: 0.9,
+  },
+  listIcon: {
+    width: 46,
+    height: 46,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  listIconText: {
+    fontSize: 22,
+    fontWeight: "800",
+    color: theme.colors.text,
+  },
+  listCopy: {
+    flex: 1,
+  },
+  listTitle: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: theme.colors.text,
+  },
+  listSubtitle: {
+    marginTop: 3,
+    fontSize: 13,
+    color: theme.colors.textSoft,
+  },
+  listChevron: {
+    fontSize: 22,
+    fontWeight: "800",
+    color: theme.colors.textMuted,
+  },
+  progressRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  progressTile: {
+    flex: 1,
+    borderRadius: 20,
+    backgroundColor: "rgba(191,214,90,0.34)",
+    paddingHorizontal: 12,
     paddingVertical: 16,
     alignItems: "center",
-    shadowColor: theme.colors.ink,
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 5 },
-    elevation: 4,
+    borderWidth: 1,
+    borderColor: "rgba(185,205,98,0.5)",
   },
-  analyticsCardPressed: {
-    transform: [{ scale: 1.03 }],
-    shadowOpacity: 0.12,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 10 },
-    elevation: 5,
-  },
-  analyticsLabel: {
-    fontSize: 11,
-    letterSpacing: 1.4,
+  progressLabel: {
+    fontSize: 10,
+    fontWeight: "700",
+    letterSpacing: 1.1,
     textTransform: "uppercase",
-    color: readyLimeText,
-    fontWeight: "600",
-    opacity: 0.7,
+    color: "#6B7B2D",
     textAlign: "center",
   },
-  analyticsValue: {
-    marginTop: 10,
-    fontSize: 26,
-    fontWeight: "800",
-    color: "#4B3E45",
+  progressValue: {
+    marginTop: 8,
+    fontSize: 24,
+    fontWeight: "900",
+    color: "#4F5A22",
     textAlign: "center",
+  },
+  pageConfettiOne: {
+    position: "absolute",
+    top: "8%",
+    left: "6%",
+    width: 16,
+    height: 16,
+    borderRadius: 999,
+    backgroundColor: "rgba(175,203,70,0.24)",
+  },
+  pageConfettiTwo: {
+    position: "absolute",
+    top: "12%",
+    right: "8%",
+    width: 14,
+    height: 14,
+    borderRadius: 6,
+    backgroundColor: "rgba(245,160,87,0.24)",
+    transform: [{ rotate: "-18deg" }],
+  },
+  pageConfettiThree: {
+    position: "absolute",
+    top: "22%",
+    left: "3%",
+    width: 9,
+    height: 28,
+    borderRadius: 999,
+    backgroundColor: "rgba(229,139,91,0.22)",
+    transform: [{ rotate: "-24deg" }],
+  },
+  pageConfettiFour: {
+    position: "absolute",
+    top: "28%",
+    right: "4%",
+    width: 18,
+    height: 18,
+    borderRadius: 999,
+    backgroundColor: "rgba(247,217,201,0.34)",
+  },
+  pageConfettiFive: {
+    position: "absolute",
+    top: "43%",
+    left: "7%",
+    width: 14,
+    height: 14,
+    borderRadius: 5,
+    backgroundColor: "rgba(175,203,70,0.22)",
+    transform: [{ rotate: "28deg" }],
+  },
+  pageConfettiSix: {
+    position: "absolute",
+    top: "56%",
+    right: "6%",
+    width: 10,
+    height: 34,
+    borderRadius: 999,
+    backgroundColor: "rgba(245,160,87,0.2)",
+    transform: [{ rotate: "-18deg" }],
+  },
+  pageConfettiSeven: {
+    position: "absolute",
+    bottom: "28%",
+    left: "8%",
+    width: 18,
+    height: 18,
+    borderRadius: 999,
+    backgroundColor: "rgba(229,139,91,0.22)",
+  },
+  pageConfettiEight: {
+    position: "absolute",
+    bottom: "22%",
+    right: "22%",
+    width: 14,
+    height: 14,
+    borderRadius: 4,
+    backgroundColor: "rgba(247,217,201,0.32)",
+    transform: [{ rotate: "-16deg" }],
+  },
+  pageConfettiNine: {
+    position: "absolute",
+    bottom: "14%",
+    right: "10%",
+    width: 10,
+    height: 34,
+    borderRadius: 999,
+    backgroundColor: "rgba(175,203,70,0.2)",
+    transform: [{ rotate: "32deg" }],
+  },
+  pageConfettiTen: {
+    position: "absolute",
+    bottom: "8%",
+    left: "18%",
+    width: 12,
+    height: 12,
+    borderRadius: 999,
+    backgroundColor: "rgba(245,160,87,0.22)",
+  },
+  pageConfettiEleven: {
+    position: "absolute",
+    top: "18%",
+    left: "18%",
+    width: 12,
+    height: 32,
+    borderRadius: 999,
+    backgroundColor: "rgba(175,203,70,0.2)",
+    transform: [{ rotate: "26deg" }],
+  },
+  pageConfettiTwelve: {
+    position: "absolute",
+    top: "34%",
+    right: "16%",
+    width: 16,
+    height: 16,
+    borderRadius: 999,
+    backgroundColor: "rgba(245,160,87,0.24)",
+  },
+  pageConfettiThirteen: {
+    position: "absolute",
+    top: "48%",
+    left: "16%",
+    width: 14,
+    height: 14,
+    borderRadius: 4,
+    backgroundColor: "rgba(247,217,201,0.32)",
+    transform: [{ rotate: "22deg" }],
+  },
+  pageConfettiFourteen: {
+    position: "absolute",
+    top: "64%",
+    left: "26%",
+    width: 10,
+    height: 30,
+    borderRadius: 999,
+    backgroundColor: "rgba(229,139,91,0.22)",
+    transform: [{ rotate: "-28deg" }],
+  },
+  pageConfettiFifteen: {
+    position: "absolute",
+    bottom: "18%",
+    right: "32%",
+    width: 18,
+    height: 18,
+    borderRadius: 999,
+    backgroundColor: "rgba(175,203,70,0.2)",
+  },
+  pageConfettiSixteen: {
+    position: "absolute",
+    bottom: "10%",
+    right: "4%",
+    width: 14,
+    height: 36,
+    borderRadius: 999,
+    backgroundColor: "rgba(245,160,87,0.2)",
+    transform: [{ rotate: "20deg" }],
+  },
+  pageConfettiSeventeen: {
+    position: "absolute",
+    top: "10%",
+    left: "34%",
+    width: 22,
+    height: 22,
+    borderRadius: 999,
+    backgroundColor: "rgba(229,139,91,0.22)",
+  },
+  pageConfettiEighteen: {
+    position: "absolute",
+    top: "36%",
+    left: "26%",
+    width: 16,
+    height: 44,
+    borderRadius: 999,
+    backgroundColor: "rgba(175,203,70,0.22)",
+    transform: [{ rotate: "24deg" }],
+  },
+  pageConfettiNineteen: {
+    position: "absolute",
+    top: "58%",
+    right: "20%",
+    width: 20,
+    height: 20,
+    borderRadius: 5,
+    backgroundColor: "rgba(245,160,87,0.24)",
+    transform: [{ rotate: "-18deg" }],
+  },
+  pageConfettiTwenty: {
+    position: "absolute",
+    bottom: "32%",
+    right: "6%",
+    width: 14,
+    height: 40,
+    borderRadius: 999,
+    backgroundColor: "rgba(247,217,201,0.36)",
+    transform: [{ rotate: "30deg" }],
   },
 });
