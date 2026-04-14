@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -9,7 +10,6 @@ import {
   View,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { Header } from "../components/Header";
 import { theme } from "../styles/theme";
 
 type StartJourneyScreenProps = {
@@ -21,6 +21,13 @@ export type JourneyType = "walk" | "run" | "hike" | "bike";
 export type TripMeasure = "distance" | "duration";
 type LocationMode = "current" | "custom";
 export type RouteShape = "oneWay" | "loop";
+type EditableContact = {
+  id: string;
+  name: string;
+  icon: string;
+  phone: string;
+  note: string;
+};
 
 export type StartJourneyConfig = {
   journeyLabel: string;
@@ -77,8 +84,16 @@ const journeyTypes: Array<{
 ];
 
 const trustedContacts: string[] = [];
-const previewTrustedContacts = ["Maya", "Jordan", "Chris"] as const;
-const previewGroupMembers = ["Ava", "Noah", "Lena"] as const;
+const initialTrustedContacts: EditableContact[] = [
+  { id: "maya", name: "Maya", icon: "M", phone: "(918) 555-0143", note: "Mom" },
+  { id: "jordan", name: "Jordan", icon: "J", phone: "(918) 555-0188", note: "Best friend" },
+  { id: "chris", name: "Chris", icon: "C", phone: "(918) 555-0121", note: "Emergency contact" },
+];
+const initialGroupMembers: EditableContact[] = [
+  { id: "ava", name: "Ava", icon: "A", phone: "(918) 555-0102", note: "Walking together" },
+  { id: "noah", name: "Noah", icon: "N", phone: "(918) 555-0190", note: "Meeting downtown" },
+  { id: "lena", name: "Lena", icon: "L", phone: "(918) 555-0176", note: "Bike partner" },
+];
 
 const journeySpeedMph: Record<JourneyType, number> = {
   walk: 3,
@@ -104,6 +119,13 @@ export function StartJourneyScreen({
   const [offRouteEnabled, setOffRouteEnabled] = useState(true);
   const [missedCheckInEnabled, setMissedCheckInEnabled] = useState(true);
   const [safetyPromptsEnabled, setSafetyPromptsEnabled] = useState(true);
+  const [trustedContactList, setTrustedContactList] =
+    useState<EditableContact[]>(initialTrustedContacts);
+  const [groupMemberList, setGroupMemberList] =
+    useState<EditableContact[]>(initialGroupMembers);
+  const [contactEditorVisible, setContactEditorVisible] = useState(false);
+  const [editingContact, setEditingContact] = useState<EditableContact | null>(null);
+  const [editingGroupContact, setEditingGroupContact] = useState(false);
 
   const enabledSafetySettings = [
     offRouteEnabled,
@@ -112,9 +134,7 @@ export function StartJourneyScreen({
   ].filter(Boolean).length;
   const totalSafetySettings = enabledSafetySettings + 1;
   const selectedJourney = journeyTypes.find((item) => item.key === journeyType);
-  const previewPeople = groupJourneyEnabled
-    ? previewGroupMembers
-    : previewTrustedContacts;
+  const previewPeople = groupJourneyEnabled ? groupMemberList : trustedContactList;
   const locationSummary =
     locationMode === "current"
       ? "Current location"
@@ -149,6 +169,90 @@ export function StartJourneyScreen({
           Math.round((distanceInMiles / journeySpeedMph[journeyType]) * 60) || 0,
         );
 
+  function openContactEditor(contact: EditableContact, isGroupContact: boolean) {
+    setEditingContact({ ...contact });
+    setEditingGroupContact(isGroupContact);
+    setContactEditorVisible(true);
+  }
+
+  function openNewContactEditor() {
+    setEditingContact({
+      id: `contact-${Date.now()}`,
+      name: "",
+      icon: "+",
+      phone: "",
+      note: "",
+    });
+    setEditingGroupContact(groupJourneyEnabled);
+    setContactEditorVisible(true);
+  }
+
+  function closeContactEditor() {
+    setContactEditorVisible(false);
+    setEditingContact(null);
+  }
+
+  function updateEditingContact(field: keyof EditableContact, value: string) {
+    setEditingContact((current) =>
+      current
+        ? {
+            ...current,
+            [field]: value,
+          }
+        : current,
+    );
+  }
+
+  function saveEditingContact() {
+    if (!editingContact) {
+      return;
+    }
+
+    const normalizedContact: EditableContact = {
+      ...editingContact,
+      name: editingContact.name.trim() || "New contact",
+      icon: editingContact.icon.trim().slice(0, 2) || "•",
+      phone: editingContact.phone.trim(),
+      note: editingContact.note.trim(),
+    };
+
+    const updateList = (contacts: EditableContact[]) => {
+      const exists = contacts.some((contact) => contact.id === normalizedContact.id);
+
+      return exists
+        ? contacts.map((contact) =>
+            contact.id === normalizedContact.id ? normalizedContact : contact,
+          )
+        : [...contacts, normalizedContact];
+    };
+
+    if (editingGroupContact) {
+      setGroupMemberList((current) => updateList(current));
+    } else {
+      setTrustedContactList((current) => updateList(current));
+    }
+
+    closeContactEditor();
+  }
+
+  function removeEditingContact() {
+    if (!editingContact) {
+      return;
+    }
+
+    if (editingGroupContact) {
+      setGroupMemberList((current) =>
+        current.filter((contact) => contact.id !== editingContact.id),
+      );
+    } else {
+      setTrustedContactList((current) =>
+        current.filter((contact) => contact.id !== editingContact.id),
+      );
+    }
+
+    closeContactEditor();
+  }
+
   return (
     <LinearGradient
       colors={[
@@ -165,36 +269,6 @@ export function StartJourneyScreen({
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <Header
-          title="Start Your Journey"
-          subtitle="We’ll keep you connected along the way."
-          tagline="Quick setup, Low stress"
-        />
-
-        <LinearGradient
-          colors={["rgba(255,255,255,0.92)", "rgba(255,251,247,0.72)"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.progressBanner}
-        >
-          <View style={styles.progressTopRow}>
-            <Text style={styles.progressEyebrow}>Start here</Text>
-          </View>
-          <Text style={styles.progressTitle}>Set up your trip in a few taps</Text>
-          <Text style={styles.progressText}>
-            Pick your journey, add your people, and start when you are ready.
-          </Text>
-          <View style={styles.progressChecklist}>
-            <Text style={styles.progressChecklistDot}>•</Text>
-            {["Journey", "Trusted contacts", "Safety"].map((item) => (
-              <View key={item} style={styles.progressChecklistItem}>
-                <Text style={styles.progressChecklistLabel}>{item}</Text>
-                <Text style={styles.progressChecklistDot}>•</Text>
-              </View>
-            ))}
-          </View>
-        </LinearGradient>
-
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionEyebrow}>Journey type</Text>
@@ -602,7 +676,11 @@ export function StartJourneyScreen({
               </View>
               <View style={styles.contactPreviewRow}>
                 {previewPeople.map((contact, index) => (
-                  <View key={contact} style={styles.contactPreviewItem}>
+                  <Pressable
+                    key={contact.id}
+                    style={styles.contactPreviewItem}
+                    onPress={() => openContactEditor(contact, groupJourneyEnabled)}
+                  >
                     <View
                       style={[
                         styles.contactPreviewAvatar,
@@ -613,16 +691,17 @@ export function StartJourneyScreen({
                             : styles.contactPreviewAvatarSoft,
                       ]}
                     >
-                      <Text style={styles.contactPreviewAvatarText}>{contact[0]}</Text>
+                      <Text style={styles.contactPreviewAvatarText}>{contact.icon}</Text>
                     </View>
-                    <Text style={styles.contactPreviewName}>{contact}</Text>
-                  </View>
+                    <Text style={styles.contactPreviewName}>{contact.name}</Text>
+                  </Pressable>
                 ))}
-              </View>
-              <View style={styles.contactActionFooter}>
-                <View style={styles.contactActionButton}>
-                  <Text style={styles.contactActionButtonText}>Open Profile</Text>
-                </View>
+                <Pressable style={styles.contactPreviewAddItem} onPress={openNewContactEditor}>
+                  <View style={styles.contactPreviewAddButton}>
+                    <Text style={styles.contactPreviewAddText}>+</Text>
+                  </View>
+                  <Text style={styles.contactPreviewName}>Add</Text>
+                </Pressable>
               </View>
             </Pressable>
           </View>
@@ -644,7 +723,7 @@ export function StartJourneyScreen({
               <Text style={styles.safetySummaryLabel}>Safety options enabled</Text>
             </View>
             <Pressable style={styles.contactActionButton} onPress={onOpenProfile}>
-              <Text style={styles.contactActionButtonText}>Open Profile</Text>
+              <Text style={styles.contactActionButtonText}>Edit</Text>
             </Pressable>
           </View>
 
@@ -694,6 +773,83 @@ export function StartJourneyScreen({
           </View>
         </LinearGradient>
       </ScrollView>
+
+      <Modal
+        transparent
+        visible={contactEditorVisible}
+        animationType="fade"
+        onRequestClose={closeContactEditor}
+      >
+        <Pressable style={styles.contactModalBackdrop} onPress={closeContactEditor}>
+          <Pressable style={styles.contactModalCard} onPress={() => {}}>
+            <Text style={styles.contactModalEyebrow}>
+              {editingGroupContact ? "Group member" : "Trusted contact"}
+            </Text>
+            <Text style={styles.contactModalTitle}>Edit contact</Text>
+
+            <View style={styles.contactModalFieldRow}>
+              <View style={styles.contactModalIconField}>
+                <Text style={styles.contactModalLabel}>Icon</Text>
+                <TextInput
+                  value={editingContact?.icon ?? ""}
+                  onChangeText={(value) => updateEditingContact("icon", value)}
+                  maxLength={2}
+                  style={styles.contactModalInput}
+                />
+              </View>
+              <View style={styles.contactModalNameField}>
+                <Text style={styles.contactModalLabel}>Name</Text>
+                <TextInput
+                  value={editingContact?.name ?? ""}
+                  onChangeText={(value) => updateEditingContact("name", value)}
+                  placeholder="Contact name"
+                  placeholderTextColor={theme.colors.textMuted}
+                  style={styles.contactModalInput}
+                />
+              </View>
+            </View>
+
+            <View style={styles.contactModalField}>
+              <Text style={styles.contactModalLabel}>Phone number</Text>
+              <TextInput
+                value={editingContact?.phone ?? ""}
+                onChangeText={(value) => updateEditingContact("phone", value)}
+                placeholder="(555) 555-5555"
+                placeholderTextColor={theme.colors.textMuted}
+                keyboardType="phone-pad"
+                style={styles.contactModalInput}
+              />
+            </View>
+
+            <View style={styles.contactModalField}>
+              <Text style={styles.contactModalLabel}>Note</Text>
+              <TextInput
+                value={editingContact?.note ?? ""}
+                onChangeText={(value) => updateEditingContact("note", value)}
+                placeholder="Mom, friend, roommate..."
+                placeholderTextColor={theme.colors.textMuted}
+                style={styles.contactModalInput}
+              />
+            </View>
+
+            <View style={styles.contactModalActions}>
+              <Pressable
+                onPress={removeEditingContact}
+                style={[styles.contactModalButton, styles.contactModalRemoveButton]}
+              >
+                <Text style={styles.contactModalRemoveText}>Remove</Text>
+              </Pressable>
+              <Pressable
+                onPress={saveEditingContact}
+                style={[styles.contactModalButton, styles.contactModalSaveButton]}
+              >
+                <Text style={styles.contactModalSaveText}>Save</Text>
+              </Pressable>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
     </LinearGradient>
   );
 }
@@ -1209,6 +1365,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
   },
+  contactPreviewAddItem: {
+    alignItems: "center",
+    gap: 8,
+  },
   contactPreviewAvatar: {
     width: 52,
     height: 52,
@@ -1235,10 +1395,21 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: theme.colors.textSoft,
   },
-  contactActionFooter: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    marginTop: 6,
+  contactPreviewAddButton: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(240,174,141,0.34)",
+    borderWidth: 1,
+    borderColor: "rgba(222,133,88,0.2)",
+  },
+  contactPreviewAddText: {
+    fontSize: 24,
+    lineHeight: 24,
+    fontWeight: "800",
+    color: theme.colors.brandDeep,
   },
   contactActionButton: {
     paddingHorizontal: 14,
@@ -1250,6 +1421,92 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "700",
     color: readyLimeText,
+  },
+  contactModalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(58,49,52,0.3)",
+    justifyContent: "center",
+    paddingHorizontal: 24,
+  },
+  contactModalCard: {
+    borderRadius: 28,
+    backgroundColor: "rgba(255,252,249,0.99)",
+    padding: 20,
+    gap: 14,
+    shadowColor: theme.colors.brandDeep,
+    shadowOpacity: 0.14,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 8,
+  },
+  contactModalEyebrow: {
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 1.6,
+    textTransform: "uppercase",
+    color: theme.colors.textMuted,
+  },
+  contactModalTitle: {
+    fontSize: 24,
+    fontWeight: "800",
+    color: theme.colors.text,
+  },
+  contactModalFieldRow: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  contactModalIconField: {
+    width: 80,
+    gap: 8,
+  },
+  contactModalNameField: {
+    flex: 1,
+    gap: 8,
+  },
+  contactModalField: {
+    gap: 8,
+  },
+  contactModalLabel: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: theme.colors.textSoft,
+  },
+  contactModalInput: {
+    minHeight: 50,
+    borderRadius: 18,
+    backgroundColor: theme.colors.surfaceSoft,
+    paddingHorizontal: 14,
+    fontSize: 16,
+    fontWeight: "600",
+    color: theme.colors.text,
+  },
+  contactModalActions: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 4,
+  },
+  contactModalButton: {
+    flex: 1,
+    minHeight: 50,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  contactModalRemoveButton: {
+    backgroundColor: "rgba(229,139,91,0.14)",
+  },
+  contactModalSaveButton: {
+    backgroundColor: theme.colors.ink,
+  },
+  contactModalRemoveText: {
+    fontSize: 15,
+    fontWeight: "800",
+    color: theme.colors.brandDeep,
+  },
+  contactModalSaveText: {
+    fontSize: 15,
+    fontWeight: "800",
+    color: theme.colors.white,
   },
   settingRow: {
     flexDirection: "row",
