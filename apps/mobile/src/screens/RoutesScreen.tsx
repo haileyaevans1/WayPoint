@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import {
+  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -27,6 +28,8 @@ type RoutesScreenProps = {
   onStartRoute: () => void;
   onAlertPress: () => void;
 };
+
+type RouteShape = "oneWay" | "loop";
 
 const routeSections: Array<{
   key: RouteSectionKey;
@@ -152,6 +155,47 @@ const sectionAccent: Record<RouteSectionKey, [string, string]> = {
 };
 
 const quickFilters = ["Well Lit", "Low Traffic", "Nearby", "Popular"] as const;
+const availableRouteTags = [
+  "Well Lit",
+  "Low Traffic",
+  "Busy Area",
+  "Scenic",
+  "Nearby",
+  "Quick Route",
+  "Easy Pace",
+  "Moderate Crowd",
+  "Open Views",
+  "Smooth Path",
+  "Trusted",
+  "Easy Navigation",
+  "Daytime Friendly",
+  "Evening Friendly",
+  "Family Friendly",
+  "Stroller Friendly",
+  "Landmark Rich",
+  "Park Access",
+  "Sidewalk Route",
+  "Loop Route",
+] as const;
+const savedRouteRecapDefaults: Record<
+  string,
+  {
+    routeShape: RouteShape;
+    safetySettingCount: number;
+    journeyMode: "Solo" | "Group";
+  }
+> = {
+  "saved-morning-walk": {
+    routeShape: "loop",
+    safetySettingCount: 2,
+    journeyMode: "Solo",
+  },
+  "saved-park-loop": {
+    routeShape: "loop",
+    safetySettingCount: 3,
+    journeyMode: "Group",
+  },
+};
 
 export function RoutesScreen({
   onStartRoute,
@@ -162,8 +206,18 @@ export function RoutesScreen({
   );
   const [activeQuickFilter, setActiveQuickFilter] = useState<string | null>(null);
   const [routeNames, setRouteNames] = useState<Record<string, string>>({});
+  const [routeReviews, setRouteReviews] = useState<Record<string, string>>({});
+  const [routeTags, setRouteTags] = useState<Record<string, string[]>>({});
   const [editingRouteId, setEditingRouteId] = useState<string | null>(null);
   const [editingNameValue, setEditingNameValue] = useState("");
+  const [editingReviewValue, setEditingReviewValue] = useState("");
+  const [editingTagsValue, setEditingTagsValue] = useState<string[]>([]);
+  const [isTagPickerOpen, setIsTagPickerOpen] = useState(false);
+  const [editingRouteShapeValue, setEditingRouteShapeValue] =
+    useState<RouteShape>("oneWay");
+  const [editingSafetySettingsValue, setEditingSafetySettingsValue] = useState<string[]>([]);
+  const [editingGroupJourneyValue, setEditingGroupJourneyValue] = useState(false);
+  const [isEditingName, setIsEditingName] = useState(false);
 
   const filteredSections = useMemo(() => {
     const query = searchValue.trim().toLowerCase();
@@ -179,29 +233,37 @@ export function RoutesScreen({
         ...section,
         routes: section.routes.filter((route) => {
           const routeName = routeNames[route.id] ?? route.name;
+          const routeReview = routeReviews[route.id] ?? route.snippet;
+          const tags = routeTags[route.id] ?? route.tags;
           const searchableText = [
             routeName,
-            route.snippet,
+            routeReview,
             route.distance,
             route.time,
-            ...route.tags,
+            ...tags,
           ]
             .join(" ")
             .toLowerCase();
 
           const matchesSearch = query ? searchableText.includes(query) : true;
           const matchesQuickFilter = hasQuickFilter
-            ? route.tags.join(" ").toLowerCase().includes(quickFilter)
+            ? tags.join(" ").toLowerCase().includes(quickFilter)
             : true;
 
           return matchesSearch && matchesQuickFilter;
         }),
       }))
       .filter((section) => section.routes.length > 0);
-  }, [searchValue, activeQuickFilter, routeNames]);
+  }, [searchValue, activeQuickFilter, routeNames, routeReviews, routeTags]);
 
   const savedSection = filteredSections.find((section) => section.key === "saved");
   const otherSections = filteredSections.filter((section) => section.key !== "saved");
+  const selectedRoute =
+    editingRouteId === null
+      ? null
+      : routeSections
+          .flatMap((section) => section.routes)
+          .find((route) => route.id === editingRouteId) ?? null;
 
   function toggleSavedRoute(routeId: string) {
     setSavedRouteIds((current) =>
@@ -216,19 +278,39 @@ export function RoutesScreen({
   }
 
   function startEditingRoute(route: RouteItem) {
+    const recapDefaults = savedRouteRecapDefaults[route.id];
     setEditingRouteId(route.id);
     setEditingNameValue(routeNames[route.id] ?? route.name);
+    setEditingReviewValue(routeReviews[route.id] ?? route.snippet);
+    setEditingTagsValue(routeTags[route.id] ?? route.tags);
+    setEditingRouteShapeValue(recapDefaults?.routeShape ?? "oneWay");
+    setEditingSafetySettingsValue(
+      Array.from({ length: recapDefaults?.safetySettingCount ?? 0 }, (_, index) =>
+        `Setting ${index + 1}`,
+      ),
+    );
+    setEditingGroupJourneyValue(recapDefaults?.journeyMode === "Group");
+    setIsEditingName(false);
+    setIsTagPickerOpen(false);
   }
 
   function cancelEditingRoute() {
     setEditingRouteId(null);
     setEditingNameValue("");
+    setEditingReviewValue("");
+    setEditingTagsValue([]);
+    setEditingRouteShapeValue("oneWay");
+    setEditingSafetySettingsValue([]);
+    setEditingGroupJourneyValue(false);
+    setIsEditingName(false);
+    setIsTagPickerOpen(false);
   }
 
   function saveRouteName(route: RouteItem) {
     const trimmedName = editingNameValue.trim();
+    const trimmedReview = editingReviewValue.trim();
 
-    if (!trimmedName) {
+    if (!trimmedName || !trimmedReview || editingTagsValue.length === 0) {
       cancelEditingRoute();
       return;
     }
@@ -237,7 +319,23 @@ export function RoutesScreen({
       ...current,
       [route.id]: trimmedName,
     }));
+    setRouteReviews((current) => ({
+      ...current,
+      [route.id]: trimmedReview,
+    }));
+    setRouteTags((current) => ({
+      ...current,
+      [route.id]: editingTagsValue,
+    }));
     cancelEditingRoute();
+  }
+
+  function toggleEditingTag(tag: string) {
+    setEditingTagsValue((current) =>
+      current.includes(tag)
+        ? current.filter((currentTag) => currentTag !== tag)
+        : [...current, tag],
+    );
   }
 
   function renderSection(section: (typeof routeSections)[number]) {
@@ -271,23 +369,14 @@ export function RoutesScreen({
             const isSaved = savedRouteIds.includes(route.id);
             const canEditRoute = section.key === "saved";
             const routeName = routeNames[route.id] ?? route.name;
-            const isEditing = canEditRoute && editingRouteId === route.id;
+            const routeReview = routeReviews[route.id] ?? route.snippet;
+            const tags = routeTags[route.id] ?? route.tags;
 
             return (
               <View key={route.id} style={styles.routeCard}>
                 <View style={styles.routeCardTopRow}>
                   <View style={styles.routeCopy}>
-                    {isEditing ? (
-                      <TextInput
-                        value={editingNameValue}
-                        onChangeText={setEditingNameValue}
-                        placeholder="Rename route"
-                        placeholderTextColor={theme.colors.textMuted}
-                        style={styles.routeNameInput}
-                      />
-                    ) : (
-                      <Text style={styles.routeName}>{routeName}</Text>
-                    )}
+                    <Text style={styles.routeName}>{routeName}</Text>
                     <Text style={styles.routeMeta}>
                       {route.distance} • {route.time}
                     </Text>
@@ -315,10 +404,10 @@ export function RoutesScreen({
                     ★ {route.rating} ({route.reviews})
                   </Text>
                 </View>
-                <Text style={styles.reviewSnippet}>“{route.snippet}”</Text>
+                <Text style={styles.reviewSnippet}>“{routeReview}”</Text>
 
                 <View style={styles.tagRow}>
-                  {route.tags.map((tag) => (
+                  {tags.map((tag) => (
                     <View key={tag} style={styles.tag}>
                       <Text style={styles.tagText}>{tag}</Text>
                     </View>
@@ -326,43 +415,24 @@ export function RoutesScreen({
                 </View>
 
                 <View style={styles.cardActions}>
-                  {isEditing ? (
-                    <>
-                      <Pressable
-                        onPress={cancelEditingRoute}
-                        style={styles.secondaryAction}
-                      >
-                        <Text style={styles.secondaryActionText}>Cancel</Text>
-                      </Pressable>
-                      <Pressable
-                        onPress={() => saveRouteName(route)}
-                        style={styles.primaryAction}
-                      >
-                        <Text style={styles.primaryActionText}>Save Name</Text>
-                      </Pressable>
-                    </>
-                  ) : (
-                    <>
-                      <Pressable
-                        onPress={() =>
-                          canEditRoute
-                            ? startEditingRoute(route)
-                            : toggleSavedRoute(route.id)
-                        }
-                        style={styles.secondaryAction}
-                      >
-                        <Text style={styles.secondaryActionText}>
-                          {canEditRoute ? "Edit" : isSaved ? "Saved" : "Save"}
-                        </Text>
-                      </Pressable>
-                      <Pressable
-                        onPress={onStartRoute}
-                        style={styles.primaryAction}
-                      >
-                        <Text style={styles.primaryActionText}>Start Route</Text>
-                      </Pressable>
-                    </>
-                  )}
+                  <Pressable
+                    onPress={() =>
+                      canEditRoute
+                        ? startEditingRoute(route)
+                        : toggleSavedRoute(route.id)
+                    }
+                    style={styles.secondaryAction}
+                  >
+                    <Text style={styles.secondaryActionText}>
+                      {canEditRoute ? "Edit" : isSaved ? "Saved" : "Save"}
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={onStartRoute}
+                    style={styles.primaryAction}
+                  >
+                    <Text style={styles.primaryActionText}>Start Route</Text>
+                  </Pressable>
                 </View>
               </View>
             );
@@ -451,6 +521,182 @@ export function RoutesScreen({
           </View>
         ) : null}
       </ScrollView>
+
+      <Modal
+        visible={selectedRoute !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={cancelEditingRoute}
+      >
+        {selectedRoute ? (
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalCard}>
+              <View style={styles.modalHeader}>
+                <View style={styles.modalHeaderCopy}>
+                  <Text style={styles.modalEyebrow}>Saved Route Details</Text>
+                  {isEditingName ? (
+                    <TextInput
+                      value={editingNameValue}
+                      onChangeText={setEditingNameValue}
+                      placeholder="Route name"
+                      placeholderTextColor={theme.colors.textMuted}
+                      style={styles.modalTitleInput}
+                      autoFocus
+                    />
+                  ) : (
+                    <Text style={styles.modalTitle}>
+                      {routeNames[selectedRoute.id] ?? selectedRoute.name}
+                    </Text>
+                  )}
+                </View>
+                <Pressable
+                  onPress={cancelEditingRoute}
+                  style={styles.modalCloseButton}
+                >
+                  <Text style={styles.modalCloseText}>×</Text>
+                </Pressable>
+              </View>
+
+              <View style={styles.modalMetaRow}>
+                <View style={styles.modalMetaChip}>
+                  <Text style={styles.modalMetaLabel}>Distance</Text>
+                  <Text style={styles.modalMetaValue}>{selectedRoute.distance}</Text>
+                </View>
+                <View style={styles.modalMetaChip}>
+                  <Text style={styles.modalMetaLabel}>Time</Text>
+                  <Text style={styles.modalMetaValue}>{selectedRoute.time}</Text>
+                </View>
+                <View style={styles.modalMetaChip}>
+                  <Text style={styles.modalMetaLabel}>Route Shape</Text>
+                  <Text style={styles.modalMetaValue}>
+                    {editingRouteShapeValue === "loop" ? "Loop" : "One-way"}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.modalSummaryRow}>
+                <View style={styles.modalSummaryChip}>
+                  <Text style={styles.modalSummaryValue}>
+                    {editingSafetySettingsValue.length}/4
+                  </Text>
+                  <Text style={styles.modalSummaryLabel}>Safety settings</Text>
+                </View>
+                <View style={styles.modalSummaryChip}>
+                  <Text style={styles.modalSummaryValue}>
+                    {editingGroupJourneyValue ? "Group" : "Solo"}
+                  </Text>
+                  <Text style={styles.modalSummaryLabel}>Journey setup</Text>
+                </View>
+                <View style={styles.modalSummaryChip}>
+                  <Text style={styles.modalSummaryValue}>
+                    {savedRouteIds.includes(selectedRoute.id) ? "Saved" : "Not saved"}
+                  </Text>
+                  <Text style={styles.modalSummaryLabel}>Favorite</Text>
+                </View>
+              </View>
+
+              <View style={styles.modalSection}>
+                <Text style={styles.modalSectionTitle}>Review Summary</Text>
+                <Text style={styles.modalReviewRating}>
+                  ★ {selectedRoute.rating} ({selectedRoute.reviews})
+                </Text>
+                <TextInput
+                  value={editingReviewValue}
+                  onChangeText={setEditingReviewValue}
+                  placeholder="Update your review"
+                  placeholderTextColor={theme.colors.textMuted}
+                  style={styles.reviewInput}
+                  multiline
+                  textAlignVertical="top"
+                />
+              </View>
+
+              <View style={styles.modalSection}>
+                <Text style={styles.modalSectionTitle}>Route Tags</Text>
+                <Text style={styles.modalHelperText}>
+                  Choose the tags that best describe this saved route.
+                </Text>
+                <Pressable
+                  onPress={() => setIsTagPickerOpen((current) => !current)}
+                  style={styles.tagDropdownButton}
+                >
+                  <Text style={styles.tagDropdownButtonText}>
+                    {isTagPickerOpen ? "Hide tag options" : "Choose route tags"}
+                  </Text>
+                  <Text style={styles.tagDropdownChevron}>
+                    {isTagPickerOpen ? "⌃" : "⌄"}
+                  </Text>
+                </Pressable>
+                {isTagPickerOpen ? (
+                  <ScrollView
+                    style={styles.modalTagList}
+                    nestedScrollEnabled
+                    showsVerticalScrollIndicator={false}
+                  >
+                    {availableRouteTags.map((tag) => {
+                      const selected = editingTagsValue.includes(tag);
+
+                      return (
+                        <Pressable
+                          key={tag}
+                          onPress={() => toggleEditingTag(tag)}
+                          style={[
+                            styles.modalTagListItem,
+                            selected && styles.modalTagListItemSelected,
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.modalTagListItemText,
+                              selected && styles.modalTagListItemTextSelected,
+                            ]}
+                          >
+                            {tag}
+                          </Text>
+                          <Text
+                            style={[
+                              styles.modalTagListItemCheck,
+                              selected && styles.modalTagListItemCheckSelected,
+                            ]}
+                          >
+                            {selected ? "Selected" : "Add"}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </ScrollView>
+                ) : null}
+                {!isTagPickerOpen ? (
+                  <View style={styles.tagRow}>
+                    {editingTagsValue.map((tag) => (
+                      <View key={tag} style={styles.tag}>
+                        <Text style={styles.tagText}>{tag}</Text>
+                      </View>
+                    ))}
+                  </View>
+                ) : null}
+              </View>
+
+              <View style={styles.modalActions}>
+                <Pressable
+                  onPress={() => setIsEditingName((current) => !current)}
+                  style={styles.secondaryAction}
+                >
+                  <Text style={styles.secondaryActionText}>
+                    {isEditingName ? "Done" : "Edit"}
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => saveRouteName(selectedRoute)}
+                  style={styles.primaryAction}
+                >
+                  <Text style={styles.primaryActionText}>Save Changes</Text>
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        ) : null}
+      </Modal>
     </LinearGradient>
   );
 }
@@ -614,13 +860,16 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
   },
   routeNameInput: {
-    fontSize: 20,
-    lineHeight: 24,
-    fontWeight: "800",
+    fontSize: 18,
+    lineHeight: 22,
+    fontWeight: "700",
     color: theme.colors.text,
+    borderRadius: 18,
+    backgroundColor: "rgba(255,250,247,0.96)",
+    paddingHorizontal: 14,
+    paddingVertical: 14,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
-    paddingBottom: 4,
   },
   routeMeta: {
     marginTop: 4,
@@ -707,6 +956,227 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "800",
     color: theme.colors.white,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    paddingHorizontal: 24,
+    backgroundColor: "rgba(78,67,68,0.34)",
+  },
+  modalCard: {
+    borderRadius: 30,
+    backgroundColor: "#FFFDFB",
+    padding: 24,
+    gap: 16,
+    shadowColor: theme.colors.brandDeep,
+    shadowOpacity: 0.14,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 6,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: 12,
+  },
+  modalHeaderCopy: {
+    flex: 1,
+    gap: 4,
+  },
+  modalEyebrow: {
+    fontSize: 12,
+    fontWeight: "800",
+    letterSpacing: 1.4,
+    textTransform: "uppercase",
+    color: theme.colors.textSoft,
+  },
+  modalTitle: {
+    fontSize: 28,
+    lineHeight: 32,
+    fontWeight: "900",
+    color: theme.colors.text,
+  },
+  modalTitleInput: {
+    borderRadius: 18,
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: "#D8C0B0",
+    fontSize: 24,
+    lineHeight: 28,
+    fontWeight: "900",
+    color: theme.colors.text,
+  },
+  modalCloseButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: theme.colors.surfaceSoft,
+  },
+  modalCloseText: {
+    fontSize: 20,
+    lineHeight: 22,
+    color: theme.colors.textSoft,
+  },
+  modalMetaRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  modalMetaChip: {
+    flex: 1,
+    borderRadius: 18,
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 12,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: "#DFCABC",
+  },
+  modalMetaLabel: {
+    fontSize: 12,
+    fontWeight: "800",
+    letterSpacing: 0.7,
+    textTransform: "uppercase",
+    color: theme.colors.textSoft,
+  },
+  modalMetaValue: {
+    marginTop: 6,
+    fontSize: 15,
+    fontWeight: "900",
+    color: theme.colors.text,
+  },
+  modalSummaryRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  modalSummaryChip: {
+    flex: 1,
+    borderRadius: 18,
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 12,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: "#DFCABC",
+    alignItems: "center",
+  },
+  modalSummaryValue: {
+    fontSize: 17,
+    fontWeight: "900",
+    color: theme.colors.text,
+  },
+  modalSummaryLabel: {
+    marginTop: 4,
+    fontSize: 12,
+    fontWeight: "800",
+    letterSpacing: 0.4,
+    textTransform: "uppercase",
+    textAlign: "center",
+    color: theme.colors.textSoft,
+  },
+  modalSection: {
+    gap: 10,
+    borderRadius: 22,
+    backgroundColor: "rgba(247,240,234,0.78)",
+    padding: 14,
+    borderWidth: 1,
+    borderColor: "rgba(223,202,188,0.9)",
+  },
+  modalSectionTitle: {
+    fontSize: 15,
+    fontWeight: "800",
+    color: theme.colors.text,
+  },
+  modalReviewRating: {
+    fontSize: 15,
+    fontWeight: "800",
+    color: theme.colors.brandDeep,
+  },
+  reviewInput: {
+    minHeight: 96,
+    borderRadius: 18,
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: "#D8C0B0",
+    fontSize: 15,
+    lineHeight: 22,
+    color: theme.colors.text,
+  },
+  modalHelperText: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: "#625556",
+  },
+  tagDropdownButton: {
+    borderRadius: 18,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#D8C0B0",
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  tagDropdownButtonText: {
+    fontSize: 15,
+    fontWeight: "800",
+    color: theme.colors.text,
+  },
+  tagDropdownChevron: {
+    fontSize: 16,
+    color: theme.colors.textSoft,
+  },
+  modalTagList: {
+    maxHeight: 220,
+    borderRadius: 20,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#D8C0B0",
+    backgroundColor: "#FFFFFF",
+  },
+  modalTagListItem: {
+    paddingHorizontal: 14,
+    paddingVertical: 15,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "rgba(78,67,68,0.08)",
+  },
+  modalTagListItemSelected: {
+    backgroundColor: "#AFCB46",
+  },
+  modalTagListItemText: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: theme.colors.text,
+  },
+  modalTagListItemCheck: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: theme.colors.textSoft,
+    textTransform: "uppercase",
+  },
+  modalTagListItemCheckSelected: {
+    color: "#2F3615",
+  },
+  modalTagListItemTextSelected: {
+    color: "#2F3615",
+  },
+  modalText: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: theme.colors.textSoft,
+  },
+  modalActions: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 4,
   },
   emptyState: {
     borderRadius: 28,
