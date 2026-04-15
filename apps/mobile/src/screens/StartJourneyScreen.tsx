@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Modal,
   Pressable,
@@ -11,10 +11,12 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { theme } from "../styles/theme";
+import type { SavedRouteStartPreset } from "./RoutesScreen";
 
 type StartJourneyScreenProps = {
   onStartJourney?: (journeyConfig: StartJourneyConfig) => void;
   onOpenProfile?: () => void;
+  initialRoutePreset?: SavedRouteStartPreset | null;
 };
 
 export type JourneyType = "walk" | "run" | "hike" | "bike";
@@ -46,6 +48,13 @@ export type StartJourneyConfig = {
   contactLabel: string;
   startedAt: string;
 };
+
+const defaultIncludedSafetyIds = [
+  "off-route",
+  "missed-check-in",
+  "emergency",
+  "check-ins",
+] as const;
 
 const readyLimeLight = "#CFE17A";
 const readyLime = "#AFCB46";
@@ -133,6 +142,7 @@ const journeySpeedMph: Record<JourneyType, number> = {
 export function StartJourneyScreen({
   onStartJourney,
   onOpenProfile,
+  initialRoutePreset = null,
 }: StartJourneyScreenProps) {
   const safetyScrollRef = useRef<ScrollView | null>(null);
   const [journeyType, setJourneyType] = useState<JourneyType>("walk");
@@ -150,7 +160,7 @@ export function StartJourneyScreen({
   const [groupMemberList, setGroupMemberList] =
     useState<EditableContact[]>(initialGroupMembers);
   const [includedSafetyIds, setIncludedSafetyIds] =
-    useState<string[]>(["off-route", "missed-check-in", "emergency", "check-ins"]);
+    useState<string[]>([...defaultIncludedSafetyIds]);
   const [selectedTrustedContactName, setSelectedTrustedContactName] =
     useState(
       initialTrustedContacts[0]
@@ -226,7 +236,40 @@ export function StartJourneyScreen({
   const journeyLabel =
     locationMode === "custom" && destinationLocation.trim().length > 0
       ? destinationLocation.trim()
+      : initialRoutePreset?.routeName?.trim()
+        ? initialRoutePreset.routeName
       : `${selectedJourney?.label ?? "Journey"} ${routeShape === "loop" ? "Loop" : "Route"}`;
+
+  useEffect(() => {
+    if (!initialRoutePreset) {
+      return;
+    }
+
+    const distanceMatch = initialRoutePreset.distance.match(/^([\d.]+)\s*(mi|km)$/i);
+    if (distanceMatch) {
+      setMeasureType("distance");
+      setDistanceValue(distanceMatch[1]);
+      setDistanceUnit(distanceMatch[2].toLowerCase());
+    }
+
+    const timeMatch = initialRoutePreset.time.match(
+      /^(?:(\d+)\s*hr\s*)?(?:(\d+)\s*min)$/i,
+    );
+    if (timeMatch) {
+      const parsedHours = timeMatch[1] ?? "0";
+      const parsedMinutes = timeMatch[2] ?? "0";
+      setDurationHours(parsedHours);
+      setDurationMinutes(parsedMinutes);
+    }
+
+    setRouteShape(initialRoutePreset.routeShape);
+    setIncludedSafetyIds(
+      Array.isArray(initialRoutePreset.safetyFeatureIds) &&
+        initialRoutePreset.safetyFeatureIds.length > 0
+        ? initialRoutePreset.safetyFeatureIds
+        : [...defaultIncludedSafetyIds],
+    );
+  }, [initialRoutePreset]);
 
   function openContactEditor(contact: EditableContact, isGroupContact: boolean) {
     setEditingContact({ ...contact });
@@ -427,6 +470,19 @@ export function StartJourneyScreen({
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
+        {initialRoutePreset ? (
+          <View style={styles.savedRoutePresetCard}>
+            <Text style={styles.savedRoutePresetEyebrow}>Saved Route</Text>
+            <Text style={styles.savedRoutePresetTitle}>
+              {initialRoutePreset.routeName}
+            </Text>
+            <Text style={styles.savedRoutePresetText}>
+              {initialRoutePreset.distance} • {initialRoutePreset.time} •{" "}
+              {initialRoutePreset.routeShape === "loop" ? "Loop" : "One-way"}
+            </Text>
+          </View>
+        ) : null}
+
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionEyebrow}>Journey type</Text>
@@ -1122,6 +1178,37 @@ const styles = StyleSheet.create({
     paddingTop: 18,
     paddingBottom: 180,
     gap: 18,
+  },
+  savedRoutePresetCard: {
+    borderRadius: 24,
+    backgroundColor: "rgba(255,255,255,0.98)",
+    padding: 18,
+    borderWidth: 1,
+    borderColor: "rgba(223,202,188,0.9)",
+    shadowColor: theme.colors.brandDeep,
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 4,
+    gap: 6,
+  },
+  savedRoutePresetEyebrow: {
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 1.2,
+    textTransform: "uppercase",
+    color: theme.colors.textMuted,
+  },
+  savedRoutePresetTitle: {
+    fontSize: 24,
+    lineHeight: 28,
+    fontWeight: "900",
+    color: theme.colors.text,
+  },
+  savedRoutePresetText: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: theme.colors.textSoft,
   },
   progressBanner: {
     borderRadius: 30,

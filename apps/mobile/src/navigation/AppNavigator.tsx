@@ -10,7 +10,10 @@ import { HomeScreen } from "../screens/HomeScreen";
 import ProfileScreen from "../screens/ProfileScreen"; 
 import SettingsScreen from "../screens/SettingsScreen";
 import StatisticsScreen from "../screens/StatisticsScreen";
-import { RoutesScreen } from "../screens/RoutesScreen";
+import {
+  RoutesScreen,
+  type SavedRouteStartPreset,
+} from "../screens/RoutesScreen";
 import { AlertsScreen } from "../screens/AlertsScreen";
 import { ActiveJourneyScreen } from "../screens/ActiveJourneyScreen";
 import {
@@ -26,6 +29,8 @@ export function AppNavigator() {
   const [currentScreen, setCurrentScreen] = useState<AppScreen>("home");
   const [activeJourneyConfig, setActiveJourneyConfig] =
     useState<StartJourneyConfig | null>(null);
+  const [pendingRoutePreset, setPendingRoutePreset] =
+    useState<SavedRouteStartPreset | null>(null);
 
   // 3. Create a router function to swap the UI based on the state
   const renderScreen = () => {
@@ -36,7 +41,10 @@ export function AppNavigator() {
             onOpenSavedRoutes={() => setCurrentScreen("routes")}
             onOpenPopularRoutes={() => setCurrentScreen("routes")}
             onOpenAlerts={() => setCurrentScreen("alerts")}
-            onOpenStartJourney={() => setCurrentScreen("startJourney")}
+            onOpenStartJourney={() => {
+              setPendingRoutePreset(null);
+              setCurrentScreen("startJourney");
+            }}
             journeyMode={activeJourneyConfig ? "active" : "idle"}
           />
         );
@@ -44,7 +52,10 @@ export function AppNavigator() {
         return (
           <RoutesScreen
             onAlertPress={() => setCurrentScreen("alerts")}
-            onStartRoute={() => setCurrentScreen("startJourney")}
+            onStartRoute={(routePreset) => {
+              setPendingRoutePreset(routePreset);
+              setCurrentScreen("startJourney");
+            }}
           />
         );
       case "profile":
@@ -65,8 +76,10 @@ export function AppNavigator() {
       case "startJourney":
         return (
           <StartJourneyScreen
+            initialRoutePreset={pendingRoutePreset}
             onStartJourney={(journeyConfig) => {
               setActiveJourneyConfig(journeyConfig);
+              setPendingRoutePreset(null);
               setCurrentScreen("activeJourney");
             }}
             onOpenProfile={() => setCurrentScreen("profile")}
@@ -91,7 +104,10 @@ export function AppNavigator() {
             onOpenSavedRoutes={() => setCurrentScreen("routes")}
             onOpenPopularRoutes={() => setCurrentScreen("routes")}
             onOpenAlerts={() => setCurrentScreen("alerts")}
-            onOpenStartJourney={() => setCurrentScreen("startJourney")}
+            onOpenStartJourney={() => {
+              setPendingRoutePreset(null);
+              setCurrentScreen("startJourney");
+            }}
             journeyMode={activeJourneyConfig ? "active" : "idle"}
           />
         ); 
@@ -111,7 +127,12 @@ export function AppNavigator() {
         <NavBar 
           activeScreen={currentScreen} 
           hasActiveJourney={Boolean(activeJourneyConfig)}
-          onNavigate={(screen) => setCurrentScreen(screen)} 
+          onNavigate={(screen) => {
+            if (screen === "startJourney") {
+              setPendingRoutePreset(null);
+            }
+            setCurrentScreen(screen);
+          }} 
         />
         
       </View>

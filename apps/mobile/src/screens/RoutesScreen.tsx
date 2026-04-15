@@ -24,8 +24,18 @@ type RouteItem = {
   tags: string[];
 };
 
+export type SavedRouteStartPreset = {
+  routeId: string;
+  routeName: string;
+  distance: string;
+  time: string;
+  routeShape: RouteShape;
+  tags: string[];
+  safetyFeatureIds: string[];
+};
+
 type RoutesScreenProps = {
-  onStartRoute: () => void;
+  onStartRoute: (route: SavedRouteStartPreset) => void;
   onAlertPress: () => void;
 };
 
@@ -181,18 +191,18 @@ const savedRouteRecapDefaults: Record<
   string,
   {
     routeShape: RouteShape;
-    safetySettingCount: number;
+    safetyFeatureIds: string[];
     journeyMode: "Solo" | "Group";
   }
 > = {
   "saved-morning-walk": {
     routeShape: "loop",
-    safetySettingCount: 2,
+    safetyFeatureIds: ["off-route", "check-ins"],
     journeyMode: "Solo",
   },
   "saved-park-loop": {
     routeShape: "loop",
-    safetySettingCount: 3,
+    safetyFeatureIds: ["off-route", "missed-check-in", "emergency"],
     journeyMode: "Group",
   },
 };
@@ -273,6 +283,11 @@ export function RoutesScreen({
     );
   }
 
+  function removeFromSaved(routeId: string) {
+    setSavedRouteIds((current) => current.filter((id) => id !== routeId));
+    cancelEditingRoute();
+  }
+
   function toggleQuickFilter(filter: string) {
     setActiveQuickFilter((current) => (current === filter ? null : filter));
   }
@@ -284,11 +299,7 @@ export function RoutesScreen({
     setEditingReviewValue(routeReviews[route.id] ?? route.snippet);
     setEditingTagsValue(routeTags[route.id] ?? route.tags);
     setEditingRouteShapeValue(recapDefaults?.routeShape ?? "oneWay");
-    setEditingSafetySettingsValue(
-      Array.from({ length: recapDefaults?.safetySettingCount ?? 0 }, (_, index) =>
-        `Setting ${index + 1}`,
-      ),
-    );
+    setEditingSafetySettingsValue(recapDefaults?.safetyFeatureIds ?? []);
     setEditingGroupJourneyValue(recapDefaults?.journeyMode === "Group");
     setIsEditingName(false);
     setIsTagPickerOpen(false);
@@ -336,6 +347,18 @@ export function RoutesScreen({
         ? current.filter((currentTag) => currentTag !== tag)
         : [...current, tag],
     );
+  }
+
+  function buildStartPreset(route: RouteItem): SavedRouteStartPreset {
+    return {
+      routeId: route.id,
+      routeName: routeNames[route.id] ?? route.name,
+      distance: route.distance,
+      time: route.time,
+      routeShape: savedRouteRecapDefaults[route.id]?.routeShape ?? "oneWay",
+      tags: routeTags[route.id] ?? route.tags,
+      safetyFeatureIds: savedRouteRecapDefaults[route.id]?.safetyFeatureIds ?? [],
+    };
   }
 
   function renderSection(section: (typeof routeSections)[number]) {
@@ -428,7 +451,7 @@ export function RoutesScreen({
                     </Text>
                   </Pressable>
                   <Pressable
-                    onPress={onStartRoute}
+                    onPress={() => onStartRoute(buildStartPreset(route))}
                     style={styles.primaryAction}
                   >
                     <Text style={styles.primaryActionText}>Start Route</Text>
@@ -693,6 +716,12 @@ export function RoutesScreen({
                   <Text style={styles.primaryActionText}>Save Changes</Text>
                 </Pressable>
               </View>
+              <Pressable
+                onPress={() => removeFromSaved(selectedRoute.id)}
+                style={styles.removeSavedButton}
+              >
+                <Text style={styles.removeSavedButtonText}>Remove from Saved</Text>
+              </Pressable>
             </View>
           </View>
         ) : null}
@@ -953,6 +982,21 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   primaryActionText: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: theme.colors.white,
+  },
+  removeSavedButton: {
+    marginTop: 12,
+    borderRadius: 18,
+    backgroundColor: theme.colors.ink,
+    borderWidth: 1,
+    borderColor: theme.colors.ink,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 13,
+  },
+  removeSavedButtonText: {
     fontSize: 14,
     fontWeight: "800",
     color: theme.colors.white,
