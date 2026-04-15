@@ -30,27 +30,39 @@ export function NavBar({
 }: NavBarProps) {
   const isJourneyScreen = activeScreen === "startJourney";
   const isActiveJourneyScreen = activeScreen === "activeJourney";
+  const isRoutesScreen = activeScreen === "routes";
+  const showsHomeCenterButton =
+    isJourneyScreen || isActiveJourneyScreen || isRoutesScreen;
+  const usesGreenHomeButton = isRoutesScreen;
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
   const centerTarget =
-    activeScreen === "activeJourney"
+    showsHomeCenterButton
       ? "home"
-      : activeScreen === "startJourney"
-        ? "activeJourney"
       : hasActiveJourney
         ? "activeJourney"
         : "startJourney";
 
-  const centerTopLabel = isActiveJourneyScreen
+  const centerTopLabel = showsHomeCenterButton
     ? "Home"
     : hasActiveJourney
       ? "Active"
       : "Start";
 
-  const centerBottomLabel = isActiveJourneyScreen ? "" : "Journey";
+  const centerBottomLabel = showsHomeCenterButton ? "" : "Journey";
+  const centerButtonColors = showsHomeCenterButton
+    ? usesGreenHomeButton
+      ? [centerGreen, centerGreen]
+      : [navPeach, navPeach]
+    : [centerGreen, centerGreen];
+  const centerButtonShadow = showsHomeCenterButton
+    ? usesGreenHomeButton
+      ? centerGreenDeep
+      : navPeach
+    : centerGreenDeep;
 
   useEffect(() => {
-    if (isJourneyScreen) {
+    if (!showsHomeCenterButton && !hasActiveJourney) {
       const pulse = Animated.loop(
         Animated.sequence([
           Animated.timing(pulseAnim, {
@@ -75,7 +87,7 @@ export function NavBar({
     }
 
     pulseAnim.setValue(1);
-  }, [isJourneyScreen, pulseAnim]);
+  }, [hasActiveJourney, pulseAnim, showsHomeCenterButton]);
 
   return (
     <View style={styles.wrapper}>
@@ -115,18 +127,21 @@ export function NavBar({
             ]}
           >
             <Pressable
-              style={styles.centerButtonShell}
+              style={[
+                styles.centerButtonShell,
+                { shadowColor: centerButtonShadow },
+              ]}
               onPress={() => onNavigate(centerTarget)}
             >
               <LinearGradient
-                colors={[centerGreen, centerGreen]}
+                colors={centerButtonColors}
                 start={{ x: 0.5, y: 0 }}
                 end={{ x: 0.5, y: 1 }}
                 style={styles.centerButton}
               >
                 <View style={styles.centerInnerRing} />
                 <Text style={styles.centerIcon}>
-                  {isActiveJourneyScreen ? "⌂" : isJourneyScreen ? "✓" : "➤"}
+                  {showsHomeCenterButton ? "⌂" : "➤"}
                 </Text>
               </LinearGradient>
             </Pressable>
@@ -235,7 +250,6 @@ const styles = StyleSheet.create({
     height: 68,
     borderRadius: 999,
     overflow: "hidden",
-    shadowColor: centerGreenDeep,
     shadowOpacity: 0.34,
     shadowRadius: 22,
     shadowOffset: { width: 0, height: 10 },
