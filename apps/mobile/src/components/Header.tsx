@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { theme } from "../styles/theme";
 
@@ -53,7 +54,7 @@ export function Header({
           accessibilityRole="button"
           onPress={onAlertPress}
         >
-          <Text style={styles.alertIcon}>◠</Text>
+          <Feather name="bell" size={16} color={theme.colors.white} />
           <View style={styles.alertDot} />
         </Pressable>
       </View>
@@ -169,10 +170,15 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.12)",
+    backgroundColor: theme.colors.brandBright,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.14)",
+    borderColor: "rgba(202,116,73,0.18)",
     position: "relative",
+    shadowColor: theme.colors.brandDeep,
+    shadowOpacity: 0.18,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 3,
   },
   alertIcon: {
     color: theme.colors.white,
@@ -180,8 +186,8 @@ const styles = StyleSheet.create({
   },
   alertDot: {
     position: "absolute",
-    top: 9,
-    right: 9,
+    top: 7,
+    right: 7,
     width: 8,
     height: 8,
     borderRadius: 999,

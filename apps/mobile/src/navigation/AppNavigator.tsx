@@ -76,6 +76,7 @@ export function AppNavigator() {
         return (
           <ActiveJourneyScreen
             journeyConfig={activeJourneyConfig}
+            onOpenAlerts={() => setCurrentScreen("alerts")}
             onJourneyComplete={() => {
               setActiveJourneyConfig(null);
               setCurrentScreen("home");
