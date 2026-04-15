@@ -557,73 +557,61 @@ export function RoutesScreen({
         {selectedRoute ? (
           <View style={styles.modalOverlay}>
             <View style={styles.modalCard}>
-              <View style={styles.modalHeader}>
-                <View style={styles.modalHeaderCopy}>
-                  <Text style={styles.modalEyebrow}>Saved Route Details</Text>
-                  {isEditingName ? (
-                    <TextInput
-                      value={editingNameValue}
-                      onChangeText={setEditingNameValue}
-                      placeholder="Route name"
-                      placeholderTextColor={theme.colors.textMuted}
-                      style={styles.modalTitleInput}
-                      autoFocus
-                    />
-                  ) : (
-                    <Text style={styles.modalTitle}>
-                      {routeNames[selectedRoute.id] ?? selectedRoute.name}
+              <LinearGradient
+                colors={["#CFE17A", "#AFCB46"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.modalReadyCard}
+              >
+                <View style={styles.modalHeader}>
+                  <View style={styles.modalHeaderCopy}>
+                    <Text style={styles.modalReadyEyebrow}>Ready to start?</Text>
+                    {isEditingName ? (
+                      <TextInput
+                        value={editingNameValue}
+                        onChangeText={setEditingNameValue}
+                        placeholder="Route name"
+                        placeholderTextColor="rgba(79,90,34,0.52)"
+                        style={styles.modalReadyTitleInput}
+                        autoFocus
+                      />
+                    ) : (
+                      <Text style={styles.modalReadyTitle}>
+                        {routeNames[selectedRoute.id] ?? selectedRoute.name}
+                      </Text>
+                    )}
+                    <Text style={styles.modalReadyMeta}>
+                      {selectedRoute.distance} • {selectedRoute.time} •{" "}
+                      {editingRouteShapeValue === "loop" ? "Loop" : "One-way"}
                     </Text>
-                  )}
+                  </View>
+                  <Pressable
+                    onPress={cancelEditingRoute}
+                    style={styles.modalCloseButton}
+                  >
+                    <Text style={styles.modalCloseText}>×</Text>
+                  </Pressable>
                 </View>
-                <Pressable
-                  onPress={cancelEditingRoute}
-                  style={styles.modalCloseButton}
-                >
-                  <Text style={styles.modalCloseText}>×</Text>
-                </Pressable>
-              </View>
 
-              <View style={styles.modalMetaRow}>
-                <View style={styles.modalMetaChip}>
-                  <Text style={styles.modalMetaLabel}>Distance</Text>
-                  <Text style={styles.modalMetaValue}>{selectedRoute.distance}</Text>
+                <View style={styles.modalReadySummaryRow}>
+                  {[
+                    editingGroupJourneyValue ? "Group journey" : "Solo journey",
+                    editingGroupJourneyValue ? "2 trusted contacts" : "2 trusted contacts",
+                    `${editingSafetySettingsValue.length}/4 safety settings`,
+                  ].map((item, index, list) => (
+                    <View key={item} style={styles.modalReadySummaryItem}>
+                      <Text style={styles.modalReadySummaryText}>{item}</Text>
+                      {index < list.length - 1 ? (
+                        <Text style={styles.modalReadySummaryDot}>•</Text>
+                      ) : null}
+                    </View>
+                  ))}
                 </View>
-                <View style={styles.modalMetaChip}>
-                  <Text style={styles.modalMetaLabel}>Time</Text>
-                  <Text style={styles.modalMetaValue}>{selectedRoute.time}</Text>
-                </View>
-                <View style={styles.modalMetaChip}>
-                  <Text style={styles.modalMetaLabel}>Route Shape</Text>
-                  <Text style={styles.modalMetaValue}>
-                    {editingRouteShapeValue === "loop" ? "Loop" : "One-way"}
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.modalSummaryRow}>
-                <View style={styles.modalSummaryChip}>
-                  <Text style={styles.modalSummaryValue}>
-                    {editingSafetySettingsValue.length}/4
-                  </Text>
-                  <Text style={styles.modalSummaryLabel}>Safety settings</Text>
-                </View>
-                <View style={styles.modalSummaryChip}>
-                  <Text style={styles.modalSummaryValue}>
-                    {editingGroupJourneyValue ? "Group" : "Solo"}
-                  </Text>
-                  <Text style={styles.modalSummaryLabel}>Journey setup</Text>
-                </View>
-                <View style={styles.modalSummaryChip}>
-                  <Text style={styles.modalSummaryValue}>
-                    {savedRouteIds.includes(selectedRoute.id) ? "Saved" : "Not saved"}
-                  </Text>
-                  <Text style={styles.modalSummaryLabel}>Favorite</Text>
-                </View>
-              </View>
+              </LinearGradient>
 
               <View style={styles.modalLocationCard}>
                 <View>
-                  <Text style={styles.modalLocationLabel}>Current Location</Text>
+                  <Text style={styles.modalLocationLabel}>Location</Text>
                   <Text style={styles.modalLocationValue}>
                     {savedRouteRecapDefaults[selectedRoute.id]?.startLocation ??
                       "Current location"}
@@ -1025,30 +1013,48 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 4,
   },
-  modalEyebrow: {
-    fontSize: 12,
-    fontWeight: "800",
-    letterSpacing: 1.4,
-    textTransform: "uppercase",
-    color: theme.colors.textSoft,
+  modalReadyCard: {
+    borderRadius: 30,
+    padding: 24,
+    gap: 14,
+    borderWidth: 1,
+    borderColor: "rgba(86,97,38,0.14)",
+    shadowColor: "#92A93A",
+    shadowOpacity: 0.16,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 8,
   },
-  modalTitle: {
+  modalReadyEyebrow: {
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 1.8,
+    textTransform: "uppercase",
+    color: "rgba(86,97,38,0.82)",
+  },
+  modalReadyTitle: {
     fontSize: 28,
     lineHeight: 32,
     fontWeight: "900",
-    color: theme.colors.text,
+    color: "#4F5A22",
   },
-  modalTitleInput: {
+  modalReadyMeta: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "700",
+    color: "rgba(79,90,34,0.74)",
+  },
+  modalReadyTitleInput: {
     borderRadius: 18,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "rgba(255,255,255,0.4)",
     paddingHorizontal: 14,
     paddingVertical: 12,
     borderWidth: 1,
-    borderColor: "#D8C0B0",
+    borderColor: "rgba(79,90,34,0.18)",
     fontSize: 24,
     lineHeight: 28,
     fontWeight: "900",
-    color: theme.colors.text,
+    color: "#4F5A22",
   },
   modalCloseButton: {
     width: 34,
@@ -1056,66 +1062,35 @@ const styles = StyleSheet.create({
     borderRadius: 17,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: theme.colors.surfaceSoft,
+    backgroundColor: "rgba(79,90,34,0.1)",
+    borderWidth: 1,
+    borderColor: "rgba(79,90,34,0.12)",
   },
   modalCloseText: {
     fontSize: 20,
     lineHeight: 22,
-    color: theme.colors.textSoft,
+    color: "#566126",
   },
-  modalMetaRow: {
+  modalReadySummaryRow: {
     flexDirection: "row",
-    gap: 10,
-  },
-  modalMetaChip: {
-    flex: 1,
-    borderRadius: 18,
-    backgroundColor: "#FFFFFF",
-    paddingHorizontal: 12,
-    paddingVertical: 14,
-    borderWidth: 1,
-    borderColor: "#DFCABC",
-  },
-  modalMetaLabel: {
-    fontSize: 12,
-    fontWeight: "800",
-    letterSpacing: 0.7,
-    textTransform: "uppercase",
-    color: theme.colors.textSoft,
-  },
-  modalMetaValue: {
-    marginTop: 6,
-    fontSize: 15,
-    fontWeight: "900",
-    color: theme.colors.text,
-  },
-  modalSummaryRow: {
-    flexDirection: "row",
-    gap: 10,
-  },
-  modalSummaryChip: {
-    flex: 1,
-    borderRadius: 18,
-    backgroundColor: "#FFFFFF",
-    paddingHorizontal: 12,
-    paddingVertical: 14,
-    borderWidth: 1,
-    borderColor: "#DFCABC",
+    flexWrap: "wrap",
     alignItems: "center",
+    gap: 10,
+    marginTop: 2,
   },
-  modalSummaryValue: {
-    fontSize: 17,
-    fontWeight: "900",
-    color: theme.colors.text,
+  modalReadySummaryItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
-  modalSummaryLabel: {
-    marginTop: 4,
-    fontSize: 12,
-    fontWeight: "800",
-    letterSpacing: 0.4,
-    textTransform: "uppercase",
-    textAlign: "center",
-    color: theme.colors.textSoft,
+  modalReadySummaryDot: {
+    fontSize: 16,
+    color: "#566126",
+  },
+  modalReadySummaryText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "rgba(79,90,34,0.88)",
   },
   modalSection: {
     gap: 10,
