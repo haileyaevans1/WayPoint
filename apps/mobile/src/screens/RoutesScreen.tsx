@@ -151,6 +151,8 @@ const sectionAccent: Record<RouteSectionKey, [string, string]> = {
   nearby: ["#D8E5F2", "#B5CBE6"],
 };
 
+const quickFilters = ["Well Lit", "Low Traffic", "Nearby", "Popular"] as const;
+
 export function RoutesScreen({
   onStartRoute,
 }: RoutesScreenProps) {
@@ -158,19 +160,24 @@ export function RoutesScreen({
   const [savedRouteIds, setSavedRouteIds] = useState<string[]>(
     routeSections[0].routes.map((route) => route.id),
   );
+  const [activeQuickFilter, setActiveQuickFilter] = useState<string | null>(null);
 
   const filteredSections = useMemo(() => {
     const query = searchValue.trim().toLowerCase();
+    const quickFilter = activeQuickFilter?.toLowerCase() ?? "";
 
-    if (!query) {
+    const hasSearch = query.length > 0;
+    const hasQuickFilter = quickFilter.length > 0;
+
+    if (!hasSearch && !hasQuickFilter) {
       return routeSections;
     }
 
     return routeSections
       .map((section) => ({
         ...section,
-        routes: section.routes.filter((route) =>
-          [
+        routes: section.routes.filter((route) => {
+          const searchableText = [
             route.name,
             route.snippet,
             route.distance,
@@ -178,12 +185,18 @@ export function RoutesScreen({
             ...route.tags,
           ]
             .join(" ")
-            .toLowerCase()
-            .includes(query),
-        ),
+            .toLowerCase();
+
+          const matchesSearch = hasSearch ? searchableText.includes(query) : true;
+          const matchesQuickFilter = hasQuickFilter
+            ? route.tags.join(" ").toLowerCase().includes(quickFilter)
+            : true;
+
+          return matchesSearch && matchesQuickFilter;
+        }),
       }))
       .filter((section) => section.routes.length > 0);
-  }, [searchValue]);
+  }, [searchValue, activeQuickFilter]);
 
   function toggleSavedRoute(routeId: string) {
     setSavedRouteIds((current) =>
@@ -191,6 +204,10 @@ export function RoutesScreen({
         ? current.filter((id) => id !== routeId)
         : [...current, routeId],
     );
+  }
+
+  function toggleQuickFilter(filter: string) {
+    setActiveQuickFilter((current) => (current === filter ? null : filter));
   }
 
   return (
@@ -205,6 +222,16 @@ export function RoutesScreen({
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
+        {/* PAGE HEADER */}
+        <View style={styles.pageIntro}>
+          <Text style={styles.pageEyebrow}>Explore</Text>
+          <Text style={styles.pageTitle}>Routes</Text>
+          <Text style={styles.pageSubtitle}>
+            Find a route that feels comfortable, safe, and right for your day.
+          </Text>
+        </View>
+
+        {/* SEARCH */}
         <Pressable
           style={({ pressed }) => [
             styles.searchShell,
@@ -220,6 +247,34 @@ export function RoutesScreen({
             style={styles.searchInput}
           />
         </Pressable>
+
+        {/* QUICK FILTERS */}
+        <View style={styles.filterRow}>
+          {quickFilters.map((filter) => {
+            const selected = activeQuickFilter === filter;
+
+            return (
+              <Pressable
+                key={filter}
+                onPress={() => toggleQuickFilter(filter)}
+                style={({ pressed }) => [
+                  styles.filterPill,
+                  selected && styles.filterPillActive,
+                  pressed && styles.filterPillPressed,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.filterPillText,
+                    selected && styles.filterPillTextActive,
+                  ]}
+                >
+                  {filter}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
 
         {filteredSections.map((section) => (
           <View key={section.key} style={styles.section}>
@@ -360,10 +415,34 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 16,
-    paddingTop: 24,
+    paddingTop: 22,
     paddingBottom: 180,
     gap: 22,
   },
+
+  pageIntro: {
+    gap: 6,
+  },
+  pageEyebrow: {
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 1.8,
+    textTransform: "uppercase",
+    color: theme.colors.textMuted,
+  },
+  pageTitle: {
+    fontSize: 34,
+    lineHeight: 38,
+    fontWeight: "900",
+    color: theme.colors.text,
+  },
+  pageSubtitle: {
+    fontSize: 15,
+    lineHeight: 22,
+    color: theme.colors.textSoft,
+    maxWidth: 320,
+  },
+
   searchShell: {
     flexDirection: "row",
     alignItems: "center",
@@ -391,6 +470,37 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
     paddingVertical: 0,
   },
+
+  filterRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+    marginTop: -6,
+  },
+  filterPill: {
+    borderRadius: theme.radius.pill,
+    backgroundColor: "rgba(255,255,255,0.75)",
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.05)",
+  },
+  filterPillActive: {
+    backgroundColor: "rgba(241,176,120,0.18)",
+    borderColor: "rgba(241,176,120,0.35)",
+  },
+  filterPillPressed: {
+    transform: [{ scale: 0.98 }],
+  },
+  filterPillText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: theme.colors.text,
+  },
+  filterPillTextActive: {
+    color: theme.colors.brandDeep,
+  },
+
   section: {
     gap: 14,
     paddingTop: 2,
@@ -432,6 +542,7 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: theme.colors.white,
   },
+
   routeList: {
     gap: 14,
   },
@@ -468,6 +579,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
     color: theme.colors.brandDeep,
   },
+
   routeCardTopRow: {
     flexDirection: "row",
     alignItems: "flex-start",
@@ -490,6 +602,7 @@ const styles = StyleSheet.create({
     color: theme.colors.textSoft,
     opacity: 0.8,
   },
+
   saveButton: {
     width: 40,
     height: 40,
@@ -511,6 +624,7 @@ const styles = StyleSheet.create({
   saveButtonIconActive: {
     color: theme.colors.brand,
   },
+
   reviewRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -526,6 +640,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     color: theme.colors.textSoft,
   },
+
   tagRow: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -544,6 +659,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#4F5A22",
   },
+
   cardActions: {
     flexDirection: "row",
     gap: 10,
@@ -588,6 +704,7 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: theme.colors.white,
   },
+
   emptyState: {
     borderRadius: 28,
     backgroundColor: "#FFFFFF",
