@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Feather } from "@expo/vector-icons";
 import {
   Modal,
   Pressable,
@@ -40,6 +41,8 @@ type RoutesScreenProps = {
 };
 
 type RouteShape = "oneWay" | "loop";
+
+const warningOrange = "#E58B5B";
 
 const routeSections: Array<{
   key: RouteSectionKey;
@@ -211,6 +214,7 @@ const savedRouteRecapDefaults: Record<
 };
 
 export function RoutesScreen({
+  onAlertPress,
   onStartRoute,
 }: RoutesScreenProps) {
   const [searchValue, setSearchValue] = useState("");
@@ -218,36 +222,37 @@ export function RoutesScreen({
     routeSections[0].routes.map((route) => route.id),
   );
   const [activeQuickFilter, setActiveQuickFilter] = useState<string | null>(null);
-  const [routeNames, setRouteNames] = useState<Record<string, string>>({});
   const [routeReviews, setRouteReviews] = useState<Record<string, string>>({});
-  const [routeTags, setRouteTags] = useState<Record<string, string[]>>({});
+  const [routeReviewTags, setRouteReviewTags] = useState<Record<string, string[]>>({});
+  const [routeUserRatings, setRouteUserRatings] = useState<Record<string, number>>({});
   const [editingRouteId, setEditingRouteId] = useState<string | null>(null);
-  const [editingNameValue, setEditingNameValue] = useState("");
   const [editingReviewValue, setEditingReviewValue] = useState("");
+  const [editingRatingValue, setEditingRatingValue] = useState<number>(0);
   const [editingTagsValue, setEditingTagsValue] = useState<string[]>([]);
   const [isTagPickerOpen, setIsTagPickerOpen] = useState(false);
   const [editingRouteShapeValue, setEditingRouteShapeValue] =
     useState<RouteShape>("oneWay");
   const [editingSafetySettingsValue, setEditingSafetySettingsValue] = useState<string[]>([]);
   const [editingGroupJourneyValue, setEditingGroupJourneyValue] = useState(false);
-  const [isEditingName, setIsEditingName] = useState(false);
+  const [isReviewComposerOpen, setIsReviewComposerOpen] = useState(false);
+  const [pendingRemovalRouteId, setPendingRemovalRouteId] = useState<string | null>(null);
 
   const filteredSections = useMemo(() => {
     const query = searchValue.trim().toLowerCase();
     const quickFilter = activeQuickFilter?.toLowerCase() ?? "";
     const hasQuickFilter = quickFilter.length > 0;
 
-    if (!query && !hasQuickFilter) {
-      return routeSections;
-    }
-
     return routeSections
       .map((section) => ({
         ...section,
         routes: section.routes.filter((route) => {
-          const routeName = routeNames[route.id] ?? route.name;
+          if (section.key === "saved" && !savedRouteIds.includes(route.id)) {
+            return false;
+          }
+
+          const routeName = route.name;
           const routeReview = routeReviews[route.id] ?? route.snippet;
-          const tags = routeTags[route.id] ?? route.tags;
+          const tags = routeReviewTags[route.id] ?? route.tags;
           const searchableText = [
             routeName,
             routeReview,
@@ -267,7 +272,7 @@ export function RoutesScreen({
         }),
       }))
       .filter((section) => section.routes.length > 0);
-  }, [searchValue, activeQuickFilter, routeNames, routeReviews, routeTags]);
+  }, [searchValue, activeQuickFilter, routeReviews, routeReviewTags, savedRouteIds]);
 
   const savedSection = filteredSections.find((section) => section.key === "saved");
   const otherSections = filteredSections.filter((section) => section.key !== "saved");
@@ -277,6 +282,12 @@ export function RoutesScreen({
       : routeSections
           .flatMap((section) => section.routes)
           .find((route) => route.id === editingRouteId) ?? null;
+  const pendingRemovalRoute =
+    pendingRemovalRouteId === null
+      ? null
+      : routeSections
+          .flatMap((section) => section.routes)
+          .find((route) => route.id === pendingRemovalRouteId) ?? null;
 
   function toggleSavedRoute(routeId: string) {
     setSavedRouteIds((current) =>
@@ -288,7 +299,12 @@ export function RoutesScreen({
 
   function removeFromSaved(routeId: string) {
     setSavedRouteIds((current) => current.filter((id) => id !== routeId));
+    setPendingRemovalRouteId(null);
     cancelEditingRoute();
+  }
+
+  function requestRemoveFromSaved(routeId: string) {
+    setPendingRemovalRouteId(routeId);
   }
 
   function toggleQuickFilter(filter: string) {
@@ -298,68 +314,117 @@ export function RoutesScreen({
   function startEditingRoute(route: RouteItem) {
     const recapDefaults = savedRouteRecapDefaults[route.id];
     setEditingRouteId(route.id);
-    setEditingNameValue(routeNames[route.id] ?? route.name);
-    setEditingReviewValue(routeReviews[route.id] ?? route.snippet);
-    setEditingTagsValue(routeTags[route.id] ?? route.tags);
+    setEditingReviewValue(routeReviews[route.id] ?? "");
+    setEditingRatingValue(routeUserRatings[route.id] ?? 0);
+    setEditingTagsValue(routeReviewTags[route.id] ?? []);
     setEditingRouteShapeValue(recapDefaults?.routeShape ?? "oneWay");
     setEditingSafetySettingsValue(recapDefaults?.safetyFeatureIds ?? []);
     setEditingGroupJourneyValue(recapDefaults?.journeyMode === "Group");
-    setIsEditingName(false);
+    setIsReviewComposerOpen(false);
     setIsTagPickerOpen(false);
   }
 
   function cancelEditingRoute() {
     setEditingRouteId(null);
-    setEditingNameValue("");
     setEditingReviewValue("");
+    setEditingRatingValue(0);
     setEditingTagsValue([]);
     setEditingRouteShapeValue("oneWay");
     setEditingSafetySettingsValue([]);
     setEditingGroupJourneyValue(false);
-    setIsEditingName(false);
+    setIsReviewComposerOpen(false);
     setIsTagPickerOpen(false);
   }
 
-  function saveRouteName(route: RouteItem) {
-    const trimmedName = editingNameValue.trim();
-    const trimmedReview = editingReviewValue.trim();
+  function toggleEditingTag(tag: string) {
+    setEditingTagsValue((current) => {
+      if (current.includes(tag)) {
+        return current.filter((currentTag) => currentTag !== tag);
+      }
 
-    if (!trimmedName || !trimmedReview || editingTagsValue.length === 0) {
-      cancelEditingRoute();
-      return;
-    }
+      if (current.length >= 3) {
+        return current;
+      }
 
-    setRouteNames((current) => ({
-      ...current,
-      [route.id]: trimmedName,
-    }));
-    setRouteReviews((current) => ({
-      ...current,
-      [route.id]: trimmedReview,
-    }));
-    setRouteTags((current) => ({
-      ...current,
-      [route.id]: editingTagsValue,
-    }));
-    cancelEditingRoute();
+      return [...current, tag];
+    });
   }
 
-  function toggleEditingTag(tag: string) {
-    setEditingTagsValue((current) =>
-      current.includes(tag)
-        ? current.filter((currentTag) => currentTag !== tag)
-        : [...current, tag],
-    );
+  function openReviewComposer(route: RouteItem) {
+    setEditingReviewValue(routeReviews[route.id] ?? "");
+    setEditingRatingValue(routeUserRatings[route.id] ?? 0);
+    setEditingTagsValue(routeReviewTags[route.id] ?? []);
+    setIsTagPickerOpen(false);
+    setIsReviewComposerOpen(true);
+  }
+
+  function saveRouteReview(route: RouteItem) {
+    const trimmedReview = editingReviewValue.trim();
+
+    setRouteUserRatings((current) => {
+      if (editingRatingValue <= 0) {
+        const { [route.id]: _removed, ...rest } = current;
+        return rest;
+      }
+
+      return {
+        ...current,
+        [route.id]: editingRatingValue,
+      };
+    });
+    setRouteReviewTags((current) => {
+      if (editingTagsValue.length === 0) {
+        const { [route.id]: _removed, ...rest } = current;
+        return rest;
+      }
+
+      return {
+        ...current,
+        [route.id]: editingTagsValue,
+      };
+    });
+    setRouteReviews((current) => {
+      if (!trimmedReview) {
+        const { [route.id]: _removed, ...rest } = current;
+        return rest;
+      }
+
+      return {
+        ...current,
+        [route.id]: trimmedReview,
+      };
+    });
+    setIsTagPickerOpen(false);
+    setIsReviewComposerOpen(false);
+  }
+
+  function getReviewSummary(route: RouteItem) {
+    const rating = routeUserRatings[route.id];
+    const tags = routeReviewTags[route.id] ?? [];
+    const hasNote = Boolean(routeReviews[route.id]?.trim());
+    const parts: string[] = [];
+
+    if (rating) {
+      parts.push(`${rating} stars`);
+    }
+    if (tags.length > 0) {
+      parts.push(tags.length === 1 ? "1 tag" : `${tags.length} tags`);
+    }
+    if (hasNote) {
+      parts.push("note added");
+    }
+
+    return parts.length > 0 ? parts.join(" • ") : "No review yet";
   }
 
   function buildStartPreset(route: RouteItem): SavedRouteStartPreset {
     return {
       routeId: route.id,
-      routeName: routeNames[route.id] ?? route.name,
+      routeName: route.name,
       distance: route.distance,
       time: route.time,
       routeShape: savedRouteRecapDefaults[route.id]?.routeShape ?? "oneWay",
-      tags: routeTags[route.id] ?? route.tags,
+      tags: routeReviewTags[route.id] ?? route.tags,
       safetyFeatureIds: savedRouteRecapDefaults[route.id]?.safetyFeatureIds ?? [],
     };
   }
@@ -372,31 +437,15 @@ export function RoutesScreen({
             <Text style={styles.sectionTitle}>{section.title}</Text>
             <Text style={styles.sectionSubtitle}>{section.subtitle}</Text>
           </View>
-          <LinearGradient
-            colors={sectionAccent[section.key]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.sectionBadge}
-          >
-            <Text style={styles.sectionBadgeText}>
-              {section.key === "reviewed"
-                ? "Top rated"
-                : section.key === "nearby"
-                  ? "Near you"
-                  : section.key === "saved"
-                    ? "Personal"
-                    : "Trending"}
-            </Text>
-          </LinearGradient>
         </View>
 
         <View style={styles.routeList}>
           {section.routes.map((route) => {
             const isSaved = savedRouteIds.includes(route.id);
             const canEditRoute = section.key === "saved";
-            const routeName = routeNames[route.id] ?? route.name;
+            const routeName = route.name;
             const routeReview = routeReviews[route.id] ?? route.snippet;
-            const tags = routeTags[route.id] ?? route.tags;
+            const tags = routeReviewTags[route.id] ?? route.tags;
 
             return (
               <View key={route.id} style={styles.routeCard}>
@@ -450,7 +499,7 @@ export function RoutesScreen({
                     style={styles.secondaryAction}
                   >
                     <Text style={styles.secondaryActionText}>
-                      {canEditRoute ? "Edit" : isSaved ? "Saved" : "Save"}
+                      {canEditRoute ? "View" : isSaved ? "Saved" : "Save"}
                     </Text>
                   </Pressable>
                   <Pressable
@@ -460,6 +509,14 @@ export function RoutesScreen({
                     <Text style={styles.primaryActionText}>Start Route</Text>
                   </Pressable>
                 </View>
+                {canEditRoute ? (
+                  <Pressable
+                    onPress={() => requestRemoveFromSaved(route.id)}
+                    style={styles.removeSavedButton}
+                  >
+                    <Text style={styles.removeSavedButtonText}>Unsave</Text>
+                  </Pressable>
+                ) : null}
               </View>
             );
           })}
@@ -480,12 +537,21 @@ export function RoutesScreen({
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.pageIntro}>
-          <Text style={styles.pageEyebrow}>Explore</Text>
-          <Text style={styles.pageTitle}>Routes</Text>
-          <Text style={styles.pageSubtitle}>
-            Find a route that feels comfortable, safe, and right for your day.
-          </Text>
+        <View style={styles.pageIntroRow}>
+          <View style={styles.pageIntro}>
+            <Text style={styles.pageEyebrow}>Explore</Text>
+            <Text style={styles.pageTitle}>Routes</Text>
+            <Text style={styles.pageSubtitle}>
+              Find a route that feels comfortable, safe, and right for your day.
+            </Text>
+          </View>
+          <Pressable
+            onPress={onAlertPress}
+            style={({ pressed }) => [styles.alertButton, pressed && styles.alertPressed]}
+          >
+            <Feather name="bell" size={18} color={theme.colors.white} />
+            <View style={styles.alertDot} />
+          </Pressable>
         </View>
 
         <View style={styles.searchShell}>
@@ -549,7 +615,7 @@ export function RoutesScreen({
       </ScrollView>
 
       <Modal
-        visible={selectedRoute !== null}
+        visible={selectedRoute !== null && !isReviewComposerOpen}
         transparent
         animationType="fade"
         onRequestClose={cancelEditingRoute}
@@ -565,21 +631,8 @@ export function RoutesScreen({
               >
                 <View style={styles.modalHeader}>
                   <View style={styles.modalHeaderCopy}>
-                    <Text style={styles.modalReadyEyebrow}>Ready to start?</Text>
-                    {isEditingName ? (
-                      <TextInput
-                        value={editingNameValue}
-                        onChangeText={setEditingNameValue}
-                        placeholder="Route name"
-                        placeholderTextColor="rgba(79,90,34,0.52)"
-                        style={styles.modalReadyTitleInput}
-                        autoFocus
-                      />
-                    ) : (
-                      <Text style={styles.modalReadyTitle}>
-                        {routeNames[selectedRoute.id] ?? selectedRoute.name}
-                      </Text>
-                    )}
+                    <Text style={styles.modalReadyEyebrow}>Saved Route</Text>
+                    <Text style={styles.modalReadyTitle}>{selectedRoute.name}</Text>
                     <Text style={styles.modalReadyMeta}>
                       {selectedRoute.distance} • {selectedRoute.time} •{" "}
                       {editingRouteShapeValue === "loop" ? "Loop" : "One-way"}
@@ -607,29 +660,93 @@ export function RoutesScreen({
                     </View>
                   ))}
                 </View>
-              </LinearGradient>
-
-              <View style={styles.modalLocationCard}>
-                <View>
-                  <Text style={styles.modalLocationLabel}>Location</Text>
-                  <Text style={styles.modalLocationValue}>
+                <View style={styles.modalReadyLocationCard}>
+                  <Text style={styles.modalReadyLocationLabel}>Location</Text>
+                  <Text style={styles.modalReadyLocationValue}>
                     {savedRouteRecapDefaults[selectedRoute.id]?.startLocation ??
                       "Current location"}
                   </Text>
                 </View>
+              </LinearGradient>
+
+              <Pressable
+                onPress={() => openReviewComposer(selectedRoute)}
+                style={styles.reviewEntryCard}
+              >
+                <View style={styles.reviewEntryIconWrap}>
+                  <Feather name="message-square" size={18} color={theme.colors.brandDeep} />
+                </View>
+                <View style={styles.reviewEntryCopy}>
+                  <Text style={styles.reviewEntryLabel}>Your Review</Text>
+                  <Text style={styles.reviewEntryValue}>{getReviewSummary(selectedRoute)}</Text>
+                </View>
+                <View style={styles.reviewEntryActionPill}>
+                  <Text style={styles.reviewEntryAction}>
+                    {getReviewSummary(selectedRoute) === "No review yet" ? "Add" : "Edit"}
+                  </Text>
+                </View>
+              </Pressable>
+            </View>
+          </View>
+        ) : null}
+      </Modal>
+      <Modal
+        visible={selectedRoute !== null && isReviewComposerOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsReviewComposerOpen(false)}
+      >
+        {selectedRoute ? (
+          <View style={styles.reviewModalOverlay}>
+            <View style={styles.reviewModalCard}>
+              <View style={styles.reviewModalHeader}>
+                <View style={styles.reviewModalHeaderCopy}>
+                  <Text style={styles.reviewModalEyebrow}>Review This Route</Text>
+                  <Text style={styles.reviewModalTitle}>{selectedRoute.name}</Text>
+                </View>
+                <Pressable
+                  onPress={() => setIsReviewComposerOpen(false)}
+                  style={styles.modalCloseButton}
+                >
+                  <Text style={styles.modalCloseText}>×</Text>
+                </Pressable>
               </View>
 
-              <View style={styles.modalSection}>
-                <Text style={styles.modalSectionTitle}>Route Tags</Text>
-                <Text style={styles.modalHelperText}>
-                  Choose the tags that best describe this saved route.
-                </Text>
+              <Text style={styles.modalHelperText}>
+                Add a rating, choose up to 3 tags, and write a note if you want to.
+              </Text>
+
+              <View style={styles.reviewStarsRow}>
+                {[1, 2, 3, 4, 5].map((star) => {
+                  const selected = star <= editingRatingValue;
+
+                  return (
+                    <Pressable
+                      key={star}
+                      onPress={() => setEditingRatingValue(star)}
+                      style={styles.reviewStarButton}
+                    >
+                      <Feather
+                        name="star"
+                        size={20}
+                        color={selected ? theme.colors.brandDeep : "rgba(110,95,86,0.35)"}
+                      />
+                    </Pressable>
+                  );
+                })}
+              </View>
+
+              <View style={styles.reviewTagBlock}>
+                <View style={styles.reviewTagHeader}>
+                  <Text style={styles.modalSectionTitle}>Tags</Text>
+                  <Text style={styles.reviewTagLimit}>Choose up to 3</Text>
+                </View>
                 <Pressable
                   onPress={() => setIsTagPickerOpen((current) => !current)}
                   style={styles.tagDropdownButton}
                 >
                   <Text style={styles.tagDropdownButtonText}>
-                    {isTagPickerOpen ? "Hide tag options" : "Choose route tags"}
+                    {isTagPickerOpen ? "Hide tag options" : "Choose review tags"}
                   </Text>
                   <Text style={styles.tagDropdownChevron}>
                     {isTagPickerOpen ? "⌃" : "⌄"}
@@ -643,6 +760,7 @@ export function RoutesScreen({
                   >
                     {availableRouteTags.map((tag) => {
                       const selected = editingTagsValue.includes(tag);
+                      const disabled = !selected && editingTagsValue.length >= 3;
 
                       return (
                         <Pressable
@@ -651,12 +769,14 @@ export function RoutesScreen({
                           style={[
                             styles.modalTagListItem,
                             selected && styles.modalTagListItemSelected,
+                            disabled && styles.modalTagListItemDisabled,
                           ]}
                         >
                           <Text
                             style={[
                               styles.modalTagListItemText,
                               selected && styles.modalTagListItemTextSelected,
+                              disabled && styles.modalTagListItemTextDisabled,
                             ]}
                           >
                             {tag}
@@ -665,16 +785,17 @@ export function RoutesScreen({
                             style={[
                               styles.modalTagListItemCheck,
                               selected && styles.modalTagListItemCheckSelected,
+                              disabled && styles.modalTagListItemCheckDisabled,
                             ]}
                           >
-                            {selected ? "Selected" : "Add"}
+                            {selected ? "Selected" : disabled ? "Max" : "Add"}
                           </Text>
                         </Pressable>
                       );
                     })}
                   </ScrollView>
                 ) : null}
-                {!isTagPickerOpen ? (
+                {editingTagsValue.length > 0 ? (
                   <View style={styles.tagRow}>
                     {editingTagsValue.map((tag) => (
                       <View key={tag} style={styles.tag}>
@@ -685,28 +806,71 @@ export function RoutesScreen({
                 ) : null}
               </View>
 
-              <View style={styles.modalActions}>
+              <TextInput
+                value={editingReviewValue}
+                onChangeText={setEditingReviewValue}
+                placeholder="Add your route review"
+                placeholderTextColor={theme.colors.textMuted}
+                multiline
+                textAlignVertical="top"
+                style={styles.reviewInput}
+                autoFocus
+              />
+
+              <View style={styles.reviewModalActions}>
                 <Pressable
-                  onPress={() => setIsEditingName((current) => !current)}
+                  onPress={() => setIsReviewComposerOpen(false)}
                   style={styles.secondaryAction}
                 >
-                  <Text style={styles.secondaryActionText}>
-                    {isEditingName ? "Done" : "Edit"}
-                  </Text>
+                  <Text style={styles.secondaryActionText}>Cancel</Text>
                 </Pressable>
                 <Pressable
-                  onPress={() => saveRouteName(selectedRoute)}
+                  onPress={() => saveRouteReview(selectedRoute)}
                   style={styles.primaryAction}
                 >
-                  <Text style={styles.primaryActionText}>Save Changes</Text>
+                  <Text style={styles.primaryActionText}>Save Review</Text>
                 </Pressable>
               </View>
-              <Pressable
-                onPress={() => removeFromSaved(selectedRoute.id)}
-                style={styles.removeSavedButton}
-              >
-                <Text style={styles.removeSavedButtonText}>Remove from Saved</Text>
-              </Pressable>
+            </View>
+          </View>
+        ) : null}
+      </Modal>
+      <Modal
+        visible={pendingRemovalRoute !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setPendingRemovalRouteId(null)}
+      >
+        {pendingRemovalRoute ? (
+          <View style={styles.removeConfirmOverlay}>
+            <View style={styles.removeConfirmCard}>
+              <View style={styles.reviewModalHeader}>
+                <View style={styles.reviewModalHeaderCopy}>
+                  <Text style={styles.removeConfirmEyebrow}>Remove Saved Route</Text>
+                  <Text style={styles.removeConfirmTitle}>
+                    Remove {pendingRemovalRoute.name}?
+                  </Text>
+                </View>
+                <Pressable
+                  onPress={() => setPendingRemovalRouteId(null)}
+                  style={styles.modalCloseButton}
+                >
+                  <Text style={styles.modalCloseText}>×</Text>
+                </Pressable>
+              </View>
+
+              <Text style={styles.removeConfirmText}>
+                This route will be removed from your saved routes. You can always save it again later if you want it back.
+              </Text>
+
+              <View style={styles.reviewModalActions}>
+                <Pressable
+                  onPress={() => removeFromSaved(pendingRemovalRoute.id)}
+                  style={styles.removeSavedButtonConfirm}
+                >
+                  <Text style={styles.removeSavedButtonConfirmText}>Remove Route</Text>
+                </Pressable>
+              </View>
             </View>
           </View>
         ) : null}
@@ -728,6 +892,13 @@ const styles = StyleSheet.create({
   },
   pageIntro: {
     gap: 6,
+    flex: 1,
+  },
+  pageIntroRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 14,
   },
   pageEyebrow: {
     fontSize: 11,
@@ -747,6 +918,34 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     color: theme.colors.textSoft,
     maxWidth: 320,
+  },
+  alertButton: {
+    minWidth: 60,
+    minHeight: 46,
+    paddingHorizontal: 8,
+    paddingVertical: 11,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: theme.colors.brandBright,
+    position: "relative",
+    shadowColor: theme.colors.brandDeep,
+    shadowOpacity: 0.18,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 4,
+  },
+  alertPressed: {
+    opacity: 0.9,
+  },
+  alertDot: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    width: 8,
+    height: 8,
+    borderRadius: 999,
+    backgroundColor: "#FF6A5B",
   },
   searchShell: {
     flexDirection: "row",
@@ -832,16 +1031,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
     fontSize: 14,
     color: theme.colors.textSoft,
-  },
-  sectionBadge: {
-    borderRadius: theme.radius.pill,
-    paddingHorizontal: 13,
-    paddingVertical: 10,
-  },
-  sectionBadgeText: {
-    fontSize: 12,
-    fontWeight: "800",
-    color: theme.colors.white,
   },
   routeList: {
     gap: 12,
@@ -972,19 +1161,42 @@ const styles = StyleSheet.create({
     color: theme.colors.white,
   },
   removeSavedButton: {
-    marginTop: 12,
+    marginTop: 4,
     borderRadius: 18,
-    backgroundColor: theme.colors.ink,
+    backgroundColor: theme.colors.white,
     borderWidth: 1,
-    borderColor: theme.colors.ink,
+    borderColor: theme.colors.border,
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 13,
+    alignSelf: "stretch",
+    paddingHorizontal: 16,
+    paddingVertical: 11,
+    shadowColor: "rgba(95,53,37,0.18)",
+    shadowOpacity: 0.12,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 3,
   },
   removeSavedButtonText: {
     fontSize: 14,
     fontWeight: "800",
-    color: theme.colors.white,
+    color: theme.colors.brandDeep,
+  },
+  removeSavedButtonConfirm: {
+    borderRadius: 20,
+    backgroundColor: "#FFF8F2",
+    alignItems: "center",
+    justifyContent: "center",
+    alignSelf: "center",
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.72)",
+  },
+  removeSavedButtonConfirmText: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: "#000000",
   },
   modalOverlay: {
     flex: 1,
@@ -1057,19 +1269,25 @@ const styles = StyleSheet.create({
     color: "#4F5A22",
   },
   modalCloseButton: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(79,90,34,0.1)",
+    backgroundColor: "rgba(255,255,255,0.82)",
     borderWidth: 1,
-    borderColor: "rgba(79,90,34,0.12)",
+    borderColor: "rgba(79,90,34,0.22)",
+    shadowColor: "rgba(79,90,34,0.34)",
+    shadowOpacity: 0.16,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
   },
   modalCloseText: {
-    fontSize: 20,
-    lineHeight: 22,
-    color: "#566126",
+    fontSize: 22,
+    lineHeight: 24,
+    fontWeight: "900",
+    color: "#394115",
   },
   modalReadySummaryRow: {
     flexDirection: "row",
@@ -1105,34 +1323,205 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: theme.colors.text,
   },
-  modalLocationCard: {
+  modalReadyLocationCard: {
     borderRadius: 22,
-    backgroundColor: theme.colors.surfaceOrangeDeep,
+    backgroundColor: "rgba(255,249,244,0.3)",
     paddingHorizontal: 14,
     paddingVertical: 11,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: 12,
     borderWidth: 1,
-    borderColor: "rgba(202,116,73,0.3)",
+    borderColor: "rgba(79,90,34,0.14)",
+    marginTop: 4,
   },
-  modalLocationLabel: {
+  modalReadyLocationLabel: {
     fontSize: 13,
-    color: "rgba(111,72,46,0.86)",
+    color: "rgba(86,97,38,0.82)",
     fontWeight: "700",
   },
-  modalLocationValue: {
+  modalReadyLocationValue: {
     marginTop: 3,
-    fontSize: 20,
-    lineHeight: 24,
-    fontWeight: "900",
-    color: theme.colors.text,
+    fontSize: 18,
+    lineHeight: 22,
+    fontWeight: "800",
+    color: "#4F5A22",
   },
   modalReviewRating: {
     fontSize: 15,
     fontWeight: "800",
     color: theme.colors.brandDeep,
+  },
+  reviewEntryCard: {
+    borderRadius: 22,
+    backgroundColor: theme.colors.surfaceOrange,
+    paddingHorizontal: 14,
+    paddingVertical: 15,
+    borderWidth: 1,
+    borderColor: "rgba(202,116,73,0.18)",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+    shadowColor: theme.colors.brandDeep,
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 3,
+  },
+  reviewEntryIconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    backgroundColor: theme.colors.surfaceOrangeDeep,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  reviewEntryCopy: {
+    flex: 1,
+    gap: 4,
+  },
+  reviewEntryLabel: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: "#7D543B",
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+  },
+  reviewEntryValue: {
+    fontSize: 15,
+    lineHeight: 21,
+    fontWeight: "700",
+    color: theme.colors.text,
+  },
+  reviewEntryActionPill: {
+    borderRadius: theme.radius.pill,
+    backgroundColor: "rgba(255,249,244,0.96)",
+    borderWidth: 1,
+    borderColor: "rgba(202,116,73,0.18)",
+    paddingHorizontal: 13,
+    paddingVertical: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  reviewEntryAction: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: theme.colors.brandDeep,
+  },
+  removeConfirmOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(95,53,37,0.42)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 24,
+  },
+  removeConfirmCard: {
+    width: "100%",
+    borderRadius: 28,
+    backgroundColor: warningOrange,
+    padding: 22,
+    gap: 16,
+    borderWidth: 1,
+    borderColor: warningOrange,
+    shadowColor: warningOrange,
+    shadowOpacity: 0.18,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 8,
+  },
+  removeConfirmEyebrow: {
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 1.4,
+    textTransform: "uppercase",
+    color: "rgba(255,245,240,0.82)",
+  },
+  removeConfirmTitle: {
+    fontSize: 22,
+    lineHeight: 26,
+    fontWeight: "900",
+    color: theme.colors.white,
+  },
+  removeConfirmText: {
+    fontSize: 15,
+    lineHeight: 22,
+    fontWeight: "700",
+    color: theme.colors.white,
+  },
+  reviewModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(62,44,35,0.34)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 24,
+  },
+  reviewModalCard: {
+    width: "100%",
+    borderRadius: 28,
+    backgroundColor: "#FFF8F2",
+    padding: 20,
+    gap: 14,
+    borderWidth: 1,
+    borderColor: "rgba(223,202,188,0.9)",
+    shadowColor: theme.colors.brandDeep,
+    shadowOpacity: 0.14,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 8,
+  },
+  reviewModalHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  reviewModalHeaderCopy: {
+    flex: 1,
+    gap: 4,
+  },
+  reviewModalEyebrow: {
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 1.4,
+    textTransform: "uppercase",
+    color: theme.colors.textMuted,
+  },
+  reviewModalTitle: {
+    fontSize: 22,
+    lineHeight: 26,
+    fontWeight: "900",
+    color: theme.colors.text,
+  },
+  reviewStarsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  reviewStarButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+    backgroundColor: "rgba(255,255,255,0.76)",
+    borderWidth: 1,
+    borderColor: "rgba(216,192,176,0.72)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  reviewTagBlock: {
+    gap: 10,
+  },
+  reviewTagHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  reviewTagLimit: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: theme.colors.textSoft,
+  },
+  reviewModalActions: {
+    alignItems: "center",
+    marginTop: 2,
   },
   reviewInput: {
     minHeight: 96,
@@ -1191,16 +1580,25 @@ const styles = StyleSheet.create({
   modalTagListItemSelected: {
     backgroundColor: "#AFCB46",
   },
+  modalTagListItemDisabled: {
+    backgroundColor: "rgba(255,255,255,0.82)",
+  },
   modalTagListItemText: {
     fontSize: 15,
     fontWeight: "700",
     color: theme.colors.text,
+  },
+  modalTagListItemTextDisabled: {
+    color: "rgba(98,85,86,0.48)",
   },
   modalTagListItemCheck: {
     fontSize: 11,
     fontWeight: "800",
     color: theme.colors.textSoft,
     textTransform: "uppercase",
+  },
+  modalTagListItemCheckDisabled: {
+    color: "rgba(98,85,86,0.48)",
   },
   modalTagListItemCheckSelected: {
     color: "#2F3615",
