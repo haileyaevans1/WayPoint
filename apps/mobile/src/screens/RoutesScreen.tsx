@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Feather } from "@expo/vector-icons";
+import { Feather, Ionicons } from "@expo/vector-icons";
 import {
   Modal,
   Pressable,
@@ -35,15 +35,26 @@ export type SavedRouteStartPreset = {
   safetyFeatureIds: string[];
 };
 
+export type FavoriteRouteSummary = {
+  routeId: string;
+  title: string;
+  subtitle: string;
+};
+
 type RoutesScreenProps = {
   onStartRoute: (route: SavedRouteStartPreset) => void;
   onAlertPress: () => void;
+  favoriteRouteId: string | null;
+  onFavoriteRouteChange: (route: FavoriteRouteSummary | null) => void;
 };
 
 type RouteShape = "oneWay" | "loop";
 
-const warningOrange = "#E58B5B";
-const navSlate = "#778093";
+export const defaultFavoriteRoute: FavoriteRouteSummary = {
+  routeId: "saved-morning-walk",
+  title: "River Parks Morning Walk",
+  subtitle: "Walk • 2.1 mi",
+};
 
 const routeSections: Array<{
   key: RouteSectionKey;
@@ -217,6 +228,8 @@ const savedRouteRecapDefaults: Record<
 export function RoutesScreen({
   onAlertPress,
   onStartRoute,
+  favoriteRouteId,
+  onFavoriteRouteChange,
 }: RoutesScreenProps) {
   const [searchValue, setSearchValue] = useState("");
   const [savedRouteIds, setSavedRouteIds] = useState<string[]>(
@@ -273,7 +286,12 @@ export function RoutesScreen({
       .map((section) => ({
         ...section,
         routes: (section.key === "saved"
-          ? savedRouteIds
+          ? [
+              ...(favoriteRouteId && savedRouteIds.includes(favoriteRouteId)
+                ? [favoriteRouteId]
+                : []),
+              ...savedRouteIds.filter((routeId) => routeId !== favoriteRouteId),
+            ]
               .map((routeId) => routeLookup[routeId])
               .filter((route): route is RouteItem => Boolean(route))
           : section.routes
@@ -301,7 +319,15 @@ export function RoutesScreen({
         }),
       }))
       .filter((section) => section.routes.length > 0);
-  }, [searchValue, activeQuickFilter, routeLookup, routeReviews, routeReviewTags, savedRouteIds]);
+  }, [
+    searchValue,
+    activeQuickFilter,
+    favoriteRouteId,
+    routeLookup,
+    routeReviews,
+    routeReviewTags,
+    savedRouteIds,
+  ]);
 
   const savedSection = filteredSections.find((section) => section.key === "saved");
   const otherSections = filteredSections.filter((section) => section.key !== "saved");
@@ -328,12 +354,30 @@ export function RoutesScreen({
 
   function removeFromSaved(routeId: string) {
     setSavedRouteIds((current) => current.filter((id) => id !== routeId));
+    if (favoriteRouteId === routeId) {
+      onFavoriteRouteChange(null);
+    }
     setPendingRemovalRouteId(null);
     cancelEditingRoute();
   }
 
   function requestRemoveFromSaved(routeId: string) {
     setPendingRemovalRouteId(routeId);
+  }
+
+  function toggleFavoriteRoute(route: RouteItem) {
+    if (favoriteRouteId === route.id) {
+      onFavoriteRouteChange(null);
+      setSaveToastMessage(`${route.name} removed from favorites.`);
+      return;
+    }
+
+    onFavoriteRouteChange({
+      routeId: route.id,
+      title: route.name,
+      subtitle: `Walk • ${route.distance}`,
+    });
+    setSaveToastMessage(`${route.name} added to favorites!`);
   }
 
   function toggleQuickFilter(filter: string) {
@@ -712,6 +756,65 @@ export function RoutesScreen({
                   </Text>
                 </View>
               </Pressable>
+
+              <Pressable
+                onPress={() => toggleFavoriteRoute(selectedRoute)}
+                style={[
+                  styles.favoriteEntryCard,
+                  favoriteRouteId === selectedRoute.id && styles.favoriteEntryCardActive,
+                ]}
+              >
+                <View style={styles.favoriteEntryIconWrap}>
+                  <Feather
+                    name="star"
+                    size={18}
+                    color={
+                      favoriteRouteId === selectedRoute.id
+                        ? theme.colors.white
+                        : theme.colors.brandDeep
+                    }
+                  />
+                </View>
+                <View style={styles.favoriteEntryCopy}>
+                  <Text
+                    style={[
+                      styles.favoriteEntryLabel,
+                      favoriteRouteId === selectedRoute.id &&
+                        styles.favoriteEntryLabelActive,
+                    ]}
+                  >
+                    Favorite
+                  </Text>
+                  <Text
+                    style={[
+                      styles.favoriteEntryValue,
+                      favoriteRouteId === selectedRoute.id &&
+                        styles.favoriteEntryValueActive,
+                    ]}
+                  >
+                    {favoriteRouteId === selectedRoute.id
+                      ? "This route appears in your Home favorites card."
+                      : "Add this route to favorites"}
+                  </Text>
+                </View>
+                <View
+                  style={[
+                    styles.favoriteEntryActionPill,
+                    favoriteRouteId === selectedRoute.id &&
+                      styles.favoriteEntryActionPillActive,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.favoriteEntryAction,
+                      favoriteRouteId === selectedRoute.id &&
+                        styles.favoriteEntryActionActive,
+                    ]}
+                  >
+                    {favoriteRouteId === selectedRoute.id ? "Unfavorite" : "Favorite"}
+                  </Text>
+                </View>
+              </Pressable>
             </View>
           </View>
         ) : null}
@@ -752,8 +855,8 @@ export function RoutesScreen({
                       onPress={() => setEditingRatingValue(star)}
                       style={styles.reviewStarButton}
                     >
-                      <Feather
-                        name="star"
+                      <Ionicons
+                        name={selected ? "star" : "star-outline"}
                         size={20}
                         color={selected ? theme.colors.brandDeep : "rgba(110,95,86,0.35)"}
                       />
@@ -1397,11 +1500,11 @@ const styles = StyleSheet.create({
   },
   reviewEntryCard: {
     borderRadius: 22,
-    backgroundColor: theme.colors.surfaceOrange,
+    backgroundColor: theme.colors.surfaceOrangeDeep,
     paddingHorizontal: 14,
     paddingVertical: 15,
     borderWidth: 1,
-    borderColor: "rgba(202,116,73,0.18)",
+    borderColor: theme.colors.brandDeep,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -1416,7 +1519,7 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 14,
-    backgroundColor: theme.colors.surfaceOrangeDeep,
+    backgroundColor: theme.colors.surfaceOrange,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -1427,7 +1530,7 @@ const styles = StyleSheet.create({
   reviewEntryLabel: {
     fontSize: 13,
     fontWeight: "800",
-    color: "#7D543B",
+    color: theme.colors.white,
     textTransform: "uppercase",
     letterSpacing: 0.4,
   },
@@ -1435,13 +1538,13 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 21,
     fontWeight: "700",
-    color: theme.colors.text,
+    color: theme.colors.white,
   },
   reviewEntryActionPill: {
     borderRadius: theme.radius.pill,
-    backgroundColor: "rgba(255,249,244,0.96)",
+    backgroundColor: theme.colors.surface,
     borderWidth: 1,
-    borderColor: "rgba(202,116,73,0.18)",
+    borderColor: theme.colors.brandDeep,
     paddingHorizontal: 13,
     paddingVertical: 10,
     alignItems: "center",
@@ -1450,6 +1553,80 @@ const styles = StyleSheet.create({
   reviewEntryAction: {
     fontSize: 13,
     fontWeight: "800",
+    color: theme.colors.brandDeep,
+  },
+  favoriteEntryCard: {
+    borderRadius: 22,
+    backgroundColor: theme.colors.surfaceSoft,
+    paddingHorizontal: 14,
+    paddingVertical: 15,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+    shadowColor: theme.colors.brandDeep,
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 3,
+  },
+  favoriteEntryCardActive: {
+    backgroundColor: theme.colors.surfaceTint,
+    borderColor: theme.colors.brandDeep,
+  },
+  favoriteEntryIconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    backgroundColor: theme.colors.surfaceOrangeDeep,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  favoriteEntryCopy: {
+    flex: 1,
+    gap: 4,
+  },
+  favoriteEntryLabel: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: theme.colors.brandDeep,
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+  },
+  favoriteEntryLabelActive: {
+    color: theme.colors.brandDeep,
+  },
+  favoriteEntryValue: {
+    fontSize: 15,
+    lineHeight: 21,
+    fontWeight: "700",
+    color: theme.colors.text,
+  },
+  favoriteEntryValueActive: {
+    color: theme.colors.text,
+  },
+  favoriteEntryActionPill: {
+    borderRadius: theme.radius.pill,
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.brandDeep,
+    paddingHorizontal: 13,
+    paddingVertical: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  favoriteEntryActionPillActive: {
+    backgroundColor: theme.colors.surfaceWarm,
+    borderColor: theme.colors.brand,
+  },
+  favoriteEntryAction: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: theme.colors.brandDeep,
+  },
+  favoriteEntryActionActive: {
     color: theme.colors.brandDeep,
   },
   removeConfirmOverlay: {
@@ -1566,7 +1743,9 @@ const styles = StyleSheet.create({
     color: theme.colors.textSoft,
   },
   reviewModalActions: {
+    flexDirection: "row",
     alignItems: "center",
+    gap: 10,
     marginTop: 2,
   },
   reviewInput: {

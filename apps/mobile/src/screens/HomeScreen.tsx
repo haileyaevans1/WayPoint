@@ -4,6 +4,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import MapView, { Marker, Polyline } from "react-native-maps";
 import AnimatedWayPointLogo from "../components/AnimatedWayPointLogo";
 import { theme } from "../styles/theme";
+import type { FavoriteRouteSummary } from "./RoutesScreen";
 
 const readyLimeTextDark = "#4F5A22";
 
@@ -41,6 +42,7 @@ type HomeScreenProps = {
   onOpenPopularRoutes: () => void;
   onOpenAlerts: () => void;
   onOpenStartJourney: () => void;
+  favoriteRoute: FavoriteRouteSummary | null;
   journeyMode?: JourneyMode;
 };
 
@@ -89,6 +91,7 @@ export function HomeScreen({
   onOpenPopularRoutes,
   onOpenAlerts,
   onOpenStartJourney,
+  favoriteRoute,
   journeyMode = "idle",
 }: HomeScreenProps) {
   const heroState = heroStateByMode[journeyMode];
@@ -201,11 +204,11 @@ export function HomeScreen({
             <View style={styles.favoriteRoutesRow}>
               {[
                 {
-                  title: "Riverwalk",
-                  subtitle: "Bike loop • 5k",
-                  icon: "↗",
-                  onPress: onOpenPopularRoutes,
-                  tone: "warm" as const,
+                  title: favoriteRoute?.title ?? "Add",
+                  subtitle: favoriteRoute?.subtitle ?? "Favorite",
+                  icon: favoriteRoute ? "★" : "+",
+                  onPress: onOpenSavedRoutes,
+                  tone: favoriteRoute ? ("warm" as const) : ("add" as const),
                 },
                 {
                   title: "School → Home",
