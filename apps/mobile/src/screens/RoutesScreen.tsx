@@ -21,6 +21,8 @@ type RouteItem = {
   reviews: string;
   snippet: string;
   tags: string[];
+  safetyScore: string;
+  crowdLevel: string;
 };
 
 type RoutesScreenProps = {
@@ -48,6 +50,8 @@ const routeSections: Array<{
         reviews: "18 reviews",
         snippet: "Easy to follow and feels calm before work.",
         tags: ["Well Lit", "Low Traffic", "Easy Pace"],
+        safetyScore: "High",
+        crowdLevel: "Light",
       },
       {
         id: "saved-park-loop",
@@ -58,6 +62,8 @@ const routeSections: Array<{
         reviews: "26 reviews",
         snippet: "Open paths and lots of visibility the whole way.",
         tags: ["Open Views", "Popular", "Moderate Crowd"],
+        safetyScore: "High",
+        crowdLevel: "Moderate",
       },
     ],
   },
@@ -75,6 +81,8 @@ const routeSections: Array<{
         reviews: "32 reviews",
         snippet: "Well lit and great for evening walks.",
         tags: ["Well Lit", "Moderate Crowd", "Smooth Path"],
+        safetyScore: "High",
+        crowdLevel: "Moderate",
       },
       {
         id: "popular-downtown",
@@ -85,6 +93,8 @@ const routeSections: Array<{
         reviews: "24 reviews",
         snippet: "Busy enough to feel comfortable but still easy to pace.",
         tags: ["Busy Area", "Shops Nearby", "Quick Route"],
+        safetyScore: "Medium",
+        crowdLevel: "Busy",
       },
     ],
   },
@@ -102,6 +112,8 @@ const routeSections: Array<{
         reviews: "41 reviews",
         snippet: "Feels safe even after sunset because the lighting is consistent.",
         tags: ["Well Lit", "Trusted", "Low Traffic"],
+        safetyScore: "High",
+        crowdLevel: "Light",
       },
       {
         id: "reviewed-campus",
@@ -112,6 +124,8 @@ const routeSections: Array<{
         reviews: "29 reviews",
         snippet: "A good mix of visibility, people around, and easy landmarks.",
         tags: ["Landmarks", "Moderate Crowd", "Easy Navigation"],
+        safetyScore: "High",
+        crowdLevel: "Moderate",
       },
     ],
   },
@@ -129,6 +143,8 @@ const routeSections: Array<{
         reviews: "15 reviews",
         snippet: "Short, scenic, and simple when you want something close.",
         tags: ["Nearby", "Scenic", "Light Traffic"],
+        safetyScore: "Medium",
+        crowdLevel: "Light",
       },
       {
         id: "nearby-market",
@@ -139,6 +155,8 @@ const routeSections: Array<{
         reviews: "12 reviews",
         snippet: "Useful for quick daytime walks with plenty of activity nearby.",
         tags: ["Daytime", "Busy Area", "Quick Route"],
+        safetyScore: "Medium",
+        crowdLevel: "Busy",
       },
     ],
   },
@@ -182,6 +200,8 @@ export function RoutesScreen({
             route.snippet,
             route.distance,
             route.time,
+            route.safetyScore,
+            route.crowdLevel,
             ...route.tags,
           ]
             .join(" ")
@@ -222,7 +242,6 @@ export function RoutesScreen({
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        {/* PAGE HEADER */}
         <View style={styles.pageIntro}>
           <Text style={styles.pageEyebrow}>Explore</Text>
           <Text style={styles.pageTitle}>Routes</Text>
@@ -231,7 +250,6 @@ export function RoutesScreen({
           </Text>
         </View>
 
-        {/* SEARCH */}
         <Pressable
           style={({ pressed }) => [
             styles.searchShell,
@@ -248,7 +266,6 @@ export function RoutesScreen({
           />
         </Pressable>
 
-        {/* QUICK FILTERS */}
         <View style={styles.filterRow}>
           {quickFilters.map((filter) => {
             const selected = activeQuickFilter === filter;
@@ -348,6 +365,19 @@ export function RoutesScreen({
                         </Text>
                       </Pressable>
                     </View>
+
+                    <View style={styles.infoChipRow}>
+                      <View style={[styles.infoChip, styles.safetyChip]}>
+                        <Text style={styles.infoChipLabel}>Safety</Text>
+                        <Text style={styles.infoChipValue}>{route.safetyScore}</Text>
+                      </View>
+                      <View style={[styles.infoChip, styles.crowdChip]}>
+                        <Text style={styles.infoChipLabel}>Crowd</Text>
+                        <Text style={styles.infoChipValue}>{route.crowdLevel}</Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.divider} />
 
                     <View style={styles.reviewRow}>
                       <Text style={styles.reviewRating}>
@@ -623,6 +653,41 @@ const styles = StyleSheet.create({
   },
   saveButtonIconActive: {
     color: theme.colors.brand,
+  },
+
+  infoChipRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  infoChip: {
+    borderRadius: 18,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    flexDirection: "row",
+    gap: 6,
+    alignItems: "center",
+  },
+  safetyChip: {
+    backgroundColor: "rgba(175,203,70,0.16)",
+  },
+  crowdChip: {
+    backgroundColor: "rgba(216,229,242,0.42)",
+  },
+  infoChipLabel: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: theme.colors.textSoft,
+  },
+  infoChipValue: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: theme.colors.text,
+  },
+
+  divider: {
+    height: 1,
+    backgroundColor: "rgba(0,0,0,0.06)",
+    marginVertical: 2,
   },
 
   reviewRow: {
