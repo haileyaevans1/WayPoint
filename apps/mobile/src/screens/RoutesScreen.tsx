@@ -54,22 +54,22 @@ const routeSections: Array<{
     routes: [
       {
         id: "saved-morning-walk",
-        name: "Morning Walk",
+        name: "River Parks Morning Walk",
         distance: "2.1 mi",
         time: "42 min",
         rating: "4.8",
         reviews: "18 reviews",
-        snippet: "Easy to follow and feels calm before work.",
+        snippet: "Easy to follow along Riverside and feels calm before work.",
         tags: ["Well Lit", "Low Traffic", "Easy Pace"],
       },
       {
         id: "saved-park-loop",
-        name: "Park Loop",
+        name: "Gathering Place Loop",
         distance: "3.0 mi",
         time: "58 min",
         rating: "4.7",
         reviews: "26 reviews",
-        snippet: "Open paths and lots of visibility the whole way.",
+        snippet: "Open paths, clear signage, and lots of visibility through the park.",
         tags: ["Open Views", "Popular", "Moderate Crowd"],
       },
     ],
@@ -81,22 +81,22 @@ const routeSections: Array<{
     routes: [
       {
         id: "popular-riverwalk",
-        name: "Riverwalk Loop",
+        name: "Gathering Place Riverwalk",
         distance: "2.8 mi",
         time: "51 min",
         rating: "4.6",
         reviews: "32 reviews",
-        snippet: "Well lit and great for evening walks.",
+        snippet: "Well lit and great for evening walks near the river.",
         tags: ["Well Lit", "Moderate Crowd", "Smooth Path"],
       },
       {
         id: "popular-downtown",
-        name: "Downtown Out-and-Back",
+        name: "Blue Dome Out-and-Back",
         distance: "1.9 mi",
         time: "36 min",
         rating: "4.5",
         reviews: "24 reviews",
-        snippet: "Busy enough to feel comfortable but still easy to pace.",
+        snippet: "Busy enough to feel comfortable but still easy to pace through downtown Tulsa.",
         tags: ["Busy Area", "Shops Nearby", "Quick Route"],
       },
     ],
@@ -108,22 +108,22 @@ const routeSections: Array<{
     routes: [
       {
         id: "reviewed-greenway",
-        name: "Greenway Path",
+        name: "Turkey Mountain Lower Trail",
         distance: "4.2 mi",
         time: "1 hr 12 min",
         rating: "4.9",
         reviews: "41 reviews",
-        snippet: "Feels safe even after sunset because the lighting is consistent.",
+        snippet: "A trusted Tulsa favorite with a route people know well and return to often.",
         tags: ["Well Lit", "Trusted", "Low Traffic"],
       },
       {
         id: "reviewed-campus",
-        name: "Campus Connector",
+        name: "Utica Square Connector",
         distance: "2.4 mi",
         time: "44 min",
         rating: "4.7",
         reviews: "29 reviews",
-        snippet: "A good mix of visibility, people around, and easy landmarks.",
+        snippet: "A good mix of visibility, people around, and easy-to-follow Tulsa landmarks.",
         tags: ["Landmarks", "Moderate Crowd", "Easy Navigation"],
       },
     ],
@@ -135,22 +135,22 @@ const routeSections: Array<{
     routes: [
       {
         id: "nearby-lake",
-        name: "Lakeside Route",
+        name: "Swan Lake Circuit",
         distance: "1.6 mi",
         time: "31 min",
         rating: "4.4",
         reviews: "15 reviews",
-        snippet: "Short, scenic, and simple when you want something close.",
+        snippet: "Short, scenic, and simple when you want something close in midtown Tulsa.",
         tags: ["Nearby", "Scenic", "Light Traffic"],
       },
       {
         id: "nearby-market",
-        name: "Market Street Loop",
+        name: "Cherry Street Loop",
         distance: "2.0 mi",
         time: "38 min",
         rating: "4.3",
         reviews: "12 reviews",
-        snippet: "Useful for quick daytime walks with plenty of activity nearby.",
+        snippet: "Useful for quick daytime walks with plenty of activity and cafes nearby.",
         tags: ["Daytime", "Busy Area", "Quick Route"],
       },
     ],
@@ -193,17 +193,20 @@ const savedRouteRecapDefaults: Record<
     routeShape: RouteShape;
     safetyFeatureIds: string[];
     journeyMode: "Solo" | "Group";
+    startLocation: string;
   }
 > = {
   "saved-morning-walk": {
     routeShape: "loop",
     safetyFeatureIds: ["off-route", "check-ins"],
     journeyMode: "Solo",
+    startLocation: "River Parks Trail, Tulsa",
   },
   "saved-park-loop": {
     routeShape: "loop",
     safetyFeatureIds: ["off-route", "missed-check-in", "emergency"],
     journeyMode: "Group",
+    startLocation: "Gathering Place, Tulsa",
   },
 };
 
@@ -618,20 +621,14 @@ export function RoutesScreen({
                 </View>
               </View>
 
-              <View style={styles.modalSection}>
-                <Text style={styles.modalSectionTitle}>Review Summary</Text>
-                <Text style={styles.modalReviewRating}>
-                  ★ {selectedRoute.rating} ({selectedRoute.reviews})
-                </Text>
-                <TextInput
-                  value={editingReviewValue}
-                  onChangeText={setEditingReviewValue}
-                  placeholder="Update your review"
-                  placeholderTextColor={theme.colors.textMuted}
-                  style={styles.reviewInput}
-                  multiline
-                  textAlignVertical="top"
-                />
+              <View style={styles.modalLocationCard}>
+                <View>
+                  <Text style={styles.modalLocationLabel}>Current Location</Text>
+                  <Text style={styles.modalLocationValue}>
+                    {savedRouteRecapDefaults[selectedRoute.id]?.startLocation ??
+                      "Current location"}
+                  </Text>
+                </View>
               </View>
 
               <View style={styles.modalSection}>
@@ -1131,6 +1128,30 @@ const styles = StyleSheet.create({
   modalSectionTitle: {
     fontSize: 15,
     fontWeight: "800",
+    color: theme.colors.text,
+  },
+  modalLocationCard: {
+    borderRadius: 22,
+    backgroundColor: theme.colors.surfaceOrangeDeep,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 12,
+    borderWidth: 1,
+    borderColor: "rgba(202,116,73,0.3)",
+  },
+  modalLocationLabel: {
+    fontSize: 13,
+    color: "rgba(111,72,46,0.86)",
+    fontWeight: "700",
+  },
+  modalLocationValue: {
+    marginTop: 3,
+    fontSize: 20,
+    lineHeight: 24,
+    fontWeight: "900",
     color: theme.colors.text,
   },
   modalReviewRating: {
