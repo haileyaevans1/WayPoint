@@ -21,8 +21,6 @@ type RouteItem = {
   reviews: string;
   snippet: string;
   tags: string[];
-  safetyScore: string;
-  crowdLevel: string;
 };
 
 type RoutesScreenProps = {
@@ -50,8 +48,6 @@ const routeSections: Array<{
         reviews: "18 reviews",
         snippet: "Easy to follow and feels calm before work.",
         tags: ["Well Lit", "Low Traffic", "Easy Pace"],
-        safetyScore: "High",
-        crowdLevel: "Light",
       },
       {
         id: "saved-park-loop",
@@ -62,8 +58,6 @@ const routeSections: Array<{
         reviews: "26 reviews",
         snippet: "Open paths and lots of visibility the whole way.",
         tags: ["Open Views", "Popular", "Moderate Crowd"],
-        safetyScore: "High",
-        crowdLevel: "Moderate",
       },
     ],
   },
@@ -81,8 +75,6 @@ const routeSections: Array<{
         reviews: "32 reviews",
         snippet: "Well lit and great for evening walks.",
         tags: ["Well Lit", "Moderate Crowd", "Smooth Path"],
-        safetyScore: "High",
-        crowdLevel: "Moderate",
       },
       {
         id: "popular-downtown",
@@ -93,8 +85,6 @@ const routeSections: Array<{
         reviews: "24 reviews",
         snippet: "Busy enough to feel comfortable but still easy to pace.",
         tags: ["Busy Area", "Shops Nearby", "Quick Route"],
-        safetyScore: "Medium",
-        crowdLevel: "Busy",
       },
     ],
   },
@@ -112,8 +102,6 @@ const routeSections: Array<{
         reviews: "41 reviews",
         snippet: "Feels safe even after sunset because the lighting is consistent.",
         tags: ["Well Lit", "Trusted", "Low Traffic"],
-        safetyScore: "High",
-        crowdLevel: "Light",
       },
       {
         id: "reviewed-campus",
@@ -124,8 +112,6 @@ const routeSections: Array<{
         reviews: "29 reviews",
         snippet: "A good mix of visibility, people around, and easy landmarks.",
         tags: ["Landmarks", "Moderate Crowd", "Easy Navigation"],
-        safetyScore: "High",
-        crowdLevel: "Moderate",
       },
     ],
   },
@@ -143,8 +129,6 @@ const routeSections: Array<{
         reviews: "15 reviews",
         snippet: "Short, scenic, and simple when you want something close.",
         tags: ["Nearby", "Scenic", "Light Traffic"],
-        safetyScore: "Medium",
-        crowdLevel: "Light",
       },
       {
         id: "nearby-market",
@@ -155,8 +139,6 @@ const routeSections: Array<{
         reviews: "12 reviews",
         snippet: "Useful for quick daytime walks with plenty of activity nearby.",
         tags: ["Daytime", "Busy Area", "Quick Route"],
-        safetyScore: "Medium",
-        crowdLevel: "Busy",
       },
     ],
   },
@@ -179,15 +161,16 @@ export function RoutesScreen({
     routeSections[0].routes.map((route) => route.id),
   );
   const [activeQuickFilter, setActiveQuickFilter] = useState<string | null>(null);
+  const [routeNames, setRouteNames] = useState<Record<string, string>>({});
+  const [editingRouteId, setEditingRouteId] = useState<string | null>(null);
+  const [editingNameValue, setEditingNameValue] = useState("");
 
   const filteredSections = useMemo(() => {
     const query = searchValue.trim().toLowerCase();
     const quickFilter = activeQuickFilter?.toLowerCase() ?? "";
-
-    const hasSearch = query.length > 0;
     const hasQuickFilter = quickFilter.length > 0;
 
-    if (!hasSearch && !hasQuickFilter) {
+    if (!query && !hasQuickFilter) {
       return routeSections;
     }
 
@@ -195,19 +178,18 @@ export function RoutesScreen({
       .map((section) => ({
         ...section,
         routes: section.routes.filter((route) => {
+          const routeName = routeNames[route.id] ?? route.name;
           const searchableText = [
-            route.name,
+            routeName,
             route.snippet,
             route.distance,
             route.time,
-            route.safetyScore,
-            route.crowdLevel,
             ...route.tags,
           ]
             .join(" ")
             .toLowerCase();
 
-          const matchesSearch = hasSearch ? searchableText.includes(query) : true;
+          const matchesSearch = query ? searchableText.includes(query) : true;
           const matchesQuickFilter = hasQuickFilter
             ? route.tags.join(" ").toLowerCase().includes(quickFilter)
             : true;
@@ -216,7 +198,10 @@ export function RoutesScreen({
         }),
       }))
       .filter((section) => section.routes.length > 0);
-  }, [searchValue, activeQuickFilter]);
+  }, [searchValue, activeQuickFilter, routeNames]);
+
+  const savedSection = filteredSections.find((section) => section.key === "saved");
+  const otherSections = filteredSections.filter((section) => section.key !== "saved");
 
   function toggleSavedRoute(routeId: string) {
     setSavedRouteIds((current) =>
@@ -228,6 +213,163 @@ export function RoutesScreen({
 
   function toggleQuickFilter(filter: string) {
     setActiveQuickFilter((current) => (current === filter ? null : filter));
+  }
+
+  function startEditingRoute(route: RouteItem) {
+    setEditingRouteId(route.id);
+    setEditingNameValue(routeNames[route.id] ?? route.name);
+  }
+
+  function cancelEditingRoute() {
+    setEditingRouteId(null);
+    setEditingNameValue("");
+  }
+
+  function saveRouteName(route: RouteItem) {
+    const trimmedName = editingNameValue.trim();
+
+    if (!trimmedName) {
+      cancelEditingRoute();
+      return;
+    }
+
+    setRouteNames((current) => ({
+      ...current,
+      [route.id]: trimmedName,
+    }));
+    cancelEditingRoute();
+  }
+
+  function renderSection(section: (typeof routeSections)[number]) {
+    return (
+      <View key={section.key} style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <View>
+            <Text style={styles.sectionTitle}>{section.title}</Text>
+            <Text style={styles.sectionSubtitle}>{section.subtitle}</Text>
+          </View>
+          <LinearGradient
+            colors={sectionAccent[section.key]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.sectionBadge}
+          >
+            <Text style={styles.sectionBadgeText}>
+              {section.key === "reviewed"
+                ? "Top rated"
+                : section.key === "nearby"
+                  ? "Near you"
+                  : section.key === "saved"
+                    ? "Personal"
+                    : "Trending"}
+            </Text>
+          </LinearGradient>
+        </View>
+
+        <View style={styles.routeList}>
+          {section.routes.map((route) => {
+            const isSaved = savedRouteIds.includes(route.id);
+            const canEditRoute = section.key === "saved";
+            const routeName = routeNames[route.id] ?? route.name;
+            const isEditing = canEditRoute && editingRouteId === route.id;
+
+            return (
+              <View key={route.id} style={styles.routeCard}>
+                <View style={styles.routeCardTopRow}>
+                  <View style={styles.routeCopy}>
+                    {isEditing ? (
+                      <TextInput
+                        value={editingNameValue}
+                        onChangeText={setEditingNameValue}
+                        placeholder="Rename route"
+                        placeholderTextColor={theme.colors.textMuted}
+                        style={styles.routeNameInput}
+                      />
+                    ) : (
+                      <Text style={styles.routeName}>{routeName}</Text>
+                    )}
+                    <Text style={styles.routeMeta}>
+                      {route.distance} • {route.time}
+                    </Text>
+                  </View>
+                  <Pressable
+                    onPress={() => toggleSavedRoute(route.id)}
+                    style={[
+                      styles.saveButton,
+                      isSaved && styles.saveButtonActive,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.saveButtonIcon,
+                        isSaved && styles.saveButtonIconActive,
+                      ]}
+                    >
+                      ♥
+                    </Text>
+                  </Pressable>
+                </View>
+
+                <View style={styles.reviewRow}>
+                  <Text style={styles.reviewRating}>
+                    ★ {route.rating} ({route.reviews})
+                  </Text>
+                </View>
+                <Text style={styles.reviewSnippet}>“{route.snippet}”</Text>
+
+                <View style={styles.tagRow}>
+                  {route.tags.map((tag) => (
+                    <View key={tag} style={styles.tag}>
+                      <Text style={styles.tagText}>{tag}</Text>
+                    </View>
+                  ))}
+                </View>
+
+                <View style={styles.cardActions}>
+                  {isEditing ? (
+                    <>
+                      <Pressable
+                        onPress={cancelEditingRoute}
+                        style={styles.secondaryAction}
+                      >
+                        <Text style={styles.secondaryActionText}>Cancel</Text>
+                      </Pressable>
+                      <Pressable
+                        onPress={() => saveRouteName(route)}
+                        style={styles.primaryAction}
+                      >
+                        <Text style={styles.primaryActionText}>Save Name</Text>
+                      </Pressable>
+                    </>
+                  ) : (
+                    <>
+                      <Pressable
+                        onPress={() =>
+                          canEditRoute
+                            ? startEditingRoute(route)
+                            : toggleSavedRoute(route.id)
+                        }
+                        style={styles.secondaryAction}
+                      >
+                        <Text style={styles.secondaryActionText}>
+                          {canEditRoute ? "Edit" : isSaved ? "Saved" : "Save"}
+                        </Text>
+                      </Pressable>
+                      <Pressable
+                        onPress={onStartRoute}
+                        style={styles.primaryAction}
+                      >
+                        <Text style={styles.primaryActionText}>Start Route</Text>
+                      </Pressable>
+                    </>
+                  )}
+                </View>
+              </View>
+            );
+          })}
+        </View>
+      </View>
+    );
   }
 
   return (
@@ -250,12 +392,7 @@ export function RoutesScreen({
           </Text>
         </View>
 
-        <Pressable
-          style={({ pressed }) => [
-            styles.searchShell,
-            pressed && styles.searchShellPressed,
-          ]}
-        >
+        <View style={styles.searchShell}>
           <Text style={styles.searchIcon}>⌕</Text>
           <TextInput
             value={searchValue}
@@ -264,7 +401,7 @@ export function RoutesScreen({
             placeholderTextColor={theme.colors.textMuted}
             style={styles.searchInput}
           />
-        </Pressable>
+        </View>
 
         <View style={styles.filterRow}>
           {quickFilters.map((filter) => {
@@ -274,10 +411,9 @@ export function RoutesScreen({
               <Pressable
                 key={filter}
                 onPress={() => toggleQuickFilter(filter)}
-                style={({ pressed }) => [
+                style={[
                   styles.filterPill,
                   selected && styles.filterPillActive,
-                  pressed && styles.filterPillPressed,
                 ]}
               >
                 <Text
@@ -293,137 +429,18 @@ export function RoutesScreen({
           })}
         </View>
 
-        {filteredSections.map((section) => (
-          <View key={section.key} style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <View style={styles.sectionTitleWrap}>
-                <Text style={styles.sectionTitle}>{section.title}</Text>
-                <Text style={styles.sectionSubtitle}>{section.subtitle}</Text>
-              </View>
-
-              <LinearGradient
-                colors={sectionAccent[section.key]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.sectionBadge}
-              >
-                <Text style={styles.sectionBadgeText}>
-                  {section.key === "reviewed"
-                    ? "Top rated"
-                    : section.key === "nearby"
-                      ? "Near you"
-                      : section.key === "saved"
-                        ? "Personal"
-                        : "Trending"}
-                </Text>
-              </LinearGradient>
-            </View>
-
-            <View style={styles.routeList}>
-              {section.routes.map((route, index) => {
-                const isSaved = savedRouteIds.includes(route.id);
-                const isFeatured = index === 0;
-
-                return (
-                  <Pressable
-                    key={route.id}
-                    style={({ pressed }) => [
-                      styles.routeCard,
-                      isFeatured && styles.routeCardFeatured,
-                      pressed && styles.routeCardPressed,
-                    ]}
-                  >
-                    {isFeatured ? (
-                      <View style={styles.featuredPill}>
-                        <Text style={styles.featuredPillText}>Recommended</Text>
-                      </View>
-                    ) : null}
-
-                    <View style={styles.routeCardTopRow}>
-                      <View style={styles.routeCopy}>
-                        <Text style={styles.routeName}>{route.name}</Text>
-                        <Text style={styles.routeMeta}>
-                          {route.distance} • {route.time}
-                        </Text>
-                      </View>
-
-                      <Pressable
-                        onPress={() => toggleSavedRoute(route.id)}
-                        style={({ pressed }) => [
-                          styles.saveButton,
-                          isSaved && styles.saveButtonActive,
-                          pressed && styles.saveButtonPressed,
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.saveButtonIcon,
-                            isSaved && styles.saveButtonIconActive,
-                          ]}
-                        >
-                          ♥
-                        </Text>
-                      </Pressable>
-                    </View>
-
-                    <View style={styles.infoChipRow}>
-                      <View style={[styles.infoChip, styles.safetyChip]}>
-                        <Text style={styles.infoChipLabel}>Safety</Text>
-                        <Text style={styles.infoChipValue}>{route.safetyScore}</Text>
-                      </View>
-                      <View style={[styles.infoChip, styles.crowdChip]}>
-                        <Text style={styles.infoChipLabel}>Crowd</Text>
-                        <Text style={styles.infoChipValue}>{route.crowdLevel}</Text>
-                      </View>
-                    </View>
-
-                    <View style={styles.divider} />
-
-                    <View style={styles.reviewRow}>
-                      <Text style={styles.reviewRating}>
-                        ★ {route.rating} ({route.reviews})
-                      </Text>
-                    </View>
-
-                    <Text style={styles.reviewSnippet}>“{route.snippet}”</Text>
-
-                    <View style={styles.tagRow}>
-                      {route.tags.map((tag) => (
-                        <View key={tag} style={styles.tag}>
-                          <Text style={styles.tagText}>{tag}</Text>
-                        </View>
-                      ))}
-                    </View>
-
-                    <View style={styles.cardActions}>
-                      <Pressable
-                        onPress={() => toggleSavedRoute(route.id)}
-                        style={({ pressed }) => [
-                          styles.secondaryAction,
-                          pressed && styles.secondaryActionPressed,
-                        ]}
-                      >
-                        <Text style={styles.secondaryActionText}>
-                          {isSaved ? "Saved" : "Save"}
-                        </Text>
-                      </Pressable>
-
-                      <Pressable
-                        onPress={onStartRoute}
-                        style={({ pressed }) => [
-                          styles.primaryAction,
-                          pressed && styles.primaryActionPressed,
-                        ]}
-                      >
-                        <Text style={styles.primaryActionText}>Start Route</Text>
-                      </Pressable>
-                    </View>
-                  </Pressable>
-                );
-              })}
-            </View>
+        {savedSection ? (
+          <View style={styles.topSectionWrap}>
+            {renderSection(savedSection)}
           </View>
-        ))}
+        ) : null}
+
+        {otherSections.length > 0 ? (
+          <View style={styles.moreSectionWrap}>
+            <Text style={styles.moreSectionTitle}>More Routes</Text>
+            {otherSections.map(renderSection)}
+          </View>
+        ) : null}
 
         {filteredSections.length === 0 ? (
           <View style={styles.emptyState}>
@@ -444,12 +461,11 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background,
   },
   content: {
-    paddingHorizontal: 16,
-    paddingTop: 22,
+    paddingHorizontal: 18,
+    paddingTop: 28,
     paddingBottom: 180,
-    gap: 22,
+    gap: 18,
   },
-
   pageIntro: {
     gap: 6,
   },
@@ -472,23 +488,19 @@ const styles = StyleSheet.create({
     color: theme.colors.textSoft,
     maxWidth: 320,
   },
-
   searchShell: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
     borderRadius: 24,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "rgba(255,250,247,0.96)",
     paddingHorizontal: 16,
     paddingVertical: 14,
     shadowColor: theme.colors.brandDeep,
-    shadowOpacity: 0.12,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 10 },
-    elevation: 6,
-  },
-  searchShellPressed: {
-    transform: [{ scale: 0.995 }],
+    shadowOpacity: 0.08,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 4,
   },
   searchIcon: {
     fontSize: 18,
@@ -496,31 +508,28 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 15,
     color: theme.colors.text,
     paddingVertical: 0,
   },
-
   filterRow: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 10,
-    marginTop: -6,
   },
   filterPill: {
     borderRadius: theme.radius.pill,
-    backgroundColor: "rgba(255,255,255,0.75)",
+    backgroundColor: "rgba(255,250,247,0.96)",
     paddingHorizontal: 14,
     paddingVertical: 10,
-    borderWidth: 1,
-    borderColor: "rgba(0,0,0,0.05)",
+    shadowColor: theme.colors.brandDeep,
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
   },
   filterPillActive: {
-    backgroundColor: "rgba(241,176,120,0.18)",
-    borderColor: "rgba(241,176,120,0.35)",
-  },
-  filterPillPressed: {
-    transform: [{ scale: 0.98 }],
+    backgroundColor: "rgba(241,176,120,0.22)",
   },
   filterPillText: {
     fontSize: 13,
@@ -530,86 +539,64 @@ const styles = StyleSheet.create({
   filterPillTextActive: {
     color: theme.colors.brandDeep,
   },
-
   section: {
     gap: 14,
-    paddingTop: 2,
+  },
+  topSectionWrap: {
+    gap: 14,
+  },
+  moreSectionWrap: {
+    gap: 18,
+    paddingTop: 8,
+  },
+  moreSectionTitle: {
+    fontSize: 16,
+    fontWeight: "800",
+    letterSpacing: 0.4,
+    textTransform: "uppercase",
+    color: theme.colors.textMuted,
   },
   sectionHeader: {
     flexDirection: "row",
-    alignItems: "flex-end",
+    alignItems: "center",
     justifyContent: "space-between",
     gap: 12,
   },
-  sectionTitleWrap: {
-    flex: 1,
-    gap: 4,
-  },
   sectionTitle: {
-    fontSize: 22,
-    lineHeight: 26,
+    fontSize: 24,
+    lineHeight: 28,
     fontWeight: "800",
     color: theme.colors.text,
   },
   sectionSubtitle: {
-    fontSize: 13,
+    marginTop: 4,
+    fontSize: 14,
     color: theme.colors.textSoft,
-    opacity: 0.8,
   },
   sectionBadge: {
     borderRadius: theme.radius.pill,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    opacity: 0.92,
-    shadowColor: theme.colors.brandDeep,
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
+    paddingHorizontal: 13,
+    paddingVertical: 10,
   },
   sectionBadgeText: {
     fontSize: 12,
     fontWeight: "800",
     color: theme.colors.white,
   },
-
   routeList: {
-    gap: 14,
+    gap: 12,
   },
   routeCard: {
     borderRadius: 28,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "rgba(255,252,249,0.98)",
     padding: 18,
     gap: 12,
     shadowColor: theme.colors.brandDeep,
-    shadowOpacity: 0.12,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 10 },
-    elevation: 6,
+    shadowOpacity: 0.08,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 4,
   },
-  routeCardFeatured: {
-    borderWidth: 1,
-    borderColor: "rgba(241,176,120,0.28)",
-    shadowOpacity: 0.16,
-  },
-  routeCardPressed: {
-    transform: [{ scale: 0.99 }],
-  },
-  featuredPill: {
-    alignSelf: "flex-start",
-    borderRadius: theme.radius.pill,
-    backgroundColor: "rgba(241,176,120,0.16)",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    marginBottom: 2,
-  },
-  featuredPillText: {
-    fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 0.4,
-    color: theme.colors.brandDeep,
-  },
-
   routeCardTopRow: {
     flexDirection: "row",
     alignItems: "flex-start",
@@ -626,26 +613,30 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: theme.colors.text,
   },
+  routeNameInput: {
+    fontSize: 20,
+    lineHeight: 24,
+    fontWeight: "800",
+    color: theme.colors.text,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+    paddingBottom: 4,
+  },
   routeMeta: {
     marginTop: 4,
-    fontSize: 13,
+    fontSize: 14,
     color: theme.colors.textSoft,
-    opacity: 0.8,
   },
-
   saveButton: {
     width: 40,
     height: 40,
     borderRadius: 14,
-    backgroundColor: "rgba(0,0,0,0.05)",
+    backgroundColor: theme.colors.surfaceSoft,
     alignItems: "center",
     justifyContent: "center",
   },
   saveButtonActive: {
-    backgroundColor: "rgba(241,176,120,0.25)",
-  },
-  saveButtonPressed: {
-    transform: [{ scale: 0.94 }],
+    backgroundColor: "rgba(241,176,120,0.2)",
   },
   saveButtonIcon: {
     fontSize: 16,
@@ -654,42 +645,6 @@ const styles = StyleSheet.create({
   saveButtonIconActive: {
     color: theme.colors.brand,
   },
-
-  infoChipRow: {
-    flexDirection: "row",
-    gap: 10,
-  },
-  infoChip: {
-    borderRadius: 18,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    flexDirection: "row",
-    gap: 6,
-    alignItems: "center",
-  },
-  safetyChip: {
-    backgroundColor: "rgba(175,203,70,0.16)",
-  },
-  crowdChip: {
-    backgroundColor: "rgba(216,229,242,0.42)",
-  },
-  infoChipLabel: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: theme.colors.textSoft,
-  },
-  infoChipValue: {
-    fontSize: 12,
-    fontWeight: "800",
-    color: theme.colors.text,
-  },
-
-  divider: {
-    height: 1,
-    backgroundColor: "rgba(0,0,0,0.06)",
-    marginVertical: 2,
-  },
-
   reviewRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -697,7 +652,7 @@ const styles = StyleSheet.create({
   },
   reviewRating: {
     fontSize: 14,
-    fontWeight: "700",
+    fontWeight: "800",
     color: theme.colors.brandDeep,
   },
   reviewSnippet: {
@@ -705,7 +660,6 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     color: theme.colors.textSoft,
   },
-
   tagRow: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -713,38 +667,32 @@ const styles = StyleSheet.create({
   },
   tag: {
     borderRadius: theme.radius.pill,
-    backgroundColor: "rgba(175,203,70,0.15)",
+    backgroundColor: "#AFCB46",
     borderWidth: 1,
-    borderColor: "rgba(146,169,58,0.25)",
+    borderColor: "#92A93A",
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingVertical: 8,
   },
   tagText: {
     fontSize: 12,
-    fontWeight: "600",
-    color: "#4F5A22",
+    fontWeight: "700",
+    color: "#2F3615",
   },
-
   cardActions: {
     flexDirection: "row",
     gap: 10,
-    marginTop: 2,
   },
   secondaryAction: {
     flex: 1,
     borderRadius: 20,
-    backgroundColor: "rgba(0,0,0,0.04)",
+    backgroundColor: theme.colors.surfaceSoft,
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 14,
   },
-  secondaryActionPressed: {
-    transform: [{ scale: 0.98 }],
-    backgroundColor: "rgba(0,0,0,0.06)",
-  },
   secondaryActionText: {
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: "700",
     color: theme.colors.text,
   },
   primaryAction: {
@@ -754,32 +702,22 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 14,
-    shadowColor: theme.colors.brand,
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 5,
-  },
-  primaryActionPressed: {
-    transform: [{ scale: 0.98 }],
-    opacity: 0.92,
   },
   primaryActionText: {
     fontSize: 14,
     fontWeight: "800",
     color: theme.colors.white,
   },
-
   emptyState: {
     borderRadius: 28,
-    backgroundColor: "#FFFFFF",
-    padding: 24,
+    backgroundColor: "rgba(255,252,249,0.98)",
+    padding: 22,
     alignItems: "center",
     shadowColor: theme.colors.brandDeep,
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 10 },
-    elevation: 5,
+    shadowOpacity: 0.08,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 4,
   },
   emptyTitle: {
     fontSize: 18,
@@ -792,6 +730,5 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     textAlign: "center",
     color: theme.colors.textSoft,
-    opacity: 0.85,
   },
 });
