@@ -173,10 +173,10 @@ const routeSections: Array<{
 ];
 
 const sectionAccent: Record<RouteSectionKey, [string, string]> = {
-  saved: ["#F7D9C9", "#F1B08F"],
-  popular: ["#F4B37E", "#E48C57"],
-  reviewed: ["#D8E59C", "#B9CD62"],
-  nearby: ["#D8E5F2", "#B5CBE6"],
+  saved: [theme.colors.surfaceOrange, theme.colors.surfaceWarmDeep],
+  popular: [theme.colors.brandBright, theme.colors.brand],
+  reviewed: [theme.colors.accentLime, theme.colors.success],
+  nearby: [theme.colors.brandBright, theme.colors.brandBright],
 };
 
 const quickFilters = ["Well Lit", "Low Traffic", "Nearby", "Popular"] as const;
@@ -231,6 +231,14 @@ export function RoutesScreen({
   favoriteRouteId,
   onFavoriteRouteChange,
 }: RoutesScreenProps) {
+  const [expandedSections, setExpandedSections] = useState<
+    Record<RouteSectionKey, boolean>
+  >({
+    saved: true,
+    popular: false,
+    reviewed: false,
+    nearby: false,
+  });
   const [searchValue, setSearchValue] = useState("");
   const [savedRouteIds, setSavedRouteIds] = useState<string[]>(
     routeSections[0].routes.map((route) => route.id),
@@ -384,6 +392,13 @@ export function RoutesScreen({
     setActiveQuickFilter((current) => (current === filter ? null : filter));
   }
 
+  function toggleSection(sectionKey: RouteSectionKey) {
+    setExpandedSections((current) => ({
+      ...current,
+      [sectionKey]: !current[sectionKey],
+    }));
+  }
+
   function startEditingRoute(route: RouteItem) {
     const recapDefaults = savedRouteRecapDefaults[route.id];
     setEditingRouteId(route.id);
@@ -503,89 +518,107 @@ export function RoutesScreen({
   }
 
   function renderSection(section: (typeof routeSections)[number]) {
+    const isExpanded = expandedSections[section.key];
+    const headerColors = sectionAccent[section.key];
+
     return (
       <View key={section.key} style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <View>
-            <Text style={styles.sectionTitle}>{section.title}</Text>
-            <Text style={styles.sectionSubtitle}>{section.subtitle}</Text>
-          </View>
-        </View>
+        <Pressable
+          onPress={() => toggleSection(section.key)}
+          style={({ pressed }) => [pressed && styles.sectionHeaderPressed]}
+        >
+          <LinearGradient
+            colors={headerColors}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={[styles.sectionHeader, styles.sectionHeaderButton]}
+          >
+            <View>
+              <Text style={styles.sectionTitle}>{section.title}</Text>
+              <Text style={styles.sectionSubtitle}>{section.subtitle}</Text>
+            </View>
+            <View style={styles.sectionChevronWrap}>
+              <Text style={styles.sectionChevron}>{isExpanded ? "⌃" : "⌄"}</Text>
+            </View>
+          </LinearGradient>
+        </Pressable>
 
-        <View style={styles.routeList}>
-          {section.routes.map((route) => {
-            const isSaved = savedRouteIds.includes(route.id);
-            const canEditRoute = section.key === "saved";
-            const routeName = route.name;
-            const routeReview = routeReviews[route.id] ?? route.snippet;
-            const tags = routeReviewTags[route.id] ?? route.tags;
+        {isExpanded ? (
+          <View style={styles.routeList}>
+            {section.routes.map((route) => {
+              const isSaved = savedRouteIds.includes(route.id);
+              const canEditRoute = section.key === "saved";
+              const routeName = route.name;
+              const routeReview = routeReviews[route.id] ?? route.snippet;
+              const tags = routeReviewTags[route.id] ?? route.tags;
 
-            return (
-              <View key={route.id} style={styles.routeCard}>
-                <View style={styles.routeCardTopRow}>
-                  <View style={styles.routeCopy}>
-                    <Text style={styles.routeName}>{routeName}</Text>
-                    <Text style={styles.routeMeta}>
-                      {route.distance} • {route.time}
-                    </Text>
-                  </View>
-                  <Pressable
-                    onPress={() => toggleSavedRoute(route)}
-                    style={[
-                      styles.saveButton,
-                      isSaved && styles.saveButtonActive,
-                    ]}
-                  >
-                    <Text
+              return (
+                <View key={route.id} style={styles.routeCard}>
+                  <View style={styles.routeCardTopRow}>
+                    <View style={styles.routeCopy}>
+                      <Text style={styles.routeName}>{routeName}</Text>
+                      <Text style={styles.routeMeta}>
+                        {route.distance} • {route.time}
+                      </Text>
+                    </View>
+                    <Pressable
+                      onPress={() => toggleSavedRoute(route)}
                       style={[
-                        styles.saveButtonIcon,
-                        isSaved && styles.saveButtonIconActive,
+                        styles.saveButton,
+                        isSaved && styles.saveButtonActive,
                       ]}
                     >
-                      ♥
+                      <Text
+                        style={[
+                          styles.saveButtonIcon,
+                          isSaved && styles.saveButtonIconActive,
+                        ]}
+                      >
+                        ♥
+                      </Text>
+                    </Pressable>
+                  </View>
+
+                  <View style={styles.reviewRow}>
+                    <Text style={styles.reviewRating}>
+                      ★ {route.rating} ({route.reviews})
                     </Text>
-                  </Pressable>
-                </View>
+                  </View>
+                  <Text style={styles.reviewSnippet}>“{routeReview}”</Text>
 
-                <View style={styles.reviewRow}>
-                  <Text style={styles.reviewRating}>
-                    ★ {route.rating} ({route.reviews})
-                  </Text>
-                </View>
-                <Text style={styles.reviewSnippet}>“{routeReview}”</Text>
+                  <View style={styles.tagRow}>
+                    {tags.map((tag) => (
+                      <View key={tag} style={styles.tag}>
+                        <Text style={styles.tagText}>{tag}</Text>
+                      </View>
+                    ))}
+                  </View>
 
-                <View style={styles.tagRow}>
-                  {tags.map((tag) => (
-                    <View key={tag} style={styles.tag}>
-                      <Text style={styles.tagText}>{tag}</Text>
-                    </View>
-                  ))}
+                  <View style={styles.cardActions}>
+                    <Pressable
+                      onPress={() =>
+                        canEditRoute
+                          ? startEditingRoute(route)
+                          : toggleSavedRoute(route)
+                      }
+                      style={styles.secondaryAction}
+                    >
+                      <Text style={styles.secondaryActionText}>
+                        {canEditRoute ? "View" : isSaved ? "Saved" : "Save"}
+                      </Text>
+                    </Pressable>
+                    <Pressable
+                      onPress={() => onStartRoute(buildStartPreset(route))}
+                      style={styles.primaryAction}
+                    >
+                      <Text style={styles.primaryActionText}>Start Route</Text>
+                    </Pressable>
+                  </View>
                 </View>
-
-                <View style={styles.cardActions}>
-                  <Pressable
-                    onPress={() =>
-                      canEditRoute
-                        ? startEditingRoute(route)
-                        : toggleSavedRoute(route)
-                    }
-                    style={styles.secondaryAction}
-                  >
-                    <Text style={styles.secondaryActionText}>
-                      {canEditRoute ? "View" : isSaved ? "Saved" : "Save"}
-                    </Text>
-                  </Pressable>
-                  <Pressable
-                    onPress={() => onStartRoute(buildStartPreset(route))}
-                    style={styles.primaryAction}
-                  >
-                    <Text style={styles.primaryActionText}>Start Route</Text>
-                  </Pressable>
-                </View>
-              </View>
-            );
-          })}
-        </View>
+              );
+            })}
+          </View>
+        ) : null}
       </View>
     );
   }
@@ -1170,6 +1203,19 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 12,
   },
+  sectionHeaderButton: {
+    borderRadius: 24,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    shadowColor: theme.colors.brandDeep,
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
+  },
+  sectionHeaderPressed: {
+    opacity: 0.92,
+  },
   sectionTitle: {
     fontSize: 24,
     lineHeight: 28,
@@ -1179,7 +1225,20 @@ const styles = StyleSheet.create({
   sectionSubtitle: {
     marginTop: 4,
     fontSize: 14,
-    color: theme.colors.textSoft,
+    color: theme.colors.text,
+  },
+  sectionChevronWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: theme.colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sectionChevron: {
+    fontSize: 18,
+    color: theme.colors.brandDeep,
+    fontWeight: "800",
   },
   routeList: {
     gap: 12,
