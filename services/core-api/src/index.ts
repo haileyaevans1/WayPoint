@@ -16,7 +16,7 @@ app.post('/api/users/onboarding', async (req: Request, res: Response) => {
     try {
         const { name, email, password, phoneNumber } = req.body;
         
-        // Use Prisma to save the new user to our database!
+        // Use Prisma to save the new user to our database
         const newUser = await prisma.user.create({
             data: {
                 name: name,

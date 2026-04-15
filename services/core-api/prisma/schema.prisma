@@ -8,8 +8,9 @@ generator client {
 // For local development, SQLite is used eithout installing full database server
 // Can switch this to "postgresql" later!
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL")
 }
 
 // 1. Users
