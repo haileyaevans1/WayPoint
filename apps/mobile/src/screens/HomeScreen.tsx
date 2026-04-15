@@ -1,4 +1,5 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import MapView, { Marker, Polyline } from "react-native-maps";
 import AnimatedWayPointLogo from "../components/AnimatedWayPointLogo";
@@ -155,7 +156,7 @@ export function HomeScreen({
             </View>
 
             <Pressable onPress={onOpenAlerts} style={({ pressed }) => [styles.alertButton, pressed && styles.alertPressed]}>
-              <Text style={styles.alertIcon}>◠</Text>
+              <Feather name="bell" size={18} color={theme.colors.white} />
               <View style={styles.alertDot} />
             </Pressable>
           </View>
@@ -194,7 +195,7 @@ export function HomeScreen({
 
           <View style={styles.sectionCard}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Suggested Routes</Text>
+              <Text style={styles.sectionTitle}>Favorites</Text>
             </View>
 
             <View style={styles.favoriteRoutesRow}>
@@ -289,6 +290,7 @@ export function HomeScreen({
                   onPress={item.onPress}
                   style={({ pressed }) => [
                     styles.listRow,
+                    item.tone === "warm" ? styles.listRowWarm : styles.listRowCool,
                     index === 0 && styles.listRowDivider,
                     pressed && styles.listRowPressed,
                   ]}
@@ -317,7 +319,7 @@ export function HomeScreen({
 
           <View style={styles.sectionCard}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Today</Text>
+              <Text style={styles.sectionTitle}>At a Glance</Text>
             </View>
 
             <View style={styles.progressRow}>
@@ -371,6 +373,7 @@ const styles = StyleSheet.create({
   },
   mapTint: {
     ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(255,242,233,0.12)",
   },
   mapTopRow: {
     paddingHorizontal: 18,
@@ -387,9 +390,9 @@ const styles = StyleSheet.create({
     paddingLeft: 4,
     paddingRight: 14,
     borderRadius: 20,
-    backgroundColor: "rgba(119,128,147,0.88)",
+    backgroundColor: "rgba(108,116,130,0.92)",
     borderWidth: 1,
-    borderColor: "rgba(243,200,162,0.16)",
+    borderColor: "rgba(243,200,162,0.28)",
     shadowColor: "#778093",
     shadowOpacity: 0.05,
     shadowRadius: 10,
@@ -414,7 +417,7 @@ const styles = StyleSheet.create({
     color: theme.colors.white,
   },
   mapBrandTitleWay: {
-    color: "#F3C8A2",
+    color: theme.colors.brandBright,
     fontSize: 28,
     fontWeight: "800",
     letterSpacing: -0.5,
@@ -436,11 +439,10 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
-    flexDirection: "row",
-    gap: 8,
-    backgroundColor: "#F7D9C9",
-    shadowColor: theme.colors.ink,
-    shadowOpacity: 0.08,
+    backgroundColor: theme.colors.brandBright,
+    position: "relative",
+    shadowColor: theme.colors.brandDeep,
+    shadowOpacity: 0.18,
     shadowRadius: 18,
     shadowOffset: { width: 0, height: 8 },
     elevation: 4,
@@ -454,8 +456,8 @@ const styles = StyleSheet.create({
   },
   alertDot: {
     position: "absolute",
-    top: 10,
-    right: 10,
+    top: 8,
+    right: 8,
     width: 8,
     height: 8,
     borderRadius: 999,
@@ -467,66 +469,79 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   sectionCard: {
-    backgroundColor: "rgb(255, 255, 255)",
+    backgroundColor: "#FFF7F1",
     borderRadius: 28,
     padding: 18,
     gap: 14,
+    borderWidth: 1,
+    borderColor: "rgba(202,116,73,0.22)",
     shadowColor: theme.colors.brandDeep,
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 10 },
-    elevation: 5,
+    shadowOpacity: 0.14,
+    shadowRadius: 22,
+    shadowOffset: { width: 0, height: 12 },
+    elevation: 6,
   },
   searchCard: {
     borderRadius: 24,
-    backgroundColor: theme.colors.surfaceSoft,
+    backgroundColor: theme.colors.surfaceOrange,
     paddingHorizontal: 16,
     paddingVertical: 15,
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
+    borderWidth: 1,
+    borderColor: "rgba(202,116,73,0.26)",
   },
   searchIcon: {
     fontSize: 22,
-    color: theme.colors.textMuted,
+    color: theme.colors.brandDeep,
   },
   searchCopy: {
     flex: 1,
   },
   searchTitle: {
     fontSize: 17,
-    fontWeight: "800",
+    fontWeight: "900",
     color: theme.colors.text,
   },
   searchSubtitle: {
     marginTop: 2,
     fontSize: 13,
-    color: theme.colors.textSoft,
+    color: theme.colors.brandDeep,
   },
   mapInfoCard: {
     borderRadius: 22,
-    backgroundColor: theme.colors.surfaceSoft,
+    backgroundColor: theme.colors.surfaceOrangeDeep,
     paddingHorizontal: 14,
     paddingVertical: 11,
     flexDirection: "row",
     justifyContent: "space-between",
+    borderWidth: 1,
+    borderColor: "rgba(202,116,73,0.3)",
   },
   mapInfoLabel: {
     fontSize: 13,
-    color: theme.colors.textMuted,
+    color: "rgba(111,72,46,0.86)",
+    fontWeight: "700",
   },
   mapInfoValue: {
     marginTop: 3,
-    fontSize: 19,
-    fontWeight: "700",
+    fontSize: 20,
+    fontWeight: "900",
     color: theme.colors.text,
   },
   mapWeatherWrap: {
     alignItems: "flex-end",
+    backgroundColor: "rgba(255,249,244,0.82)",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "rgba(202,116,73,0.16)",
   },
   mapWeatherLabel: {
     fontSize: 13,
-    color: theme.colors.textMuted,
+    color: theme.colors.brandDeep,
   },
   mapWeatherValue: {
     marginTop: 3,
@@ -542,8 +557,8 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 22,
     lineHeight: 26,
-    fontWeight: "800",
-    color: theme.colors.text,
+    fontWeight: "900",
+    color: theme.colors.brandDeep,
   },
   sectionAction: {
     fontSize: 14,
@@ -594,12 +609,14 @@ const styles = StyleSheet.create({
   favoriteRouteSubtitle: {
     marginTop: 2,
     fontSize: 13,
-    color: theme.colors.textSoft,
+    color: theme.colors.text,
   },
   listCard: {
     borderRadius: 22,
-    backgroundColor: theme.colors.surfaceSoft,
+    backgroundColor: theme.colors.surfaceOrange,
     overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(202,116,73,0.22)",
   },
   listRow: {
     flexDirection: "row",
@@ -608,9 +625,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 15,
   },
+  listRowWarm: {
+    backgroundColor: theme.colors.surfaceOrangeDeep,
+  },
+  listRowCool: {
+    backgroundColor: theme.colors.success,
+  },
   listRowDivider: {
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(88,80,93,0.06)",
+    borderBottomColor: "rgba(202,116,73,0.12)",
   },
   listRowPressed: {
     opacity: 0.9,
@@ -632,18 +655,18 @@ const styles = StyleSheet.create({
   },
   listTitle: {
     fontSize: 18,
-    fontWeight: "800",
+    fontWeight: "900",
     color: theme.colors.text,
   },
   listSubtitle: {
     marginTop: 3,
     fontSize: 13,
-    color: theme.colors.textSoft,
+    color: theme.colors.text,
   },
   listChevron: {
     fontSize: 22,
     fontWeight: "800",
-    color: theme.colors.textMuted,
+    color: theme.colors.brandDeep,
   },
   progressRow: {
     flexDirection: "row",
@@ -652,26 +675,26 @@ const styles = StyleSheet.create({
   progressTile: {
     flex: 1,
     borderRadius: 20,
-    backgroundColor: "rgba(191,214,90,0.34)",
+    backgroundColor: theme.colors.surfaceOrange,
     paddingHorizontal: 12,
     paddingVertical: 16,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "rgba(185,205,98,0.5)",
+    borderColor: "rgba(202,116,73,0.28)",
   },
   progressLabel: {
     fontSize: 10,
     fontWeight: "700",
     letterSpacing: 1.1,
     textTransform: "uppercase",
-    color: "#6B7B2D",
+    color: theme.colors.brandDeep,
     textAlign: "center",
   },
   progressValue: {
     marginTop: 8,
     fontSize: 24,
     fontWeight: "900",
-    color: "#4F5A22",
+    color: theme.colors.brandDeep,
     textAlign: "center",
   },
 });

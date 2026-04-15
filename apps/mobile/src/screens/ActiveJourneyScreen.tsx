@@ -9,6 +9,7 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
+import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import MapView, { Marker, Polyline } from "react-native-maps";
 import { theme } from "../styles/theme";
@@ -246,7 +247,7 @@ export function ActiveJourneyScreen({
                   accessibilityRole="button"
                   onPress={onOpenAlerts}
                 >
-                  <Text style={styles.mapAlertIcon}>◠</Text>
+                  <Feather name="bell" size={18} color={theme.colors.white} />
                   <View style={styles.mapAlertDot} />
                 </Pressable>
                 {!isComplete ? (
@@ -611,7 +612,7 @@ const styles = StyleSheet.create({
   },
   mapTint: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(255,250,247,0.08)",
+    backgroundColor: "rgba(255,242,233,0.12)",
   },
   mapTopControls: {
     position: "absolute",
@@ -627,13 +628,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 11,
     borderRadius: 20,
-    backgroundColor: warningPeach,
+    backgroundColor: theme.colors.brandBright,
+    position: "relative",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    shadowColor: theme.colors.ink,
-    shadowOpacity: 0.08,
+    shadowColor: theme.colors.brandDeep,
+    shadowOpacity: 0.18,
     shadowRadius: 18,
     shadowOffset: { width: 0, height: 8 },
     elevation: 4,
@@ -646,6 +648,9 @@ const styles = StyleSheet.create({
     color: warningOrange,
   },
   mapAlertDot: {
+    position: "absolute",
+    top: 8,
+    right: 8,
     width: 8,
     height: 8,
     borderRadius: 999,
@@ -661,7 +666,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     shadowColor: warningOrange,
-    shadowOpacity: 0.18,
+    shadowOpacity: 0.22,
     shadowRadius: 18,
     shadowOffset: { width: 0, height: 8 },
     elevation: 4,
@@ -722,11 +727,13 @@ const styles = StyleSheet.create({
     right: 16,
     bottom: 16,
     borderRadius: 20,
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.surfaceOrangeDeep,
     paddingHorizontal: 14,
     paddingVertical: 11,
     flexDirection: "row",
     justifyContent: "space-between",
+    borderWidth: 1,
+    borderColor: "rgba(202,116,73,0.3)",
     shadowColor: theme.colors.ink,
     shadowOpacity: 0.08,
     shadowRadius: 18,
@@ -735,20 +742,27 @@ const styles = StyleSheet.create({
   },
   heroLocationLabel: {
     fontSize: 13,
-    color: theme.colors.textMuted,
+    color: "rgba(111,72,46,0.86)",
+    fontWeight: "700",
   },
   heroLocationValue: {
     marginTop: 3,
-    fontSize: 19,
-    fontWeight: "700",
+    fontSize: 20,
+    fontWeight: "900",
     color: theme.colors.text,
   },
   weatherWrap: {
     alignItems: "flex-end",
+    backgroundColor: "rgba(255,249,244,0.84)",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "rgba(202,116,73,0.16)",
   },
   weatherLabel: {
     fontSize: 13,
-    color: theme.colors.textMuted,
+    color: theme.colors.brandDeep,
   },
   weatherValue: {
     marginTop: 3,
@@ -759,23 +773,25 @@ const styles = StyleSheet.create({
   weatherText: {
     marginTop: 2,
     fontSize: 13,
-    color: theme.colors.textSoft,
+    color: "rgba(111,72,46,0.82)",
   },
   section: {
-    backgroundColor: "rgb(255, 255, 255)",
+    backgroundColor: "#FFF7F1",
     borderRadius: 28,
     padding: 20,
     gap: 14,
+    borderWidth: 1,
+    borderColor: "rgba(202,116,73,0.22)",
     shadowColor: theme.colors.brandDeep,
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 10 },
-    elevation: 5,
+    shadowOpacity: 0.12,
+    shadowRadius: 22,
+    shadowOffset: { width: 0, height: 12 },
+    elevation: 6,
   },
   warningSection: {
     borderWidth: 1,
-    borderColor: "rgba(229,139,91,0.2)",
-    backgroundColor: "rgba(255,249,245,0.98)",
+    borderColor: "rgba(229,139,91,0.32)",
+    backgroundColor: theme.colors.surfaceOrange,
   },
   sectionEyebrow: {
     fontSize: 11,
@@ -787,13 +803,13 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 22,
     lineHeight: 26,
-    fontWeight: "800",
-    color: theme.colors.text,
+    fontWeight: "900",
+    color: theme.colors.brandDeep,
   },
   sectionText: {
     fontSize: 14,
     lineHeight: 21,
-    color: theme.colors.textSoft,
+    color: theme.colors.text,
   },
   statusHeader: {
     flexDirection: "row",
@@ -822,7 +838,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
     fontSize: 16,
     fontWeight: "800",
-    color: theme.colors.textSoft,
+    color: theme.colors.text,
   },
   statsGrid: {
     flexDirection: "row",
@@ -833,13 +849,15 @@ const styles = StyleSheet.create({
     width: "47.5%",
     padding: 16,
     borderRadius: 22,
-    backgroundColor: theme.colors.surfaceSoft,
+    backgroundColor: theme.colors.surfaceOrange,
     gap: 6,
+    borderWidth: 1,
+    borderColor: "rgba(202,116,73,0.22)",
   },
   statLabel: {
     fontSize: 12,
     fontWeight: "700",
-    color: theme.colors.textMuted,
+    color: theme.colors.brandDeep,
   },
   statValue: {
     fontSize: 19,
@@ -868,7 +886,7 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     paddingVertical: 16,
     paddingHorizontal: 18,
-    backgroundColor: theme.colors.surfaceSoft,
+    backgroundColor: theme.colors.surfaceOrange,
   },
   secondarySafetyActionLabel: {
     fontSize: 15,
@@ -880,23 +898,26 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     paddingVertical: 16,
     paddingHorizontal: 18,
-    backgroundColor: warningPeach,
+    backgroundColor: theme.colors.surfaceOrangeDeep,
   },
   emergencyActionLabel: {
     fontSize: 15,
     fontWeight: "800",
-    color: warningOrange,
+    color: theme.colors.brandDeep,
     textAlign: "center",
   },
   deadlineCard: {
     borderRadius: 28,
     padding: 20,
     gap: 12,
+    backgroundColor: theme.colors.surfaceOrange,
+    borderWidth: 1,
+    borderColor: "rgba(202,116,73,0.24)",
     shadowColor: theme.colors.brandDeep,
-    shadowOpacity: 0.08,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 4,
+    shadowOpacity: 0.12,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 5,
   },
   deadlineRow: {
     flexDirection: "row",
@@ -908,7 +929,7 @@ const styles = StyleSheet.create({
     fontSize: 31,
     lineHeight: 34,
     fontWeight: "900",
-    color: theme.colors.text,
+    color: theme.colors.brandDeep,
     letterSpacing: 0,
     textAlign: "center",
     fontVariant: ["tabular-nums"],
@@ -916,13 +937,13 @@ const styles = StyleSheet.create({
   deadlineLabel: {
     fontSize: 14,
     fontWeight: "800",
-    color: theme.colors.text,
+    color: theme.colors.brandDeep,
   },
   deadlineText: {
     marginTop: 4,
     fontSize: 13,
     lineHeight: 19,
-    color: theme.colors.textSoft,
+    color: theme.colors.brandDeep,
     maxWidth: 180,
   },
   contactPreviewRow: {
@@ -939,7 +960,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
   },
   contactPreviewItemActive: {
-    backgroundColor: "rgba(255,250,247,0.92)",
+    backgroundColor: "rgba(243,203,184,0.34)",
   },
   contactPreviewAvatar: {
     width: 52,
@@ -965,7 +986,7 @@ const styles = StyleSheet.create({
   contactPreviewName: {
     fontSize: 12,
     fontWeight: "700",
-    color: theme.colors.textSoft,
+    color: theme.colors.text,
   },
   warningActionRow: {
     gap: 10,

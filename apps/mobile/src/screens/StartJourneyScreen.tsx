@@ -1126,12 +1126,12 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     padding: 22,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.56)",
+    borderColor: "rgba(202,116,73,0.18)",
     shadowColor: theme.colors.brandDeep,
-    shadowOpacity: 0.06,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 3,
+    shadowOpacity: 0.1,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 4,
   },
   progressTopRow: {
     alignItems: "flex-start",
@@ -1147,14 +1147,14 @@ const styles = StyleSheet.create({
     marginTop: 4,
     fontSize: 24,
     lineHeight: 29,
-    fontWeight: "800",
+    fontWeight: "900",
     color: theme.colors.text,
   },
   progressText: {
     marginTop: 8,
     fontSize: 15,
     lineHeight: 22,
-    color: theme.colors.textSoft,
+    color: theme.colors.text,
   },
   progressChecklist: {
     marginTop: 14,
@@ -1179,19 +1179,21 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
   },
   section: {
-    backgroundColor: "rgba(255,253,251,0.98)",
+    backgroundColor: theme.colors.surface,
     borderRadius: 28,
     padding: 20,
     gap: 14,
+    borderWidth: 1,
+    borderColor: "rgba(202,116,73,0.16)",
     shadowColor: theme.colors.brandDeep,
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 10 },
-    elevation: 5,
+    shadowOpacity: 0.12,
+    shadowRadius: 22,
+    shadowOffset: { width: 0, height: 12 },
+    elevation: 6,
   },
   contactsSection: {
     borderWidth: 1,
-    borderColor: "rgba(222,133,88,0.12)",
+    borderColor: "rgba(222,133,88,0.22)",
   },
   sectionHeader: {
     gap: 5,
@@ -1212,13 +1214,13 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 22,
     lineHeight: 26,
-    fontWeight: "800",
+    fontWeight: "900",
     color: theme.colors.text,
   },
   sectionText: {
     fontSize: 14,
     lineHeight: 21,
-    color: theme.colors.textSoft,
+    color: theme.colors.text,
   },
   typeGrid: {
     flexDirection: "row",
@@ -1242,14 +1244,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 14,
     borderWidth: 1,
-    borderColor: "rgba(175,203,70,0.34)",
-    backgroundColor: "#FFF9F5",
+    borderColor: "rgba(202,116,73,0.18)",
+    backgroundColor: theme.colors.surfaceWarm,
     alignItems: "center",
     justifyContent: "flex-start",
   },
   typeCardSelected: {
-    borderColor: readyLime,
-    backgroundColor: "rgba(255,247,241,0.98)",
+    borderColor: theme.colors.brandDeep,
+    backgroundColor: theme.colors.surfaceWarmDeep,
   },
   typeIconBadge: {
     width: 44,
@@ -1281,7 +1283,7 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     minHeight: 32,
     width: "100%",
-    color: theme.colors.textSoft,
+    color: theme.colors.text,
     textAlign: "center",
   },
   typeBlurbSelected: {
@@ -1291,7 +1293,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignSelf: "flex-start",
     padding: 4,
-    backgroundColor: theme.colors.surfaceSoft,
+    backgroundColor: theme.colors.surfaceWarm,
     borderRadius: theme.radius.pill,
   },
   segment: {
@@ -1300,7 +1302,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.pill,
   },
   segmentSelected: {
-    backgroundColor: readyLime,
+    backgroundColor: "#92A93A",
   },
   segmentLabel: {
     fontSize: 13,
@@ -1308,13 +1310,15 @@ const styles = StyleSheet.create({
     color: theme.colors.textSoft,
   },
   segmentLabelSelected: {
-    color: readyLimeText,
+    color: theme.colors.white,
   },
   measureInputCard: {
     padding: 16,
     borderRadius: 22,
-    backgroundColor: theme.colors.surfaceSoft,
+    backgroundColor: "rgba(225,138,84,0.24)",
     gap: 12,
+    borderWidth: 1,
+    borderColor: "rgba(202,116,73,0.3)",
   },
   measureInputCopy: {
     gap: 4,
@@ -1327,7 +1331,7 @@ const styles = StyleSheet.create({
   measureInputHint: {
     fontSize: 14,
     lineHeight: 20,
-    color: theme.colors.textSoft,
+    color: theme.colors.text,
   },
   measureInputRow: {
     flexDirection: "row",
@@ -1348,7 +1352,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     padding: 4,
     borderRadius: theme.radius.pill,
-    backgroundColor: "rgba(255,255,255,0.72)",
+    backgroundColor: "rgba(255,249,244,0.96)",
   },
   measureUnitPill: {
     paddingHorizontal: 12,
@@ -1356,7 +1360,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.pill,
   },
   measureUnitPillSelected: {
-    backgroundColor: readyLime,
+    backgroundColor: "#92A93A",
   },
   measureUnitLabel: {
     fontSize: 13,
@@ -1364,7 +1368,7 @@ const styles = StyleSheet.create({
     color: theme.colors.textSoft,
   },
   measureUnitLabelSelected: {
-    color: readyLimeText,
+    color: theme.colors.white,
   },
   durationRow: {
     flexDirection: "row",
@@ -1377,7 +1381,7 @@ const styles = StyleSheet.create({
   durationLabel: {
     fontSize: 13,
     fontWeight: "700",
-    color: theme.colors.textSoft,
+    color: theme.colors.text,
   },
   locationStack: {
     gap: 12,
@@ -1385,24 +1389,24 @@ const styles = StyleSheet.create({
   locationCard: {
     padding: 16,
     borderRadius: 22,
-    backgroundColor: theme.colors.surfaceSoft,
+    backgroundColor: theme.colors.surfaceWarm,
     gap: 6,
   },
   locationCardSelected: {
     borderWidth: 1,
-    borderColor: "rgba(175,203,70,0.42)",
-    backgroundColor: "rgba(207,225,122,0.2)",
+    borderColor: "rgba(202,116,73,0.28)",
+    backgroundColor: theme.colors.surfaceWarmDeep,
   },
   locationOptionCard: {
     padding: 16,
     borderRadius: 22,
-    backgroundColor: theme.colors.surfaceSoft,
+    backgroundColor: theme.colors.surfaceWarm,
     gap: 12,
   },
   locationOptionCardSelected: {
     borderWidth: 1,
-    borderColor: "rgba(175,203,70,0.42)",
-    backgroundColor: "rgba(207,225,122,0.2)",
+    borderColor: "rgba(202,116,73,0.28)",
+    backgroundColor: theme.colors.surfaceWarmDeep,
   },
   locationTopRow: {
     flexDirection: "row",
@@ -1432,7 +1436,7 @@ const styles = StyleSheet.create({
   locationLabel: {
     fontSize: 13,
     fontWeight: "700",
-    color: theme.colors.textMuted,
+    color: theme.colors.brandDeep,
   },
   locationValue: {
     fontSize: 17,
@@ -1444,14 +1448,14 @@ const styles = StyleSheet.create({
     marginTop: 4,
     paddingHorizontal: 14,
     borderRadius: 16,
-    backgroundColor: "rgba(255,255,255,0.84)",
+    backgroundColor: "rgba(255,251,248,0.96)",
     fontSize: 15,
     fontWeight: "600",
     color: theme.colors.text,
   },
   locationInputSelected: {
     borderWidth: 1,
-    borderColor: "rgba(175,203,70,0.42)",
+    borderColor: "rgba(202,116,73,0.28)",
   },
   locationAction: {
     paddingHorizontal: 14,
@@ -1460,7 +1464,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.white,
   },
   locationActionSelected: {
-    backgroundColor: readyLime,
+    backgroundColor: "#92A93A",
   },
   locationActionText: {
     fontSize: 13,
@@ -1468,7 +1472,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
   },
   locationActionTextSelected: {
-    color: readyLimeText,
+    color: theme.colors.white,
   },
   routeShapeGrid: {
     gap: 12,
@@ -1476,7 +1480,7 @@ const styles = StyleSheet.create({
   routeShapeCard: {
     borderRadius: 22,
     padding: 16,
-    backgroundColor: theme.colors.surfaceSoft,
+    backgroundColor: theme.colors.surfaceWarm,
     gap: 6,
   },
   routeShapeTopRow: {
@@ -1490,8 +1494,8 @@ const styles = StyleSheet.create({
   },
   routeShapeCardSelected: {
     borderWidth: 1,
-    borderColor: "rgba(175,203,70,0.42)",
-    backgroundColor: "rgba(207,225,122,0.2)",
+    borderColor: "rgba(202,116,73,0.28)",
+    backgroundColor: theme.colors.surfaceWarmDeep,
   },
   routeShapeTitle: {
     fontSize: 17,
@@ -1504,10 +1508,10 @@ const styles = StyleSheet.create({
   routeShapeText: {
     fontSize: 14,
     lineHeight: 20,
-    color: theme.colors.textSoft,
+    color: theme.colors.text,
   },
   routeShapeTextSelected: {
-    color: readyLimeText,
+    color: theme.colors.brandDeep,
   },
   routeShapeAction: {
     paddingHorizontal: 14,
@@ -1516,7 +1520,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.white,
   },
   routeShapeActionSelected: {
-    backgroundColor: readyLime,
+    backgroundColor: "#92A93A",
   },
   routeShapeActionText: {
     fontSize: 13,
@@ -1524,7 +1528,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
   },
   routeShapeActionTextSelected: {
-    color: readyLimeText,
+    color: theme.colors.white,
   },
   contactsHeaderRow: {
     flexDirection: "row",
@@ -1538,18 +1542,18 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 20,
     alignItems: "center",
-    backgroundColor: "rgba(222,133,88,0.12)",
+    backgroundColor: "rgba(222,133,88,0.2)",
   },
   contactsCountValue: {
     fontSize: 20,
     fontWeight: "900",
-    color: readyLime,
+    color: theme.colors.brandDeep,
   },
   contactsCountLabel: {
     marginTop: 2,
     fontSize: 12,
     fontWeight: "700",
-    color: theme.colors.textSoft,
+    color: theme.colors.text,
   },
   contactRow: {
     flexDirection: "row",
@@ -1589,8 +1593,10 @@ const styles = StyleSheet.create({
   contactActionCard: {
     borderRadius: 22,
     padding: 16,
-    backgroundColor: theme.colors.surfaceSoft,
+    backgroundColor: theme.colors.surfaceWarm,
     gap: 6,
+    borderWidth: 1,
+    borderColor: "rgba(202,116,73,0.14)",
   },
   contactActionCopy: {
     gap: 2,
@@ -1610,7 +1616,7 @@ const styles = StyleSheet.create({
   contactActionText: {
     fontSize: 14,
     lineHeight: 20,
-    color: theme.colors.textSoft,
+    color: theme.colors.text,
   },
   contactPreviewRow: {
     flexDirection: "row",
@@ -1672,12 +1678,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: theme.radius.pill,
-    backgroundColor: readyLime,
+    backgroundColor: theme.colors.brandBright,
   },
   contactActionButtonText: {
     fontSize: 13,
     fontWeight: "700",
-    color: readyLimeText,
+    color: theme.colors.brandDeep,
   },
   contactModalBackdrop: {
     flex: 1,
