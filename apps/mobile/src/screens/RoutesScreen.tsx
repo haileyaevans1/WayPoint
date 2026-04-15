@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Feather } from "@expo/vector-icons";
 import {
   Modal,
@@ -43,6 +43,7 @@ type RoutesScreenProps = {
 type RouteShape = "oneWay" | "loop";
 
 const warningOrange = "#E58B5B";
+const navSlate = "#778093";
 
 const routeSections: Array<{
   key: RouteSectionKey;
@@ -236,6 +237,32 @@ export function RoutesScreen({
   const [editingGroupJourneyValue, setEditingGroupJourneyValue] = useState(false);
   const [isReviewComposerOpen, setIsReviewComposerOpen] = useState(false);
   const [pendingRemovalRouteId, setPendingRemovalRouteId] = useState<string | null>(null);
+  const [saveToastMessage, setSaveToastMessage] = useState<string | null>(null);
+
+  const allRoutes = useMemo(
+    () => routeSections.flatMap((section) => section.routes),
+    [],
+  );
+  const routeLookup = useMemo(
+    () =>
+      allRoutes.reduce<Record<string, RouteItem>>((current, route) => {
+        current[route.id] = route;
+        return current;
+      }, {}),
+    [allRoutes],
+  );
+
+  useEffect(() => {
+    if (!saveToastMessage) {
+      return undefined;
+    }
+
+    const timeoutId = setTimeout(() => {
+      setSaveToastMessage(null);
+    }, 2200);
+
+    return () => clearTimeout(timeoutId);
+  }, [saveToastMessage]);
 
   const filteredSections = useMemo(() => {
     const query = searchValue.trim().toLowerCase();
@@ -245,10 +272,12 @@ export function RoutesScreen({
     return routeSections
       .map((section) => ({
         ...section,
-        routes: section.routes.filter((route) => {
-          if (section.key === "saved" && !savedRouteIds.includes(route.id)) {
-            return false;
-          }
+        routes: (section.key === "saved"
+          ? savedRouteIds
+              .map((routeId) => routeLookup[routeId])
+              .filter((route): route is RouteItem => Boolean(route))
+          : section.routes
+        ).filter((route) => {
 
           const routeName = route.name;
           const routeReview = routeReviews[route.id] ?? route.snippet;
@@ -272,29 +301,29 @@ export function RoutesScreen({
         }),
       }))
       .filter((section) => section.routes.length > 0);
-  }, [searchValue, activeQuickFilter, routeReviews, routeReviewTags, savedRouteIds]);
+  }, [searchValue, activeQuickFilter, routeLookup, routeReviews, routeReviewTags, savedRouteIds]);
 
   const savedSection = filteredSections.find((section) => section.key === "saved");
   const otherSections = filteredSections.filter((section) => section.key !== "saved");
   const selectedRoute =
     editingRouteId === null
       ? null
-      : routeSections
-          .flatMap((section) => section.routes)
-          .find((route) => route.id === editingRouteId) ?? null;
+      : routeLookup[editingRouteId] ?? null;
   const pendingRemovalRoute =
     pendingRemovalRouteId === null
       ? null
-      : routeSections
-          .flatMap((section) => section.routes)
-          .find((route) => route.id === pendingRemovalRouteId) ?? null;
+      : routeLookup[pendingRemovalRouteId] ?? null;
 
-  function toggleSavedRoute(routeId: string) {
-    setSavedRouteIds((current) =>
-      current.includes(routeId)
-        ? current.filter((id) => id !== routeId)
-        : [...current, routeId],
-    );
+  function toggleSavedRoute(route: RouteItem) {
+    const isAlreadySaved = savedRouteIds.includes(route.id);
+
+    if (isAlreadySaved) {
+      requestRemoveFromSaved(route.id);
+      return;
+    }
+
+    setSavedRouteIds((current) => [...current, route.id]);
+    setSaveToastMessage(`${route.name} added to saved routes!`);
   }
 
   function removeFromSaved(routeId: string) {
@@ -457,7 +486,7 @@ export function RoutesScreen({
                     </Text>
                   </View>
                   <Pressable
-                    onPress={() => toggleSavedRoute(route.id)}
+                    onPress={() => toggleSavedRoute(route)}
                     style={[
                       styles.saveButton,
                       isSaved && styles.saveButtonActive,
@@ -494,7 +523,7 @@ export function RoutesScreen({
                     onPress={() =>
                       canEditRoute
                         ? startEditingRoute(route)
-                        : toggleSavedRoute(route.id)
+                        : toggleSavedRoute(route)
                     }
                     style={styles.secondaryAction}
                   >
@@ -509,14 +538,6 @@ export function RoutesScreen({
                     <Text style={styles.primaryActionText}>Start Route</Text>
                   </Pressable>
                 </View>
-                {canEditRoute ? (
-                  <Pressable
-                    onPress={() => requestRemoveFromSaved(route.id)}
-                    style={styles.removeSavedButton}
-                  >
-                    <Text style={styles.removeSavedButtonText}>Unsave</Text>
-                  </Pressable>
-                ) : null}
               </View>
             );
           })}
@@ -537,6 +558,11 @@ export function RoutesScreen({
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
+        {saveToastMessage ? (
+          <View style={styles.saveToast}>
+            <Text style={styles.saveToastText}>{saveToastMessage}</Text>
+          </View>
+        ) : null}
         <View style={styles.pageIntroRow}>
           <View style={styles.pageIntro}>
             <Text style={styles.pageEyebrow}>Explore</Text>
@@ -889,6 +915,26 @@ const styles = StyleSheet.create({
     paddingTop: 28,
     paddingBottom: 180,
     gap: 18,
+  },
+  saveToast: {
+    borderRadius: 20,
+    backgroundColor: "#F7FBEC",
+    borderWidth: 1,
+    borderColor: "rgba(146,169,58,0.28)",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    shadowColor: "#92A93A",
+    shadowOpacity: 0.14,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 4,
+  },
+  saveToastText: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "800",
+    color: "#4F5A22",
+    textAlign: "center",
   },
   pageIntro: {
     gap: 6,
@@ -1416,12 +1462,12 @@ const styles = StyleSheet.create({
   removeConfirmCard: {
     width: "100%",
     borderRadius: 28,
-    backgroundColor: warningOrange,
+    backgroundColor: theme.colors.brand,
     padding: 22,
     gap: 16,
     borderWidth: 1,
-    borderColor: warningOrange,
-    shadowColor: warningOrange,
+    borderColor: theme.colors.brand,
+    shadowColor: theme.colors.brand,
     shadowOpacity: 0.18,
     shadowRadius: 18,
     shadowOffset: { width: 0, height: 10 },
