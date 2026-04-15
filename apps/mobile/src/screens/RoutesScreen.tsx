@@ -205,7 +205,12 @@ export function RoutesScreen({
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <Pressable style={({ pressed }) => [styles.searchShell, pressed && styles.searchShellPressed]}>
+        <Pressable
+          style={({ pressed }) => [
+            styles.searchShell,
+            pressed && styles.searchShellPressed,
+          ]}
+        >
           <Text style={styles.searchIcon}>⌕</Text>
           <TextInput
             value={searchValue}
@@ -219,10 +224,11 @@ export function RoutesScreen({
         {filteredSections.map((section) => (
           <View key={section.key} style={styles.section}>
             <View style={styles.sectionHeader}>
-              <View>
+              <View style={styles.sectionTitleWrap}>
                 <Text style={styles.sectionTitle}>{section.title}</Text>
                 <Text style={styles.sectionSubtitle}>{section.subtitle}</Text>
               </View>
+
               <LinearGradient
                 colors={sectionAccent[section.key]}
                 start={{ x: 0, y: 0 }}
@@ -242,17 +248,25 @@ export function RoutesScreen({
             </View>
 
             <View style={styles.routeList}>
-              {section.routes.map((route) => {
+              {section.routes.map((route, index) => {
                 const isSaved = savedRouteIds.includes(route.id);
+                const isFeatured = index === 0;
 
                 return (
                   <Pressable
                     key={route.id}
                     style={({ pressed }) => [
                       styles.routeCard,
+                      isFeatured && styles.routeCardFeatured,
                       pressed && styles.routeCardPressed,
                     ]}
                   >
+                    {isFeatured ? (
+                      <View style={styles.featuredPill}>
+                        <Text style={styles.featuredPillText}>Recommended</Text>
+                      </View>
+                    ) : null}
+
                     <View style={styles.routeCardTopRow}>
                       <View style={styles.routeCopy}>
                         <Text style={styles.routeName}>{route.name}</Text>
@@ -348,7 +362,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 24,
     paddingBottom: 180,
-    gap: 18,
+    gap: 22,
   },
   searchShell: {
     flexDirection: "row",
@@ -378,21 +392,26 @@ const styles = StyleSheet.create({
     paddingVertical: 0,
   },
   section: {
-    gap: 12,
+    gap: 14,
+    paddingTop: 2,
   },
   sectionHeader: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-end",
     justifyContent: "space-between",
     gap: 12,
   },
+  sectionTitleWrap: {
+    flex: 1,
+    gap: 4,
+  },
   sectionTitle: {
     fontSize: 22,
+    lineHeight: 26,
     fontWeight: "800",
     color: theme.colors.text,
   },
   sectionSubtitle: {
-    marginTop: 4,
     fontSize: 13,
     color: theme.colors.textSoft,
     opacity: 0.8,
@@ -402,6 +421,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     opacity: 0.92,
+    shadowColor: theme.colors.brandDeep,
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
   },
   sectionBadgeText: {
     fontSize: 12,
@@ -409,7 +433,7 @@ const styles = StyleSheet.create({
     color: theme.colors.white,
   },
   routeList: {
-    gap: 12,
+    gap: 14,
   },
   routeCard: {
     borderRadius: 28,
@@ -422,8 +446,27 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 10 },
     elevation: 6,
   },
+  routeCardFeatured: {
+    borderWidth: 1,
+    borderColor: "rgba(241,176,120,0.28)",
+    shadowOpacity: 0.16,
+  },
   routeCardPressed: {
     transform: [{ scale: 0.99 }],
+  },
+  featuredPill: {
+    alignSelf: "flex-start",
+    borderRadius: theme.radius.pill,
+    backgroundColor: "rgba(241,176,120,0.16)",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    marginBottom: 2,
+  },
+  featuredPillText: {
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 0.4,
+    color: theme.colors.brandDeep,
   },
   routeCardTopRow: {
     flexDirection: "row",
@@ -437,6 +480,7 @@ const styles = StyleSheet.create({
   },
   routeName: {
     fontSize: 20,
+    lineHeight: 24,
     fontWeight: "800",
     color: theme.colors.text,
   },
@@ -503,6 +547,7 @@ const styles = StyleSheet.create({
   cardActions: {
     flexDirection: "row",
     gap: 10,
+    marginTop: 2,
   },
   secondaryAction: {
     flex: 1,
