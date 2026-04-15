@@ -49,6 +49,7 @@ export type StartJourneyConfig = {
 
 const readyLimeLight = "#CFE17A";
 const readyLime = "#AFCB46";
+const readyLimeMid = "#A1BE3F";
 const readyLimeText = "#566126";
 const readyLimeTextDark = "#4F5A22";
 
@@ -1126,9 +1127,9 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     padding: 22,
     borderWidth: 1,
-    borderColor: "rgba(202,116,73,0.18)",
+    borderColor: "rgba(202,116,73,0.24)",
     shadowColor: theme.colors.brandDeep,
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.14,
     shadowRadius: 18,
     shadowOffset: { width: 0, height: 10 },
     elevation: 4,
@@ -1148,13 +1149,13 @@ const styles = StyleSheet.create({
     fontSize: 24,
     lineHeight: 29,
     fontWeight: "900",
-    color: theme.colors.text,
+    color: theme.colors.brandDeep,
   },
   progressText: {
     marginTop: 8,
     fontSize: 15,
     lineHeight: 22,
-    color: theme.colors.text,
+    color: theme.colors.brandDeep,
   },
   progressChecklist: {
     marginTop: 14,
@@ -1179,14 +1180,14 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
   },
   section: {
-    backgroundColor: theme.colors.surface,
+    backgroundColor: "#FFF7F1",
     borderRadius: 28,
     padding: 20,
     gap: 14,
     borderWidth: 1,
-    borderColor: "rgba(202,116,73,0.16)",
+    borderColor: "rgba(202,116,73,0.22)",
     shadowColor: theme.colors.brandDeep,
-    shadowOpacity: 0.12,
+    shadowOpacity: 0.14,
     shadowRadius: 22,
     shadowOffset: { width: 0, height: 12 },
     elevation: 6,
@@ -1215,12 +1216,12 @@ const styles = StyleSheet.create({
     fontSize: 22,
     lineHeight: 26,
     fontWeight: "900",
-    color: theme.colors.text,
+    color: theme.colors.brandDeep,
   },
   sectionText: {
     fontSize: 14,
     lineHeight: 21,
-    color: theme.colors.text,
+    color: theme.colors.brandDeep,
   },
   typeGrid: {
     flexDirection: "row",
@@ -1245,13 +1246,13 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderWidth: 1,
     borderColor: "rgba(202,116,73,0.18)",
-    backgroundColor: theme.colors.surfaceWarm,
+    backgroundColor: theme.colors.surfaceOrange,
     alignItems: "center",
     justifyContent: "flex-start",
   },
   typeCardSelected: {
     borderColor: theme.colors.brandDeep,
-    backgroundColor: theme.colors.surfaceWarmDeep,
+    backgroundColor: theme.colors.surfaceOrangeDeep,
   },
   typeIconBadge: {
     width: 44,
@@ -1267,7 +1268,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 20,
     fontWeight: "800",
-    color: theme.colors.text,
+    color: theme.colors.brandDeep,
     textAlign: "center",
   },
   typeLabelSelected: {
@@ -1283,7 +1284,7 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     minHeight: 32,
     width: "100%",
-    color: theme.colors.text,
+    color: theme.colors.brandDeep,
     textAlign: "center",
   },
   typeBlurbSelected: {
@@ -1293,7 +1294,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignSelf: "flex-start",
     padding: 4,
-    backgroundColor: theme.colors.surfaceWarm,
+    backgroundColor: theme.colors.surfaceOrange,
     borderRadius: theme.radius.pill,
   },
   segment: {
@@ -1302,7 +1303,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.pill,
   },
   segmentSelected: {
-    backgroundColor: "#92A93A",
+    backgroundColor: readyLimeMid,
   },
   segmentLabel: {
     fontSize: 13,
@@ -1331,7 +1332,7 @@ const styles = StyleSheet.create({
   measureInputHint: {
     fontSize: 14,
     lineHeight: 20,
-    color: theme.colors.text,
+    color: theme.colors.brandDeep,
   },
   measureInputRow: {
     flexDirection: "row",
@@ -1360,7 +1361,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.pill,
   },
   measureUnitPillSelected: {
-    backgroundColor: "#92A93A",
+    backgroundColor: readyLimeMid,
   },
   measureUnitLabel: {
     fontSize: 13,
@@ -1389,24 +1390,24 @@ const styles = StyleSheet.create({
   locationCard: {
     padding: 16,
     borderRadius: 22,
-    backgroundColor: theme.colors.surfaceWarm,
+    backgroundColor: theme.colors.surfaceOrange,
     gap: 6,
   },
   locationCardSelected: {
     borderWidth: 1,
     borderColor: "rgba(202,116,73,0.28)",
-    backgroundColor: theme.colors.surfaceWarmDeep,
+    backgroundColor: theme.colors.surfaceOrangeDeep,
   },
   locationOptionCard: {
     padding: 16,
     borderRadius: 22,
-    backgroundColor: theme.colors.surfaceWarm,
+    backgroundColor: theme.colors.surfaceOrange,
     gap: 12,
   },
   locationOptionCardSelected: {
     borderWidth: 1,
     borderColor: "rgba(202,116,73,0.28)",
-    backgroundColor: theme.colors.surfaceWarmDeep,
+    backgroundColor: theme.colors.surfaceOrangeDeep,
   },
   locationTopRow: {
     flexDirection: "row",
@@ -1440,7 +1441,7 @@ const styles = StyleSheet.create({
   },
   locationValue: {
     fontSize: 17,
-    fontWeight: "700",
+    fontWeight: "800",
     color: theme.colors.text,
   },
   locationInput: {
@@ -1464,7 +1465,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.white,
   },
   locationActionSelected: {
-    backgroundColor: "#92A93A",
+    backgroundColor: readyLimeMid,
   },
   locationActionText: {
     fontSize: 13,
@@ -1480,7 +1481,7 @@ const styles = StyleSheet.create({
   routeShapeCard: {
     borderRadius: 22,
     padding: 16,
-    backgroundColor: theme.colors.surfaceWarm,
+    backgroundColor: theme.colors.surfaceOrange,
     gap: 6,
   },
   routeShapeTopRow: {
@@ -1495,7 +1496,7 @@ const styles = StyleSheet.create({
   routeShapeCardSelected: {
     borderWidth: 1,
     borderColor: "rgba(202,116,73,0.28)",
-    backgroundColor: theme.colors.surfaceWarmDeep,
+    backgroundColor: theme.colors.surfaceOrangeDeep,
   },
   routeShapeTitle: {
     fontSize: 17,
@@ -1520,7 +1521,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.white,
   },
   routeShapeActionSelected: {
-    backgroundColor: "#92A93A",
+    backgroundColor: readyLimeMid,
   },
   routeShapeActionText: {
     fontSize: 13,
@@ -1593,10 +1594,10 @@ const styles = StyleSheet.create({
   contactActionCard: {
     borderRadius: 22,
     padding: 16,
-    backgroundColor: theme.colors.surfaceWarm,
+    backgroundColor: theme.colors.surfaceOrange,
     gap: 6,
     borderWidth: 1,
-    borderColor: "rgba(202,116,73,0.14)",
+    borderColor: "rgba(202,116,73,0.22)",
   },
   contactActionCopy: {
     gap: 2,
@@ -1611,12 +1612,12 @@ const styles = StyleSheet.create({
   contactActionTitle: {
     fontSize: 17,
     fontWeight: "800",
-    color: theme.colors.text,
+    color: theme.colors.brandDeep,
   },
   contactActionText: {
     fontSize: 14,
     lineHeight: 20,
-    color: theme.colors.text,
+    color: theme.colors.brandDeep,
   },
   contactPreviewRow: {
     flexDirection: "row",

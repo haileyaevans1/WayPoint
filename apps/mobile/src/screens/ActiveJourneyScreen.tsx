@@ -282,11 +282,11 @@ export function ActiveJourneyScreen({
           </View>
         </View>
 
-        <View style={styles.section}>
+        <View style={[styles.section, styles.statusSection]}>
           <View style={styles.statusHeader}>
             <View>
-              <Text style={styles.sectionEyebrow}>Status</Text>
-              <Text style={styles.sectionTitle}>Journey Active</Text>
+              <Text style={[styles.sectionEyebrow, styles.warmSectionEyebrow]}>Status</Text>
+              <Text style={[styles.sectionTitle, styles.warmSectionTitle]}>Journey Active</Text>
               <Text style={styles.statusStateText}>{statusLabel}</Text>
             </View>
             <View
@@ -320,12 +320,12 @@ export function ActiveJourneyScreen({
         </View>
 
         <LinearGradient
-          colors={["rgba(255,255,255,0.98)", "rgba(255,251,247,0.95)"]}
+          colors={[theme.colors.surfaceOrange, theme.colors.surfaceWarmDeep]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={styles.deadlineCard}
+          style={[styles.deadlineCard, styles.countdownSection]}
         >
-          <Text style={styles.sectionEyebrow}>Countdown</Text>
+          <Text style={[styles.sectionEyebrow, styles.warmSectionEyebrow]}>Countdown</Text>
           <View style={styles.deadlineRow}>
             <Text style={styles.deadlineValue}>
               {journeyState === "late" ? "00:45" : checkInCountdownDisplay}
@@ -345,11 +345,11 @@ export function ActiveJourneyScreen({
           </View>
         </LinearGradient>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionEyebrow}>
+        <View style={[styles.section, styles.contactsStatusSection]}>
+          <Text style={[styles.sectionEyebrow, styles.warmSectionEyebrow]}>
             {journeyConfig?.contactLabel ?? "Trusted contact status"}
           </Text>
-          <Text style={styles.sectionTitle}>Your safety circle is connected</Text>
+          <Text style={[styles.sectionTitle, styles.warmSectionTitle]}>Your safety circle is connected</Text>
 
           <View style={styles.contactPreviewRow}>
             {syncedContactStatuses.map((contact, index) => (
@@ -727,13 +727,13 @@ const styles = StyleSheet.create({
     right: 16,
     bottom: 16,
     borderRadius: 20,
-    backgroundColor: theme.colors.surfaceOrangeDeep,
+    backgroundColor: theme.colors.surfaceWarmDeep,
     paddingHorizontal: 14,
     paddingVertical: 11,
     flexDirection: "row",
     justifyContent: "space-between",
     borderWidth: 1,
-    borderColor: "rgba(202,116,73,0.3)",
+    borderColor: "rgba(202,116,73,0.32)",
     shadowColor: theme.colors.ink,
     shadowOpacity: 0.08,
     shadowRadius: 18,
@@ -747,13 +747,13 @@ const styles = StyleSheet.create({
   },
   heroLocationValue: {
     marginTop: 3,
-    fontSize: 20,
+    fontSize: 21,
     fontWeight: "900",
-    color: theme.colors.text,
+    color: theme.colors.brandDeep,
   },
   weatherWrap: {
     alignItems: "flex-end",
-    backgroundColor: "rgba(255,249,244,0.84)",
+    backgroundColor: "rgba(255,252,248,0.92)",
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 16,
@@ -768,7 +768,7 @@ const styles = StyleSheet.create({
     marginTop: 3,
     fontSize: 18,
     fontWeight: "700",
-    color: theme.colors.text,
+    color: theme.colors.brandDeep,
   },
   weatherText: {
     marginTop: 2,
@@ -776,22 +776,32 @@ const styles = StyleSheet.create({
     color: "rgba(111,72,46,0.82)",
   },
   section: {
-    backgroundColor: "#FFF7F1",
+    backgroundColor: theme.colors.surface,
     borderRadius: 28,
     padding: 20,
     gap: 14,
     borderWidth: 1,
     borderColor: "rgba(202,116,73,0.22)",
     shadowColor: theme.colors.brandDeep,
-    shadowOpacity: 0.12,
+    shadowOpacity: 0.14,
     shadowRadius: 22,
     shadowOffset: { width: 0, height: 12 },
     elevation: 6,
   },
+  statusSection: {
+    backgroundColor: "#FFF8F2",
+  },
+  countdownSection: {
+    backgroundColor: theme.colors.surface,
+    borderColor: "rgba(202,116,73,0.18)",
+  },
+  contactsStatusSection: {
+    backgroundColor: "#FFF9F4",
+  },
   warningSection: {
     borderWidth: 1,
     borderColor: "rgba(229,139,91,0.32)",
-    backgroundColor: theme.colors.surfaceOrange,
+    backgroundColor: theme.colors.surfaceWarm,
   },
   sectionEyebrow: {
     fontSize: 11,
@@ -800,16 +810,22 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     color: theme.colors.textMuted,
   },
+  warmSectionEyebrow: {
+    color: "rgba(111,72,46,0.72)",
+  },
   sectionTitle: {
     fontSize: 22,
     lineHeight: 26,
     fontWeight: "900",
+    color: theme.colors.text,
+  },
+  warmSectionTitle: {
     color: theme.colors.brandDeep,
   },
   sectionText: {
     fontSize: 14,
     lineHeight: 21,
-    color: theme.colors.text,
+    color: theme.colors.textSoft,
   },
   statusHeader: {
     flexDirection: "row",
@@ -838,7 +854,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
     fontSize: 16,
     fontWeight: "800",
-    color: theme.colors.text,
+    color: readyLimeTextDark,
   },
   statsGrid: {
     flexDirection: "row",
@@ -849,10 +865,10 @@ const styles = StyleSheet.create({
     width: "47.5%",
     padding: 16,
     borderRadius: 22,
-    backgroundColor: theme.colors.surfaceOrange,
+    backgroundColor: "rgba(255,251,248,0.98)",
     gap: 6,
     borderWidth: 1,
-    borderColor: "rgba(202,116,73,0.22)",
+    borderColor: "rgba(202,116,73,0.14)",
   },
   statLabel: {
     fontSize: 12,
@@ -862,7 +878,7 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 19,
     fontWeight: "800",
-    color: theme.colors.text,
+    color: warningOrange,
   },
   safetyPromptGrid: {
     gap: 12,
@@ -886,7 +902,7 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     paddingVertical: 16,
     paddingHorizontal: 18,
-    backgroundColor: theme.colors.surfaceOrange,
+    backgroundColor: theme.colors.surfaceWarm,
   },
   secondarySafetyActionLabel: {
     fontSize: 15,
@@ -898,21 +914,21 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     paddingVertical: 16,
     paddingHorizontal: 18,
-    backgroundColor: theme.colors.surfaceOrangeDeep,
+    backgroundColor: theme.colors.surfaceWarmDeep,
   },
   emergencyActionLabel: {
     fontSize: 15,
     fontWeight: "800",
-    color: theme.colors.brandDeep,
+    color: warningOrange,
     textAlign: "center",
   },
   deadlineCard: {
     borderRadius: 28,
     padding: 20,
     gap: 12,
-    backgroundColor: theme.colors.surfaceOrange,
+    backgroundColor: "rgba(255,255,255,0.98)",
     borderWidth: 1,
-    borderColor: "rgba(202,116,73,0.24)",
+    borderColor: "rgba(202,116,73,0.14)",
     shadowColor: theme.colors.brandDeep,
     shadowOpacity: 0.12,
     shadowRadius: 20,
@@ -929,7 +945,7 @@ const styles = StyleSheet.create({
     fontSize: 31,
     lineHeight: 34,
     fontWeight: "900",
-    color: theme.colors.brandDeep,
+    color: warningOrange,
     letterSpacing: 0,
     textAlign: "center",
     fontVariant: ["tabular-nums"],
@@ -943,7 +959,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
     fontSize: 13,
     lineHeight: 19,
-    color: theme.colors.brandDeep,
+    color: "rgba(111,72,46,0.84)",
     maxWidth: 180,
   },
   contactPreviewRow: {
@@ -960,7 +976,9 @@ const styles = StyleSheet.create({
     borderRadius: 18,
   },
   contactPreviewItemActive: {
-    backgroundColor: "rgba(243,203,184,0.34)",
+    backgroundColor: "rgba(255,245,238,0.96)",
+    borderWidth: 1,
+    borderColor: "rgba(202,116,73,0.14)",
   },
   contactPreviewAvatar: {
     width: 52,
@@ -986,7 +1004,7 @@ const styles = StyleSheet.create({
   contactPreviewName: {
     fontSize: 12,
     fontWeight: "700",
-    color: theme.colors.text,
+    color: theme.colors.brandDeep,
   },
   warningActionRow: {
     gap: 10,
@@ -1007,7 +1025,7 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     paddingVertical: 15,
     paddingHorizontal: 18,
-    backgroundColor: theme.colors.surfaceSoft,
+    backgroundColor: theme.colors.surfaceWarm,
     alignItems: "center",
   },
   warningSecondaryActionText: {
@@ -1021,7 +1039,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(41,34,28,0.32)",
   },
   safetySheet: {
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.surface,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     paddingHorizontal: 20,
@@ -1030,7 +1048,7 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   contactSheet: {
-    backgroundColor: "rgba(255,252,249,0.99)",
+    backgroundColor: "rgba(255,249,245,0.99)",
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
     paddingHorizontal: 20,
@@ -1047,7 +1065,7 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: warningPeach,
+    backgroundColor: theme.colors.surfaceWarmDeep,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -1064,12 +1082,12 @@ const styles = StyleSheet.create({
     fontSize: 24,
     lineHeight: 28,
     fontWeight: "800",
-    color: theme.colors.text,
+    color: theme.colors.brandDeep,
   },
   contactSheetText: {
     fontSize: 14,
     lineHeight: 20,
-    color: theme.colors.textSoft,
+    color: theme.colors.brandDeep,
   },
   contactSheetActions: {
     flexDirection: "row",
@@ -1078,7 +1096,7 @@ const styles = StyleSheet.create({
   contactSheetActionCard: {
     flex: 1,
     borderRadius: 22,
-    backgroundColor: theme.colors.surfaceSoft,
+    backgroundColor: theme.colors.surfaceWarm,
     paddingHorizontal: 10,
     paddingVertical: 16,
     alignItems: "center",
@@ -1101,7 +1119,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 16,
     fontWeight: "700",
-    color: theme.colors.text,
+    color: theme.colors.brandDeep,
     textAlign: "center",
   },
   contactSheetCloseButton: {
@@ -1123,12 +1141,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 12,
     borderRadius: theme.radius.pill,
-    backgroundColor: theme.colors.surfaceSoft,
+    backgroundColor: theme.colors.surfaceWarm,
   },
   safetyCloseButtonText: {
     fontSize: 14,
     fontWeight: "700",
-    color: theme.colors.text,
+    color: theme.colors.brandDeep,
   },
   completionEyebrow: {
     fontSize: 11,

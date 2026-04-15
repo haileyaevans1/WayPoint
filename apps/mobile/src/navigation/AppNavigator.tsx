@@ -10,8 +10,9 @@ import { HomeScreen } from "../screens/HomeScreen";
 import ProfileScreen from "../screens/ProfileScreen"; 
 import SettingsScreen from "../screens/SettingsScreen";
 import StatisticsScreen from "../screens/StatisticsScreen";
+import { RoutesScreen } from "../screens/RoutesScreen";
+import { AlertsScreen } from "../screens/AlertsScreen";
 import { ActiveJourneyScreen } from "../screens/ActiveJourneyScreen";
-import { UnavailableScreen } from "../screens/UnavailableScreen";
 import {
   StartJourneyScreen,
   type StartJourneyConfig,
@@ -41,11 +42,9 @@ export function AppNavigator() {
         );
       case "routes":
         return (
-          <UnavailableScreen
-            title="Routes"
-            message="The Routes screen is temporarily removed while you work on it. You can add it back later without changing the rest of the navigator."
-            actionLabel="Go Home"
-            onActionPress={() => setCurrentScreen("home")}
+          <RoutesScreen
+            onAlertPress={() => setCurrentScreen("alerts")}
+            onStartRoute={() => setCurrentScreen("startJourney")}
           />
         );
       case "profile":
@@ -56,11 +55,9 @@ export function AppNavigator() {
         return <StatisticsScreen />;
       case "alerts":
         return (
-          <UnavailableScreen
-            title="Alerts"
-            message="The Alerts screen is temporarily removed right now. Navigation still works, and this placeholder prevents the app from crashing until you add it back."
-            actionLabel={activeJourneyConfig ? "Open Journey" : "Go Home"}
-            onActionPress={() =>
+          <AlertsScreen
+            onAlertPress={() => {}}
+            onViewJourney={() =>
               setCurrentScreen(activeJourneyConfig ? "activeJourney" : "home")
             }
           />
@@ -79,6 +76,7 @@ export function AppNavigator() {
         return (
           <ActiveJourneyScreen
             journeyConfig={activeJourneyConfig}
+            onOpenAlerts={() => setCurrentScreen("alerts")}
             onJourneyComplete={() => {
               setActiveJourneyConfig(null);
               setCurrentScreen("home");
