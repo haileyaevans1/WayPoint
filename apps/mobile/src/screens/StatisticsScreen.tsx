@@ -11,11 +11,24 @@ const pageColors = {
   white: '#FFFFFF',
 };
 
-export default function StatisticsScreen() {
+type StatisticsScreenProps = {
+  onOpenAlerts?: () => void;
+  hasAlertIndicator?: boolean;
+};
+
+export default function StatisticsScreen({
+  onOpenAlerts,
+  hasAlertIndicator = false,
+}: StatisticsScreenProps) {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-      
-      <Text style={styles.pageHeader}>Your Stats</Text>
+      <View style={styles.pageHeaderRow}>
+        <Text style={styles.pageHeader}>Your Stats</Text>
+        <TouchableOpacity style={styles.alertButton} onPress={onOpenAlerts}>
+          <Feather name="bell" size={18} color={pageColors.white} />
+          {hasAlertIndicator ? <View style={styles.alertDot} /> : null}
+        </TouchableOpacity>
+      </View>
 
       {/* --- STREAKS WIDGET --- */}
       <View style={styles.bubbleCard}>
@@ -80,8 +93,42 @@ export default function StatisticsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: pageColors.papaya },
-  scrollContent: { padding: 20, paddingTop: 60, gap: 16 },
-  pageHeader: { fontSize: 32, fontWeight: 'bold', color: pageColors.charcoal, marginBottom: 8 },
+  scrollContent: { padding: 20, paddingTop: 28, gap: 16 },
+  pageHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 14,
+    marginBottom: 8,
+  },
+  pageHeader: { fontSize: 32, fontWeight: 'bold', color: pageColors.charcoal, flex: 1 },
+  alertButton: {
+    minWidth: 60,
+    minHeight: 46,
+    paddingHorizontal: 8,
+    paddingVertical: 11,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#DE8558',
+    borderWidth: 1,
+    borderColor: '#CA7449',
+    position: 'relative',
+    shadowColor: '#CA7449',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.22,
+    shadowRadius: 16,
+    elevation: 4,
+  },
+  alertDot: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 8,
+    height: 8,
+    borderRadius: 999,
+    backgroundColor: pageColors.lightGreen,
+  },
   bubbleCard: {
     backgroundColor: pageColors.white,
     borderRadius: 24,
