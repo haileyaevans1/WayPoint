@@ -10,8 +10,8 @@ import { HomeScreen } from "../screens/HomeScreen";
 import ProfileScreen from "../screens/ProfileScreen"; 
 import SettingsScreen from "../screens/SettingsScreen";
 import StatisticsScreen from "../screens/StatisticsScreen";
-//import { RoutesScreen } from "../screens/RoutesScreen";
-//import { AlertsScreen } from "../screens/AlertsScreen";
+import { RoutesScreen } from "../screens/RoutesScreen";
+import { AlertsScreen } from "../screens/AlertsScreen";
 import { ActiveJourneyScreen } from "../screens/ActiveJourneyScreen";
 import {
   StartJourneyScreen,
