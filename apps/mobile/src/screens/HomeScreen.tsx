@@ -1,10 +1,19 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  Modal,
+} from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import MapView, { Marker, Polyline } from "react-native-maps";
+import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from "react-native-maps";
 import AnimatedWayPointLogo from "../components/AnimatedWayPointLogo";
 import { theme } from "../styles/theme";
 import type { FavoriteRouteSummary } from "./RoutesScreen";
+import { API_BASE_URL, API_HEADERS } from '../constants/api';
 
 const readyLimeTextDark = "#4F5A22";
 
@@ -38,12 +47,15 @@ const activeRouteRegion = {
 type JourneyMode = "idle" | "active" | "off_route" | "complete";
 
 type HomeScreenProps = {
+  route?: any;
+  navigation?: any;
   onOpenSavedRoutes: () => void;
   onOpenPopularRoutes: () => void;
   onOpenAlerts: () => void;
   onOpenStartJourney: () => void;
   favoriteRoute: FavoriteRouteSummary | null;
   journeyMode?: JourneyMode;
+  isNewUser?: boolean;
 };
 
 const heroStateByMode: Record<
@@ -87,14 +99,57 @@ const heroStateByMode: Record<
 };
 
 export function HomeScreen({
+  route,
+  navigation,
   onOpenSavedRoutes,
   onOpenPopularRoutes,
   onOpenAlerts,
   onOpenStartJourney,
   favoriteRoute,
   journeyMode = "idle",
+  isNewUser = false,
 }: HomeScreenProps) {
   const heroState = heroStateByMode[journeyMode];
+
+  // --- RESTORED ML STATE ---
+  const [riskScore, setRiskScore] = useState<number | null>(null);
+
+  // --- WELCOME POP-UP STATE ---
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+
+  // Check if they just signed up!
+  useEffect(() => {
+    if (isNewUser) {
+      setShowWelcomeModal(true);
+    }
+  }, [isNewUser]);
+
+  // --- RESTORED ML FETCH LOGIC ---
+  useEffect(() => {
+    async function getSafetyScore() {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/journeys/risk-score`,
+          {
+            method: "POST",
+            headers: API_HEADERS,
+            body: JSON.stringify({
+              latitude: liveLocationRegion.latitude,
+              longitude: liveLocationRegion.longitude,
+            }),
+          },
+        );
+
+        const data = await response.json();
+        if (data.riskScore !== undefined) {
+          setRiskScore(data.riskScore);
+        }
+      } catch (error) {
+        console.error(" Error fetching ML Score:", error);
+      }
+    }
+
+    getSafetyScore();
+  }, []);
 
   return (
     <LinearGradient
@@ -104,79 +159,98 @@ export function HomeScreen({
       end={{ x: 0.5, y: 1 }}
       style={styles.screen}
     >
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.mapShell}>
-        <View style={styles.mapHero}>
-          <MapView
-            style={styles.mapView}
-            initialRegion={heroState.showRoute ? activeRouteRegion : liveLocationRegion}
-            showsUserLocation={!heroState.showRoute}
-            followsUserLocation={!heroState.showRoute}
-            scrollEnabled={false}
-            zoomEnabled={false}
-            pitchEnabled={false}
-            rotateEnabled={false}
-            toolbarEnabled={false}
-            showsCompass={false}
-            pointerEvents="none"
-          >
-            {heroState.showRoute ? (
-              <>
-                <Polyline
-                  coordinates={[...previewRoute]}
-                  strokeColor="#675EF2"
-                  strokeWidth={5}
-                  lineCap="round"
-                  lineJoin="round"
-                />
-                <Marker coordinate={previewRoute[0]} title="Start" />
-                <Marker
-                  coordinate={previewRoute[Math.min(4, previewRoute.length - 1)]}
-                  title="Current position"
-                  pinColor={theme.colors.brand}
-                />
-              </>
-            ) : null}
-          </MapView>
-          <LinearGradient
-            colors={["rgba(255,255,255,0.05)", "rgba(255,250,247,0.18)"]}
-            start={{ x: 0.2, y: 0 }}
-            end={{ x: 0.8, y: 1 }}
-            style={styles.mapTint}
-          />
+          <View style={styles.mapHero}>
+            {/* RESTORED PROVIDER_GOOGLE SO IT DOESN'T CRASH */}
+            <MapView
+              provider={PROVIDER_GOOGLE}
+              style={styles.mapView}
+              initialRegion={
+                heroState.showRoute ? activeRouteRegion : liveLocationRegion
+              }
+              showsUserLocation={!heroState.showRoute}
+              followsUserLocation={!heroState.showRoute}
+              scrollEnabled={false}
+              zoomEnabled={false}
+              pitchEnabled={false}
+              rotateEnabled={false}
+              toolbarEnabled={false}
+              showsCompass={false}
+              pointerEvents="none"
+            >
+              {heroState.showRoute ? (
+                <>
+                  <Polyline
+                    coordinates={[...previewRoute]}
+                    strokeColor="#675EF2"
+                    strokeWidth={5}
+                    lineCap="round"
+                    lineJoin="round"
+                  />
+                  <Marker coordinate={previewRoute[0]} title="Start" />
+                  <Marker
+                    coordinate={
+                      previewRoute[Math.min(4, previewRoute.length - 1)]
+                    }
+                    title="Current position"
+                    pinColor={theme.colors.brand}
+                  />
+                </>
+              ) : null}
+            </MapView>
+            <LinearGradient
+              colors={["rgba(255,255,255,0.05)", "rgba(255,250,247,0.18)"]}
+              start={{ x: 0.2, y: 0 }}
+              end={{ x: 0.8, y: 1 }}
+              style={styles.mapTint}
+            />
 
-          <View style={styles.mapTopRow}>
-            <View style={styles.mapBrand}>
-              <View style={styles.mapBrandLogoWrap}>
-                <AnimatedWayPointLogo size={92} />
+            <View style={styles.mapTopRow}>
+              <View style={styles.mapBrand}>
+                <View style={styles.mapBrandLogoWrap}>
+                  <AnimatedWayPointLogo size={92} />
+                </View>
+                <View style={styles.mapBrandCopy}>
+                  <Text style={styles.mapBrandTitle}>
+                    <Text style={styles.mapBrandTitleWay}>Way</Text>
+                    <Text style={styles.mapBrandTitlePoint}>Point</Text>
+                  </Text>
+                </View>
               </View>
-              <View style={styles.mapBrandCopy}>
-                <Text style={styles.mapBrandTitle}>
-                  <Text style={styles.mapBrandTitleWay}>Way</Text>
-                  <Text style={styles.mapBrandTitlePoint}>Point</Text>
-                </Text>
-              </View>
+
+              <Pressable
+                onPress={onOpenAlerts}
+                style={({ pressed }) => [
+                  styles.alertButton,
+                  pressed && styles.alertPressed,
+                ]}
+              >
+                <Feather name="bell" size={18} color={theme.colors.white} />
+                <View style={styles.alertDot} />
+              </Pressable>
             </View>
-
-            <Pressable onPress={onOpenAlerts} style={({ pressed }) => [styles.alertButton, pressed && styles.alertPressed]}>
-              <Feather name="bell" size={18} color={theme.colors.white} />
-              <View style={styles.alertDot} />
-            </Pressable>
           </View>
-
-        </View>
         </View>
 
         <View style={styles.contentStack}>
           <View style={styles.sectionCard}>
             <Pressable
               onPress={onOpenStartJourney}
-              style={({ pressed }) => [styles.searchCard, pressed && styles.cardPressed]}
+              style={({ pressed }) => [
+                styles.searchCard,
+                pressed && styles.cardPressed,
+              ]}
             >
               <Text style={styles.searchIcon}>⌕</Text>
               <View style={styles.searchCopy}>
                 <Text style={styles.searchTitle}>Where do you want to go?</Text>
-                <Text style={styles.searchSubtitle}>Find a safe route nearby</Text>
+                <Text style={styles.searchSubtitle}>
+                  Find a safe route nearby
+                </Text>
               </View>
             </Pressable>
 
@@ -186,12 +260,28 @@ export function HomeScreen({
                   {heroState.showRoute ? "Current Journey" : "Current Location"}
                 </Text>
                 <Text style={styles.mapInfoValue}>
-                  {heroState.showRoute ? heroState.routeValue : heroState.locationValue}
+                  {heroState.showRoute
+                    ? heroState.routeValue
+                    : heroState.locationValue}
                 </Text>
               </View>
+
+              {/* RESTORED ML RISK SCORE WIDGET */}
               <View style={styles.mapWeatherWrap}>
-                <Text style={styles.mapWeatherLabel}>{heroState.weatherText}</Text>
-                <Text style={styles.mapWeatherValue}>{heroState.weatherValue}</Text>
+                <Text style={styles.mapWeatherLabel}>Safety Score</Text>
+                <Text
+                  style={[
+                    styles.mapWeatherValue,
+                    {
+                      color:
+                        riskScore && riskScore < 50
+                          ? "#FF4A4A"
+                          : theme.colors.brand,
+                    },
+                  ]}
+                >
+                  {riskScore !== null ? `${riskScore}%` : "..."}
+                </Text>
               </View>
             </View>
           </View>
@@ -224,9 +314,9 @@ export function HomeScreen({
                   onPress: onOpenSavedRoutes,
                   tone: "add" as const,
                 },
-              ].map((item) => (
+              ].map((item, index) => (
                 <Pressable
-                  key={item.title}
+                  key={index} // fixed duplicate key issue
                   onPress={item.onPress}
                   style={({ pressed }) => [
                     styles.favoriteRouteItem,
@@ -260,7 +350,9 @@ export function HomeScreen({
                   <Text style={styles.favoriteRouteTitle} numberOfLines={1}>
                     {item.title}
                   </Text>
-                  <Text style={styles.favoriteRouteSubtitle}>{item.subtitle}</Text>
+                  <Text style={styles.favoriteRouteSubtitle}>
+                    {item.subtitle}
+                  </Text>
                 </Pressable>
               ))}
             </View>
@@ -293,7 +385,9 @@ export function HomeScreen({
                   onPress={item.onPress}
                   style={({ pressed }) => [
                     styles.listRow,
-                    item.tone === "warm" ? styles.listRowWarm : styles.listRowCool,
+                    item.tone === "warm"
+                      ? styles.listRowWarm
+                      : styles.listRowCool,
                     index === 0 && styles.listRowDivider,
                     pressed && styles.listRowPressed,
                   ]}
@@ -340,6 +434,28 @@ export function HomeScreen({
           </View>
         </View>
       </ScrollView>
+      {/* --- NEW USER WELCOME MODAL --- */}
+      <Modal animationType="fade" transparent={true} visible={showWelcomeModal}>
+        <View style={styles.welcomeOverlay}>
+          <View style={styles.welcomeContent}>
+            <Text style={styles.welcomeTitle}>Welcome to WayPoint!</Text>
+            <Text style={styles.welcomeBody}>
+              To get started, head to your Profile to personalize your account. Then to Settings to add your
+              emergency contacts and set your safety preferences.
+            </Text>
+
+            <Pressable
+              style={styles.welcomeButton}
+              onPress={() => {
+                // Simply close the modal!
+                setShowWelcomeModal(false); 
+              }}
+            >
+              <Text style={styles.welcomeButtonText}>Happy Exploring!</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </LinearGradient>
   );
 }
@@ -700,4 +816,46 @@ const styles = StyleSheet.create({
     color: theme.colors.brandDeep,
     textAlign: "center",
   },
+  welcomeOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  welcomeContent: {
+    backgroundColor: "#FFF",
+    borderRadius: 24,
+    padding: 24,
+    alignItems: "center",
+    width: "100%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.2,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  welcomeTitle: {
+    fontSize: 22,
+    fontWeight: "900",
+    color: theme.colors.brandDeep,
+    marginBottom: 12,
+    textAlign: "center",
+  },
+  welcomeBody: {
+    fontSize: 16,
+    color: "#555",
+    textAlign: "center",
+    lineHeight: 22,
+    marginBottom: 24,
+  },
+  welcomeButton: {
+    backgroundColor: theme.colors.brandBright,
+    paddingVertical: 14,
+    paddingHorizontal: 30,
+    borderRadius: 20,
+    width: "100%",
+    alignItems: "center",
+  },
+  welcomeButtonText: { color: "#FFF", fontSize: 16, fontWeight: "bold" },
 });

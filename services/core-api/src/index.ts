@@ -24,7 +24,7 @@ const hashPassword = async (password: string) => {
 // ROUTES
 // ---------------------------------------------------------
 
-// The endpoint for the mobile app's onboarding questions
+// 1. THE FRICTIONLESS ONBOARDING ROUTE (Mobile App -> Prisma -> Supabase)
 app.post('/api/users/onboarding', async (req: Request, res: Response) => {
   try {
     const { name, email, password, phoneNumber } = req.body as {
@@ -56,7 +56,7 @@ app.post('/api/users/onboarding', async (req: Request, res: Response) => {
       }
     });
 
-    res.status(201).json({ message: 'User profile created successfully!', user: newUser });
+    res.status(201).json({ message: 'User profile created successfully.', user: newUser });
   } catch (error: unknown) {
     const prismaError =
       error instanceof Prisma.PrismaClientKnownRequestError
@@ -73,6 +73,45 @@ app.post('/api/users/onboarding', async (req: Request, res: Response) => {
   }
 });
 
+// 2. THE MACHINE LEARNING ROUTE (Dummy data for presentation)
+app.post('/api/journeys/risk-score', async (req: Request, res: Response) => {
+    try {
+        const { latitude, longitude } = req.body;
+
+        if (!latitude || !longitude) {
+            res.status(400).json({ error: "Missing coordinates" });
+            return;
+        }
+
+        // We use the exact dummy data format
+        const mlData = {
+            session_id: "test-session-123",
+            risk_score_raw: 0.82,
+            risk_level: "high",
+            contributing_factors: ["nighttime", "isolated-path"]
+        };
+        
+        // Convert the 0.82 decimal into an 82% integer for the mobile UI
+        const formattedScore = Math.round(mlData.risk_score_raw * 100);
+
+        console.log(`ML API pinged for ${latitude}, ${longitude}. Score: ${formattedScore}`);
+        
+        // Send the clean data to React Native
+        res.status(200).json({ 
+            riskScore: formattedScore,
+            riskLevel: mlData.risk_level,
+            factors: mlData.contributing_factors
+        });
+
+    } catch (error) {
+        console.error("Error calculating risk score:", error);
+        res.status(500).json({ error: "Failed to calculate risk." });
+    }
+});
+
+// ---------------------------------------------------------
+// SERVER LIFECYCLE
+// ---------------------------------------------------------
 process.on('SIGINT', async () => {
   await prisma.$disconnect();
   process.exit(0);

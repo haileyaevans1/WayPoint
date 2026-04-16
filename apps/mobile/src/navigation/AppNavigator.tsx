@@ -26,7 +26,8 @@ import {
 // Import the team's theme and the AppScreen type
 import { theme, AppScreen } from "../styles/theme"; 
 
-export function AppNavigator() {
+export function AppNavigator({ route }: any) {
+  const isNewUser = route?.params?.params?.isNewUser ?? false;
   // 2. Create the State to track the active screen (defaults to "home")
   const [currentScreen, setCurrentScreen] = useState<AppScreen>("home");
   const [activeJourneyConfig, setActiveJourneyConfig] =
@@ -51,6 +52,8 @@ export function AppNavigator() {
             }}
             favoriteRoute={favoriteRoute}
             journeyMode={activeJourneyConfig ? "active" : "idle"}
+            isNewUser={isNewUser}
+
           />
         );
       case "routes":
