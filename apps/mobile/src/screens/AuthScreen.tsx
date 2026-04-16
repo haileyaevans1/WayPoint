@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { LinearGradient } from 'expo-linear-gradient';
-import { colors } from '../theme/colors';
+import { theme } from '../styles/theme';
 
 export default function AuthScreen({ navigation }: any) {
   const [signUpHovered, setSignUpHovered] = useState(false);
@@ -43,14 +43,11 @@ export default function AuthScreen({ navigation }: any) {
           >
             {({ pressed }) => (
               <LinearGradient
-                // Your exact CSS hex codes!
-                colors={['#B2EF91', '#FA9372']} 
-                // 90deg translates to starting left (x:0) and ending right (x:1)
+                colors={[theme.colors.brandBright, theme.colors.brand]}
                 start={{ x: 0, y: 0.5 }}
                 end={{ x: 1, y: 0.5 }}
                 style={[
                   styles.primaryButton,
-                  // Add glow when hovered, scale down slightly when clicked
                   signUpHovered && styles.buttonHoverGlow,
                   pressed && styles.buttonPressed
                 ]}
@@ -70,7 +67,7 @@ export default function AuthScreen({ navigation }: any) {
               <View 
                 style={[
                   styles.secondaryButton,
-                  logInHovered && styles.buttonHoverGlow, // Uses the same glow effect
+                  logInHovered && styles.secondaryButtonHover,
                   pressed && styles.buttonPressed
                 ]}
               >
@@ -88,7 +85,7 @@ export default function AuthScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.blue1000,
+    backgroundColor: theme.colors.backgroundDeep,
     overflow: 'hidden', 
   },
   videoBackground: {
@@ -102,7 +99,7 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: colors.videoOverlay, 
+    backgroundColor: 'rgba(78, 67, 68, 0.34)',
   },
   contentContainer: {
     flex: 1,
@@ -113,9 +110,13 @@ const styles = StyleSheet.create({
   },
   tagline: {
     fontSize: 18,
-    color: colors.white,
+    color: theme.colors.surface,
     marginBottom: 60,
-    fontWeight: '500', 
+    fontWeight: '600',
+    letterSpacing: 0.3,
+    textShadowColor: 'rgba(78, 67, 68, 0.28)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 10,
   },
   buttonContainer: {
     width: '100%',
@@ -123,42 +124,49 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     paddingVertical: 16,
-    borderRadius: 30, 
+    borderRadius: theme.radius.pill,
     alignItems: 'center',
-    // Base subtle shadow
-    shadowColor: '#FA9372', 
+    shadowColor: theme.colors.brand,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
+    shadowOpacity: 0.28,
+    shadowRadius: 10,
   },
   primaryButtonText: {
-    color: colors.blue1000, 
+    color: theme.colors.text,
     fontSize: 18,
     fontWeight: 'bold',
   },
   secondaryButton: {
-    backgroundColor: 'transparent',
-    borderWidth: 2,
-    borderColor: colors.green400, 
+    backgroundColor: 'rgba(255, 249, 244, 0.14)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 249, 244, 0.45)',
     paddingVertical: 16,
-    borderRadius: 30,
+    borderRadius: theme.radius.pill,
     alignItems: 'center',
   },
   secondaryButtonText: {
-    color: colors.white,
+    color: theme.colors.surface,
     fontSize: 18,
     fontWeight: 'bold',
   },
-  // --- HOVER & PRESS EFFECTS ---
   buttonHoverGlow: {
-    shadowColor: '#B2EF91', // Glows with your bright green color
-    shadowOffset: { width: 0, height: 0 }, // 0 offset makes it glow in all directions
-    shadowOpacity: 0.8,
-    shadowRadius: 15, // Large blur creates the "glow"
-    transform: [{ scale: 1.02 }], // Slightly enlarges the button
+    shadowColor: theme.colors.brandBright,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.45,
+    shadowRadius: 18,
+    transform: [{ scale: 1.02 }],
+  },
+  secondaryButtonHover: {
+    backgroundColor: 'rgba(255, 249, 244, 0.22)',
+    borderColor: theme.colors.accentLime,
+    shadowColor: theme.colors.accentLime,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.32,
+    shadowRadius: 16,
+    transform: [{ scale: 1.02 }],
   },
   buttonPressed: {
-    transform: [{ scale: 0.98 }], // Shrinks slightly when actively clicked
-    shadowOpacity: 0.2, // Dims the glow when clicked
+    transform: [{ scale: 0.98 }],
+    shadowOpacity: 0.18,
   }
 });
