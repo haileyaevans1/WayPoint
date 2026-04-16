@@ -1,162 +1,75 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { Header } from "../components/Header";
+import type { AlertAction, AlertTone, JourneyAlert } from "../alerts/alertData";
 import { theme } from "../styles/theme";
 
-type AlertTone = "warning" | "critical" | "info" | "success";
-
-type AlertItem = {
-  id: string;
-  icon: string;
-  title: string;
-  message: string;
-  timestamp: string;
-  status: string;
-  tone: AlertTone;
-  actionLabel?: string;
-};
-
-type AlertSection = {
-  title: string;
-  subtitle: string;
-  alerts: AlertItem[];
-};
-
 type AlertsScreenProps = {
-  onAlertPress: () => void;
-  onViewJourney: () => void;
+  alerts: JourneyAlert[];
+  onAlertAction: (alertId: string, action: AlertAction) => void;
+  onDismissAlert: (alertId: string) => void;
+  onClose: () => void;
 };
 
-const alertSections: AlertSection[] = [
-  {
-    title: "Active Alerts",
-    subtitle: "Needs your attention",
-    alerts: [
-      {
-        id: "off-route",
-        icon: "⚠️",
-        title: "Off Route",
-        message:
-          "You went off route during your journey. Confirm you're safe if this was intentional.",
-        timestamp: "2 min ago",
-        status: "Action Required",
-        tone: "warning",
-        actionLabel: "I'm Safe",
-      },
-      {
-        id: "missed-check-in",
-        icon: "🚨",
-        title: "Missed Check-In",
-        message:
-          "You missed your check-in window. Your trusted contact was notified automatically.",
-        timestamp: "10 min ago",
-        status: "Notified",
-        tone: "critical",
-        actionLabel: "View Journey",
-      },
-    ],
-  },
-  {
-    title: "Recent Alerts",
-    subtitle: "Today",
-    alerts: [
-      {
-        id: "location-shared",
-        icon: "📍",
-        title: "Location Shared",
-        message:
-          "Your location was sent to Mom after you requested a safety update.",
-        timestamp: "15 min ago",
-        status: "Sent",
-        tone: "info",
-      },
-      {
-        id: "contact-notified",
-        icon: "👥",
-        title: "Contact Notified",
-        message:
-          "Jordan was notified about your journey status and received your latest location.",
-        timestamp: "28 min ago",
-        status: "Delivered",
-        tone: "info",
-      },
-    ],
-  },
-  {
-    title: "Past Alerts",
-    subtitle: "Yesterday",
-    alerts: [
-      {
-        id: "journey-complete",
-        icon: "🎉",
-        title: "Journey Completed",
-        message:
-          "You completed your journey safely and your trusted contacts were updated.",
-        timestamp: "Yesterday at 6:14 PM",
-        status: "Resolved",
-        tone: "success",
-      },
-      {
-        id: "safe-confirmation",
-        icon: "🫶",
-        title: "Safety Confirmed",
-        message:
-          "You confirmed you were safe after going briefly off route.",
-        timestamp: "Yesterday at 5:52 PM",
-        status: "Resolved",
-        tone: "success",
-      },
-    ],
-  },
-];
-
-const toneColors: Record<
-  AlertTone,
-  {
-    badge: [string, string];
-    statusBg: string;
-    statusText: string;
-    cardBorder: string;
-  }
-> = {
-  warning: {
-    badge: ["#F6D3BE", "#EFA774"],
-    statusBg: "rgba(239,167,116,0.16)",
-    statusText: "#A76139",
-    cardBorder: "rgba(239,167,116,0.22)",
-  },
-  critical: {
-    badge: ["#F5C5BF", "#E28A6E"],
-    statusBg: "rgba(226,138,110,0.18)",
-    statusText: "#9B4E3D",
-    cardBorder: "rgba(226,138,110,0.24)",
-  },
-  info: {
-    badge: ["#DCE8F5", "#B8CCE5"],
-    statusBg: "rgba(184,204,229,0.22)",
-    statusText: "#607C97",
-    cardBorder: "rgba(184,204,229,0.22)",
-  },
-  success: {
-    badge: ["#D8E59C", "#B9CD62"],
-    statusBg: "rgba(185,205,98,0.18)",
-    statusText: "#617228",
-    cardBorder: "rgba(185,205,98,0.22)",
-  },
+const tonePriority: Record<AlertTone, number> = {
+  urgent: 0,
+  warning: 1,
+  info: 2,
+  safe: 3,
 };
+
+const toneIndicator: Record<AlertTone, string> = {
+  urgent: theme.colors.accentCoral,
+  warning: theme.colors.accentPeach,
+  info: theme.colors.textSoft,
+  safe: theme.colors.accentLime,
+};
+
+const activeToneIndicator: Record<AlertTone, string> = {
+  urgent: theme.colors.brandBright,
+  warning: theme.colors.brandBright,
+  info: theme.colors.brandBright,
+  safe: theme.colors.brandBright,
+};
+
+function getPrimaryAction(alert: JourneyAlert) {
+  return alert.actions.find((action) => action.emphasis === "primary") ?? null;
+}
+
+function getSecondaryActions(alert: JourneyAlert) {
+  const primaryAction = getPrimaryAction(alert);
+
+  return alert.actions.filter((action) => action.id !== primaryAction?.id);
+}
+
+function isStrongSecondaryAction(action: AlertAction) {
+  return action.label === "Extend time" || action.label === "Extend journey";
+}
+
+function isDualPrimaryAlert(alert: JourneyAlert) {
+  return alert.type === "off-route";
+}
 
 export function AlertsScreen({
-  onAlertPress,
-  onViewJourney,
+  alerts,
+  onAlertAction,
+  onDismissAlert,
+  onClose,
 }: AlertsScreenProps) {
+  const visibleAlerts = alerts.filter(
+    (alert) =>
+      alert.type === "missed-check-in" ||
+      alert.type === "off-route" ||
+      alert.type === "escalation",
+  );
+  const orderedAlerts = [...visibleAlerts].sort(
+    (left, right) => tonePriority[left.tone] - tonePriority[right.tone],
+  );
+
   return (
     <LinearGradient
-      colors={[
-        theme.colors.background,
-        "#F1E7DC",
-        theme.colors.backgroundDeep,
-      ]}
-      locations={[0, 0.5, 1]}
+      colors={[theme.colors.background, theme.colors.backgroundAlt, theme.colors.surface]}
+      locations={[0, 0.44, 1]}
       start={{ x: 0.5, y: 0 }}
       end={{ x: 0.5, y: 1 }}
       style={styles.screen}
@@ -165,96 +78,142 @@ export function AlertsScreen({
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <Header
-          title="Alerts"
-          subtitle="Stay updated on your safety and journey activity."
-          tagline="Awareness, Full transparency"
-          onAlertPress={onAlertPress}
-        />
+        <View style={styles.pageIntroRow}>
+          <View style={styles.pageIntro}>
+            <Text style={styles.pageTitle}>Alerts</Text>
+            <Text style={styles.pageSubtitle}>
+              Quick safety updates and actions when something changes.
+            </Text>
+          </View>
 
-        {alertSections.map((section) => (
-          <View key={section.title} style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <View>
-                <Text style={styles.sectionTitle}>{section.title}</Text>
-                <Text style={styles.sectionSubtitle}>{section.subtitle}</Text>
-              </View>
-            </View>
+          <Pressable style={styles.headerCloseButton} onPress={onClose}>
+            <Feather name="x" size={20} color={theme.colors.text} />
+          </Pressable>
+        </View>
 
-            <View style={styles.alertList}>
-              {section.alerts.map((alert) => {
-                const colors = toneColors[alert.tone];
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Needs Attention</Text>
+        </View>
 
-                return (
-                  <View
-                    key={alert.id}
-                    style={[styles.alertCard, { borderColor: colors.cardBorder }]}
-                  >
-                    <View style={styles.alertTopRow}>
-                      <View style={styles.alertHeadingWrap}>
-                        <LinearGradient
-                          colors={colors.badge}
-                          start={{ x: 0, y: 0 }}
-                          end={{ x: 1, y: 1 }}
-                          style={styles.iconBadge}
-                        >
-                          <Text style={styles.iconText}>{alert.icon}</Text>
-                        </LinearGradient>
-                        <View style={styles.alertCopy}>
-                          <Text style={styles.alertTitle}>{alert.title}</Text>
-                          <Text style={styles.alertTimestamp}>
-                            {alert.timestamp}
-                          </Text>
-                        </View>
-                      </View>
+        <View style={styles.alertList}>
+          {orderedAlerts.length > 0 ? (
+            orderedAlerts.map((alert) => (
+              <View key={alert.id} style={styles.alertCard}>
+                <View
+                  style={[
+                    styles.alertAccent,
+                    { backgroundColor: toneIndicator[alert.tone] },
+                  ]}
+                />
 
-                      <View
-                        style={[
-                          styles.statusPill,
-                          { backgroundColor: colors.statusBg },
-                        ]}
-                      >
-                        <Text
+                <View style={styles.alertContent}>
+                  <View style={styles.alertTopRow}>
+                    <View style={styles.alertCopy}>
+                      <View style={styles.metaRow}>
+                        <View
                           style={[
-                            styles.statusPillText,
-                            { color: colors.statusText },
+                            styles.statusDot,
+                            { backgroundColor: activeToneIndicator[alert.tone] },
                           ]}
-                        >
-                          {alert.status}
-                        </Text>
+                        />
+                        <Text style={styles.alertTimestamp}>{alert.timestamp}</Text>
                       </View>
+                      <Text style={styles.alertTitle}>{alert.title}</Text>
+                      <Text numberOfLines={2} style={styles.alertMessage}>
+                        {alert.message}
+                      </Text>
                     </View>
 
-                    <Text style={styles.alertMessage}>{alert.message}</Text>
+                    <Pressable
+                      onPress={() => onDismissAlert(alert.id)}
+                      style={styles.cardCloseButton}
+                    >
+                      <Feather name="x" size={18} color={theme.colors.brandDeep} />
+                    </Pressable>
+                  </View>
 
-                    {alert.actionLabel ? (
-                      <View style={styles.actionRow}>
-                        <Pressable
-                          onPress={onViewJourney}
-                          style={[
-                            styles.primaryAction,
-                            alert.actionLabel === "I'm Safe" &&
-                              styles.primaryActionSoft,
-                          ]}
-                        >
-                          <Text
+                  <View style={styles.alertActionRow}>
+                    {isDualPrimaryAlert(alert) ? (
+                      <View style={styles.splitActionRow}>
+                        {getPrimaryAction(alert) ? (
+                          <Pressable
+                            onPress={() =>
+                              onAlertAction(alert.id, getPrimaryAction(alert)!)
+                            }
+                            style={[styles.primaryAction, styles.splitActionButton]}
+                          >
+                            <Text style={styles.primaryActionText}>
+                              {getPrimaryAction(alert)!.label}
+                            </Text>
+                          </Pressable>
+                        ) : null}
+                        {getSecondaryActions(alert).slice(0, 1).map((action) => (
+                          <Pressable
+                            key={action.id}
+                            onPress={() => onAlertAction(alert.id, action)}
                             style={[
-                              styles.primaryActionText,
-                              alert.actionLabel === "I'm Safe" &&
-                                styles.primaryActionTextSoft,
+                              styles.secondaryActionStrong,
+                              styles.splitActionButton,
                             ]}
                           >
-                            {alert.actionLabel}
-                          </Text>
-                        </Pressable>
+                            <Text style={styles.secondaryActionTextStrong}>
+                              {action.label}
+                            </Text>
+                          </Pressable>
+                        ))}
                       </View>
-                    ) : null}
+                    ) : (
+                      <>
+                        {getPrimaryAction(alert) ? (
+                          <Pressable
+                            onPress={() =>
+                              onAlertAction(alert.id, getPrimaryAction(alert)!)
+                            }
+                            style={styles.primaryAction}
+                          >
+                            <Text style={styles.primaryActionText}>
+                              {getPrimaryAction(alert)!.label}
+                            </Text>
+                          </Pressable>
+                        ) : null}
+
+                        {getSecondaryActions(alert).length > 0 ? (
+                          <View style={styles.secondaryActionRow}>
+                            {getSecondaryActions(alert).slice(0, 2).map((action) => (
+                              <Pressable
+                                key={action.id}
+                                onPress={() => onAlertAction(alert.id, action)}
+                                style={[
+                                  styles.secondaryAction,
+                                  isStrongSecondaryAction(action) &&
+                                    styles.secondaryActionStrong,
+                                ]}
+                              >
+                                <Text
+                                  style={[
+                                    styles.secondaryActionText,
+                                    isStrongSecondaryAction(action) &&
+                                      styles.secondaryActionTextStrong,
+                                  ]}
+                                >
+                                  {action.label}
+                                </Text>
+                              </Pressable>
+                            ))}
+                          </View>
+                        ) : null}
+                      </>
+                    )}
                   </View>
-                );
-              })}
+                </View>
+              </View>
+            ))
+          ) : (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyStateText}>No alerts right now.</Text>
             </View>
-          </View>
-        ))}
+          )}
+        </View>
       </ScrollView>
     </LinearGradient>
   );
@@ -267,115 +226,197 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 18,
-    paddingTop: 18,
+    paddingTop: 28,
     paddingBottom: 180,
-    gap: 18,
+    gap: 14,
+    backgroundColor: "transparent",
   },
-  section: {
-    gap: 12,
+  pageIntroRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 14,
+  },
+  pageIntro: {
+    gap: 6,
+    flex: 1,
+  },
+  pageTitle: {
+    fontSize: 34,
+    lineHeight: 38,
+    fontWeight: "900",
+    color: theme.colors.text,
+  },
+  pageSubtitle: {
+    fontSize: 15,
+    lineHeight: 22,
+    color: theme.colors.textSoft,
+    maxWidth: 320,
   },
   sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    paddingTop: 2,
   },
   sectionTitle: {
-    fontSize: 24,
-    lineHeight: 28,
+    fontSize: 20,
+    lineHeight: 24,
     fontWeight: "800",
     color: theme.colors.text,
   },
-  sectionSubtitle: {
-    marginTop: 4,
-    fontSize: 14,
-    color: theme.colors.textSoft,
+  headerCloseButton: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: theme.colors.brandDeep,
+    shadowOpacity: 0.1,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 3,
+  },
+  metaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 999,
   },
   alertList: {
     gap: 12,
   },
   alertCard: {
-    borderRadius: 28,
-    backgroundColor: "rgba(255,252,249,0.98)",
-    padding: 18,
-    gap: 12,
+    flexDirection: "row",
+    overflow: "hidden",
+    borderRadius: theme.radius.md,
+    backgroundColor: theme.colors.brand,
     borderWidth: 1,
+    borderColor: theme.colors.brandDeep,
     shadowColor: theme.colors.brandDeep,
-    shadowOpacity: 0.08,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 4,
+    shadowOpacity: 0.22,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 12 },
+    elevation: 7,
+  },
+  alertAccent: {
+    width: 6,
+    backgroundColor: theme.colors.brandBright,
+  },
+  alertContent: {
+    flex: 1,
+    paddingHorizontal: 18,
+    paddingVertical: 20,
+    gap: 10,
   },
   alertTopRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 10,
-  },
-  alertHeadingWrap: {
-    flexDirection: "row",
-    alignItems: "center",
     gap: 12,
-    flex: 1,
-    minWidth: 0,
-  },
-  iconBadge: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  iconText: {
-    fontSize: 20,
   },
   alertCopy: {
     flex: 1,
     minWidth: 0,
-  },
-  alertTitle: {
-    fontSize: 18,
-    fontWeight: "800",
-    color: theme.colors.text,
+    gap: 4,
   },
   alertTimestamp: {
-    marginTop: 4,
-    fontSize: 13,
-    color: theme.colors.textMuted,
-  },
-  statusPill: {
-    alignSelf: "flex-start",
-    borderRadius: theme.radius.pill,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  statusPillText: {
     fontSize: 12,
+    color: theme.colors.white,
+    fontWeight: "700",
+  },
+  alertTitle: {
+    fontSize: 22,
+    lineHeight: 26,
     fontWeight: "800",
+    color: theme.colors.white,
   },
   alertMessage: {
-    fontSize: 14,
+    fontSize: 15,
     lineHeight: 21,
-    color: theme.colors.textSoft,
+    color: theme.colors.white,
   },
-  actionRow: {
+  cardCloseButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: theme.colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: theme.colors.surfaceWarmDeep,
+  },
+  alertActionRow: {
+    gap: 6,
+  },
+  splitActionRow: {
     flexDirection: "row",
-    gap: 10,
+    gap: 12,
+  },
+  splitActionButton: {
+    alignSelf: "flex-start",
+    alignItems: "center",
+    justifyContent: "center",
   },
   primaryAction: {
     alignSelf: "flex-start",
-    borderRadius: 20,
-    backgroundColor: theme.colors.ink,
+    borderRadius: 18,
+    backgroundColor: theme.colors.white,
     paddingHorizontal: 16,
-    paddingVertical: 13,
-  },
-  primaryActionSoft: {
-    backgroundColor: theme.colors.surfaceSoft,
+    paddingVertical: 12,
+    shadowColor: theme.colors.brandDeep,
+    shadowOpacity: 0.14,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 3,
   },
   primaryActionText: {
     fontSize: 14,
     fontWeight: "800",
+    color: theme.colors.brandDeep,
+  },
+  secondaryActionRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 18,
+  },
+  secondaryAction: {
+    paddingVertical: 2,
+    opacity: 0.92,
+  },
+  secondaryActionStrong: {
+    borderRadius: 18,
+    backgroundColor: theme.colors.white,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    shadowColor: theme.colors.brandDeep,
+    shadowOpacity: 0.14,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 3,
+    opacity: 1,
+  },
+  secondaryActionText: {
+    fontSize: 13,
+    fontWeight: "700",
     color: theme.colors.white,
   },
-  primaryActionTextSoft: {
-    color: theme.colors.text,
+  secondaryActionTextStrong: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: theme.colors.brandDeep,
+  },
+  emptyState: {
+    borderRadius: theme.radius.md,
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    padding: theme.spacing.md,
+  },
+  emptyStateText: {
+    fontSize: 14,
+    color: theme.colors.textSoft,
   },
 });

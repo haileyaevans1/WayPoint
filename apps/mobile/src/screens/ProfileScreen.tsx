@@ -12,9 +12,20 @@ const pageColors = {
   white: '#FFFFFF',
 };
 
-export default function ProfileScreen() {
+type ProfileScreenProps = {
+  onOpenAlerts?: () => void;
+};
+
+export default function ProfileScreen({ onOpenAlerts }: ProfileScreenProps) {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+      <View style={styles.pageTopRow}>
+        <View style={styles.pageTopSpacer} />
+        <TouchableOpacity style={styles.alertButton} onPress={onOpenAlerts}>
+          <Feather name="bell" size={18} color={pageColors.white} />
+          <View style={styles.alertDot} />
+        </TouchableOpacity>
+      </View>
       
       {/* --- HEADER WIDGET (Now with Edit features!) --- */}
       <View style={[styles.bubbleCard, styles.headerCard]}>
@@ -98,8 +109,42 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 20,
-    paddingTop: 60,
+    paddingTop: 28,
     gap: 16, 
+  },
+  pageTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  pageTopSpacer: {
+    flex: 1,
+  },
+  alertButton: {
+    minWidth: 60,
+    minHeight: 46,
+    paddingHorizontal: 8,
+    paddingVertical: 11,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: pageColors.tangerine,
+    position: 'relative',
+    shadowColor: pageColors.charcoal,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.16,
+    shadowRadius: 16,
+    elevation: 4,
+  },
+  alertDot: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 8,
+    height: 8,
+    borderRadius: 999,
+    backgroundColor: pageColors.lightGreen,
   },
   bubbleCard: {
     backgroundColor: pageColors.white,

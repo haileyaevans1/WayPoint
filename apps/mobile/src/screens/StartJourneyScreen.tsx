@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Feather } from "@expo/vector-icons";
 import {
   Modal,
   Pressable,
@@ -15,6 +16,7 @@ import type { SavedRouteStartPreset } from "./RoutesScreen";
 
 type StartJourneyScreenProps = {
   onStartJourney?: (journeyConfig: StartJourneyConfig) => void;
+  onOpenAlerts?: () => void;
   onOpenProfile?: () => void;
   initialRoutePreset?: SavedRouteStartPreset | null;
 };
@@ -141,6 +143,7 @@ const journeySpeedMph: Record<JourneyType, number> = {
 
 export function StartJourneyScreen({
   onStartJourney,
+  onOpenAlerts,
   onOpenProfile,
   initialRoutePreset = null,
 }: StartJourneyScreenProps) {
@@ -470,6 +473,14 @@ export function StartJourneyScreen({
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
+        <View style={styles.pageActionRow}>
+          <View style={styles.pageActionSpacer} />
+          <Pressable onPress={onOpenAlerts} style={styles.alertButton}>
+            <Feather name="bell" size={18} color={theme.colors.white} />
+            <View style={styles.alertDot} />
+          </Pressable>
+        </View>
+
         {initialRoutePreset ? (
           <View style={styles.savedRoutePresetCard}>
             <Text style={styles.savedRoutePresetEyebrow}>Saved Route</Text>
@@ -1178,6 +1189,39 @@ const styles = StyleSheet.create({
     paddingTop: 18,
     paddingBottom: 180,
     gap: 18,
+  },
+  pageActionRow: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    alignItems: "center",
+  },
+  pageActionSpacer: {
+    flex: 1,
+  },
+  alertButton: {
+    minWidth: 60,
+    minHeight: 46,
+    paddingHorizontal: 8,
+    paddingVertical: 11,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: theme.colors.brandBright,
+    position: "relative",
+    shadowColor: theme.colors.brandDeep,
+    shadowOpacity: 0.18,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 4,
+  },
+  alertDot: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    width: 8,
+    height: 8,
+    borderRadius: 999,
+    backgroundColor: "#FF6A5B",
   },
   savedRoutePresetCard: {
     borderRadius: 24,

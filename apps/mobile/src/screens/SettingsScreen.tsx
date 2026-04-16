@@ -11,15 +11,24 @@ const pageColors = {
   white: '#FFFFFF',
 };
 
-export default function SettingsScreen() {
+type SettingsScreenProps = {
+  onOpenAlerts?: () => void;
+};
+
+export default function SettingsScreen({ onOpenAlerts }: SettingsScreenProps) {
   // Local state for our toggle switches
   const [autoShare, setAutoShare] = useState(true);
   const [pushNotifs, setPushNotifs] = useState(true);
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-      
-      <Text style={styles.pageHeader}>Settings</Text>
+      <View style={styles.pageHeaderRow}>
+        <Text style={styles.pageHeader}>Settings</Text>
+        <TouchableOpacity style={styles.alertButton} onPress={onOpenAlerts}>
+          <Feather name="bell" size={18} color={pageColors.white} />
+          <View style={styles.alertDot} />
+        </TouchableOpacity>
+      </View>
 
       {/* --- SAFETY PREFERENCES WIDGET --- */}
       <View style={styles.bubbleCard}>
@@ -90,8 +99,40 @@ export default function SettingsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: pageColors.papaya },
-  scrollContent: { padding: 20, paddingTop: 60, gap: 16 },
-  pageHeader: { fontSize: 32, fontWeight: 'bold', color: pageColors.charcoal, marginBottom: 8 },
+  scrollContent: { padding: 20, paddingTop: 28, gap: 16 },
+  pageHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 14,
+    marginBottom: 8,
+  },
+  pageHeader: { fontSize: 32, fontWeight: 'bold', color: pageColors.charcoal, flex: 1 },
+  alertButton: {
+    minWidth: 60,
+    minHeight: 46,
+    paddingHorizontal: 8,
+    paddingVertical: 11,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: pageColors.tangerine,
+    position: 'relative',
+    shadowColor: pageColors.charcoal,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.16,
+    shadowRadius: 16,
+    elevation: 4,
+  },
+  alertDot: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 8,
+    height: 8,
+    borderRadius: 999,
+    backgroundColor: pageColors.lightGreen,
+  },
   bubbleCard: {
     backgroundColor: pageColors.white,
     borderRadius: 24,
