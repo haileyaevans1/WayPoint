@@ -51,7 +51,7 @@ export default function App() {
       {isSplashVisible && (
         <Animated.View style={[styles.splashContainer, { opacity: fadeAnim }]}>
           <Image
-            source={require('./assets/WayPoint_vertical_logo.png')}
+            source={require('./assets/waypoint-logo.png')}
             style={styles.logoImage}
             resizeMode="cover"
           />
