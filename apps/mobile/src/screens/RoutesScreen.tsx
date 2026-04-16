@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import AnimatedWayPointLogo from "../components/AnimatedWayPointLogo";
 import { theme } from "../styles/theme";
 
 type RouteSectionKey = "saved" | "popular" | "reviewed" | "nearby";
@@ -644,8 +645,12 @@ export function RoutesScreen({
         ) : null}
         <View style={styles.pageIntroRow}>
           <View style={styles.pageIntro}>
-            <Text style={styles.pageEyebrow}>Explore</Text>
-            <Text style={styles.pageTitle}>Routes</Text>
+            <View style={styles.pageTitleRow}>
+              <View style={styles.pageLogoWrap}>
+                <AnimatedWayPointLogo size={70} />
+              </View>
+              <Text style={styles.pageTitle}>Routes</Text>
+            </View>
             <Text style={styles.pageSubtitle}>
               Find a route that feels comfortable, safe, and right for your day.
             </Text>
@@ -1084,12 +1089,16 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 14,
   },
-  pageEyebrow: {
-    fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 1.8,
-    textTransform: "uppercase",
-    color: theme.colors.textMuted,
+  pageTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  pageLogoWrap: {
+    width: 62,
+    height: 62,
+    alignItems: "center",
+    justifyContent: "center",
   },
   pageTitle: {
     fontSize: 34,

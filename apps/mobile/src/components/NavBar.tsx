@@ -28,12 +28,13 @@ export function NavBar({
   hasActiveJourney = false,
   onNavigate,
 }: NavBarProps) {
-  const isJourneyScreen = activeScreen === "startJourney";
-  const isActiveJourneyScreen = activeScreen === "activeJourney";
-  const isRoutesScreen = activeScreen === "routes";
-  const showsHomeCenterButton =
-    isJourneyScreen || isActiveJourneyScreen || isRoutesScreen;
-  const usesGreenHomeButton = isRoutesScreen;
+  const showsHomeCenterButton = activeScreen !== "home";
+  const usesGreenHomeButton =
+    activeScreen === "routes" ||
+    activeScreen === "stats" ||
+    activeScreen === "profile" ||
+    activeScreen === "settings" ||
+    activeScreen === "activeJourney";
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
   const centerTarget =
@@ -50,7 +51,7 @@ export function NavBar({
       : "Start";
 
   const centerBottomLabel = showsHomeCenterButton ? "" : "Journey";
-  const centerButtonColors = showsHomeCenterButton
+  const centerButtonColors: [string, string] = showsHomeCenterButton
     ? usesGreenHomeButton
       ? [centerGreen, centerGreen]
       : [navPeach, navPeach]
