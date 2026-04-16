@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { StatusBar } from "expo-status-bar";
-import { SafeAreaView, StyleSheet, View } from "react-native";
+import { Modal, SafeAreaView, StyleSheet, View } from "react-native";
 import {
   initialAlerts,
   buildEscalationAlert,
@@ -36,7 +36,7 @@ import { theme, AppScreen } from "../styles/theme";
 export function AppNavigator() {
   // 2. Create the State to track the active screen (defaults to "home")
   const [currentScreen, setCurrentScreen] = useState<AppScreen>("home");
-  const [previousScreen, setPreviousScreen] = useState<AppScreen>("home");
+  const [isAlertsOpen, setIsAlertsOpen] = useState(false);
   const [activeJourneyConfig, setActiveJourneyConfig] =
     useState<StartJourneyConfig | null>(null);
   const [pendingRoutePreset, setPendingRoutePreset] =
@@ -47,10 +47,7 @@ export function AppNavigator() {
   const [toastAlertId, setToastAlertId] = useState<string | null>(
     initialAlerts[0]?.id ?? null,
   );
-  const openAlerts = () => {
-    setPreviousScreen(currentScreen);
-    setCurrentScreen("alerts");
-  };
+  const openAlerts = () => setIsAlertsOpen(true);
   const activeToast = useMemo(
     () => alerts.find((alert) => alert.id === toastAlertId) ?? null,
     [alerts, toastAlertId],
@@ -82,7 +79,7 @@ export function AppNavigator() {
   }
 
   function closeAlerts() {
-    setCurrentScreen(previousScreen === "alerts" ? "home" : previousScreen);
+    setIsAlertsOpen(false);
   }
 
   function handleAlertAction(alertId: string, action: AlertAction) {
@@ -102,7 +99,7 @@ export function AppNavigator() {
     if (action.label === "Call emergency") {
       dismissAlert(alertId);
       addOrPromoteAlert(buildEscalationAlert(timestamp));
-      setCurrentScreen("alerts");
+      setIsAlertsOpen(true);
       return;
     }
 
@@ -152,15 +149,6 @@ export function AppNavigator() {
         return <SettingsScreen onOpenAlerts={openAlerts} />;
       case "stats":
         return <StatisticsScreen onOpenAlerts={openAlerts} />;
-      case "alerts":
-        return (
-          <AlertsScreen
-            alerts={alerts}
-            onAlertAction={handleAlertAction}
-            onDismissAlert={dismissAlert}
-            onClose={closeAlerts}
-          />
-        );
       case "startJourney":
         return (
           <StartJourneyScreen
@@ -208,7 +196,7 @@ export function AppNavigator() {
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" />
       <View style={styles.container}>
-        {activeToast && currentScreen !== "alerts" ? (
+        {activeToast && !isAlertsOpen ? (
           <AlertToast
             alert={activeToast}
             onDismiss={dismissAlert}
@@ -218,6 +206,20 @@ export function AppNavigator() {
         
         {/* 4. Render the dynamic screen instead of the hardcoded HomeScreen */}
         {renderScreen()}
+
+        <Modal
+          visible={isAlertsOpen}
+          transparent
+          animationType="fade"
+          onRequestClose={closeAlerts}
+        >
+          <AlertsScreen
+            alerts={alerts}
+            onAlertAction={handleAlertAction}
+            onDismissAlert={dismissAlert}
+            onClose={closeAlerts}
+          />
+        </Modal>
 
         {/* 5. Pass the state into the NavBar so it knows which button to highlight, 
             and what to do when a new button is pressed */}

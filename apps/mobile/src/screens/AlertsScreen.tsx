@@ -67,169 +67,202 @@ export function AlertsScreen({
   );
 
   return (
-    <LinearGradient
-      colors={[theme.colors.background, theme.colors.backgroundAlt, theme.colors.surface]}
-      locations={[0, 0.44, 1]}
-      start={{ x: 0.5, y: 0 }}
-      end={{ x: 0.5, y: 1 }}
-      style={styles.screen}
-    >
-      <ScrollView
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
+    <View style={styles.overlay}>
+      <Pressable style={styles.backdrop} onPress={onClose} />
+      <LinearGradient
+        colors={[theme.colors.background, theme.colors.backgroundAlt, theme.colors.surface]}
+        locations={[0, 0.44, 1]}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={styles.modalCard}
       >
-        <View style={styles.pageIntroRow}>
-          <View style={styles.pageIntro}>
-            <Text style={styles.pageTitle}>Alerts</Text>
-            <Text style={styles.pageSubtitle}>
-              Quick safety updates and actions when something changes.
-            </Text>
+        <View style={styles.headerBlock}>
+          <View style={styles.pageIntroRow}>
+            <View style={styles.pageIntro}>
+              <Text style={styles.pageTitle}>Alerts</Text>
+              <Text style={styles.pageSubtitle}>
+                Quick safety updates and actions when something changes.
+              </Text>
+            </View>
+
+            <Pressable style={styles.headerCloseButton} onPress={onClose}>
+              <Feather name="x" size={20} color={theme.colors.text} />
+            </Pressable>
           </View>
 
-          <Pressable style={styles.headerCloseButton} onPress={onClose}>
-            <Feather name="x" size={20} color={theme.colors.text} />
-          </Pressable>
-        </View>
-
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Needs Attention</Text>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Needs Attention</Text>
+          </View>
         </View>
 
         <View style={styles.alertList}>
-          {orderedAlerts.length > 0 ? (
-            orderedAlerts.map((alert) => (
-              <View key={alert.id} style={styles.alertCard}>
-                <View
-                  style={[
-                    styles.alertAccent,
-                    { backgroundColor: toneIndicator[alert.tone] },
-                  ]}
-                />
+          <ScrollView
+            style={styles.alertScroll}
+            contentContainerStyle={styles.content}
+            showsVerticalScrollIndicator={false}
+          >
+            {orderedAlerts.length > 0 ? (
+              orderedAlerts.map((alert) => (
+                <View key={alert.id} style={styles.alertCard}>
+                  <View
+                    style={[
+                      styles.alertAccent,
+                      { backgroundColor: toneIndicator[alert.tone] },
+                    ]}
+                  />
 
-                <View style={styles.alertContent}>
-                  <View style={styles.alertTopRow}>
-                    <View style={styles.alertCopy}>
-                      <View style={styles.metaRow}>
-                        <View
-                          style={[
-                            styles.statusDot,
-                            { backgroundColor: activeToneIndicator[alert.tone] },
-                          ]}
-                        />
-                        <Text style={styles.alertTimestamp}>{alert.timestamp}</Text>
+                  <View style={styles.alertContent}>
+                    <View style={styles.alertTopRow}>
+                      <View style={styles.alertCopy}>
+                        <View style={styles.metaRow}>
+                          <View
+                            style={[
+                              styles.statusDot,
+                              { backgroundColor: activeToneIndicator[alert.tone] },
+                            ]}
+                          />
+                          <Text style={styles.alertTimestamp}>{alert.timestamp}</Text>
+                        </View>
+                        <Text style={styles.alertTitle}>{alert.title}</Text>
+                        <Text numberOfLines={2} style={styles.alertMessage}>
+                          {alert.message}
+                        </Text>
                       </View>
-                      <Text style={styles.alertTitle}>{alert.title}</Text>
-                      <Text numberOfLines={2} style={styles.alertMessage}>
-                        {alert.message}
-                      </Text>
+
+                      <Pressable
+                        onPress={() => onDismissAlert(alert.id)}
+                        style={styles.cardCloseButton}
+                      >
+                        <Feather name="x" size={18} color={theme.colors.brandDeep} />
+                      </Pressable>
                     </View>
 
-                    <Pressable
-                      onPress={() => onDismissAlert(alert.id)}
-                      style={styles.cardCloseButton}
-                    >
-                      <Feather name="x" size={18} color={theme.colors.brandDeep} />
-                    </Pressable>
-                  </View>
+                    <View style={styles.alertActionRow}>
+                      {isDualPrimaryAlert(alert) ? (
+                        <View style={styles.splitActionRow}>
+                          {getPrimaryAction(alert) ? (
+                            <Pressable
+                              onPress={() =>
+                                onAlertAction(alert.id, getPrimaryAction(alert)!)
+                              }
+                              style={[styles.primaryAction, styles.splitActionButton]}
+                            >
+                              <Text style={styles.primaryActionText}>
+                                {getPrimaryAction(alert)!.label}
+                              </Text>
+                            </Pressable>
+                          ) : null}
+                          {getSecondaryActions(alert).slice(0, 1).map((action) => (
+                            <Pressable
+                              key={action.id}
+                              onPress={() => onAlertAction(alert.id, action)}
+                              style={[
+                                styles.secondaryActionStrong,
+                                styles.splitActionButton,
+                              ]}
+                            >
+                              <Text style={styles.secondaryActionTextStrong}>
+                                {action.label}
+                              </Text>
+                            </Pressable>
+                          ))}
+                        </View>
+                      ) : (
+                        <>
+                          {getPrimaryAction(alert) ? (
+                            <Pressable
+                              onPress={() =>
+                                onAlertAction(alert.id, getPrimaryAction(alert)!)
+                              }
+                              style={styles.primaryAction}
+                            >
+                              <Text style={styles.primaryActionText}>
+                                {getPrimaryAction(alert)!.label}
+                              </Text>
+                            </Pressable>
+                          ) : null}
 
-                  <View style={styles.alertActionRow}>
-                    {isDualPrimaryAlert(alert) ? (
-                      <View style={styles.splitActionRow}>
-                        {getPrimaryAction(alert) ? (
-                          <Pressable
-                            onPress={() =>
-                              onAlertAction(alert.id, getPrimaryAction(alert)!)
-                            }
-                            style={[styles.primaryAction, styles.splitActionButton]}
-                          >
-                            <Text style={styles.primaryActionText}>
-                              {getPrimaryAction(alert)!.label}
-                            </Text>
-                          </Pressable>
-                        ) : null}
-                        {getSecondaryActions(alert).slice(0, 1).map((action) => (
-                          <Pressable
-                            key={action.id}
-                            onPress={() => onAlertAction(alert.id, action)}
-                            style={[
-                              styles.secondaryActionStrong,
-                              styles.splitActionButton,
-                            ]}
-                          >
-                            <Text style={styles.secondaryActionTextStrong}>
-                              {action.label}
-                            </Text>
-                          </Pressable>
-                        ))}
-                      </View>
-                    ) : (
-                      <>
-                        {getPrimaryAction(alert) ? (
-                          <Pressable
-                            onPress={() =>
-                              onAlertAction(alert.id, getPrimaryAction(alert)!)
-                            }
-                            style={styles.primaryAction}
-                          >
-                            <Text style={styles.primaryActionText}>
-                              {getPrimaryAction(alert)!.label}
-                            </Text>
-                          </Pressable>
-                        ) : null}
-
-                        {getSecondaryActions(alert).length > 0 ? (
-                          <View style={styles.secondaryActionRow}>
-                            {getSecondaryActions(alert).slice(0, 2).map((action) => (
-                              <Pressable
-                                key={action.id}
-                                onPress={() => onAlertAction(alert.id, action)}
-                                style={[
-                                  styles.secondaryAction,
-                                  isStrongSecondaryAction(action) &&
-                                    styles.secondaryActionStrong,
-                                ]}
-                              >
-                                <Text
+                          {getSecondaryActions(alert).length > 0 ? (
+                            <View style={styles.secondaryActionRow}>
+                              {getSecondaryActions(alert).slice(0, 2).map((action) => (
+                                <Pressable
+                                  key={action.id}
+                                  onPress={() => onAlertAction(alert.id, action)}
                                   style={[
-                                    styles.secondaryActionText,
+                                    styles.secondaryAction,
                                     isStrongSecondaryAction(action) &&
-                                      styles.secondaryActionTextStrong,
+                                      styles.secondaryActionStrong,
                                   ]}
                                 >
-                                  {action.label}
-                                </Text>
-                              </Pressable>
-                            ))}
-                          </View>
-                        ) : null}
-                      </>
-                    )}
+                                  <Text
+                                    style={[
+                                      styles.secondaryActionText,
+                                      isStrongSecondaryAction(action) &&
+                                        styles.secondaryActionTextStrong,
+                                    ]}
+                                  >
+                                    {action.label}
+                                  </Text>
+                                </Pressable>
+                              ))}
+                            </View>
+                          ) : null}
+                        </>
+                      )}
+                    </View>
                   </View>
                 </View>
+              ))
+            ) : (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyStateText}>No alerts right now.</Text>
               </View>
-            ))
-          ) : (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyStateText}>No alerts right now.</Text>
-            </View>
-          )}
+            )}
+          </ScrollView>
         </View>
-      </ScrollView>
-    </LinearGradient>
+      </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
+  overlay: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: "rgba(78,67,68,0.34)",
+    justifyContent: "center",
+    paddingHorizontal: 18,
+    paddingVertical: 28,
+  },
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  modalCard: {
+    width: "100%",
+    maxHeight: "82%",
+    borderRadius: 28,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    shadowColor: theme.colors.brandDeep,
+    shadowOpacity: 0.16,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 16 },
+    elevation: 8,
+  },
+  headerBlock: {
+    paddingHorizontal: 18,
+    paddingTop: 22,
+    paddingBottom: 12,
+    gap: 14,
+  },
+  alertScroll: {
+    flexGrow: 0,
   },
   content: {
     paddingHorizontal: 18,
-    paddingTop: 28,
-    paddingBottom: 180,
-    gap: 14,
-    backgroundColor: "transparent",
+    paddingTop: 6,
+    paddingBottom: 22,
+    gap: 12,
   },
   pageIntroRow: {
     flexDirection: "row",
@@ -288,7 +321,9 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   alertList: {
-    gap: 12,
+    flexShrink: 1,
+    minHeight: 0,
+    paddingBottom: 6,
   },
   alertCard: {
     flexDirection: "row",
