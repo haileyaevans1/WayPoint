@@ -1,6 +1,13 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { StatusBar } from "expo-status-bar";
-import { SafeAreaView, StyleSheet, View } from "react-native";
+import { Modal, SafeAreaView, StyleSheet, View } from "react-native";
+import {
+  initialAlerts,
+  buildEscalationAlert,
+  type AlertAction,
+  type JourneyAlert,
+} from "../alerts/alertData";
+import { AlertToast } from "../components/AlertToast";
 
 // 1. Import all of the screens!
 import { NavBar } from "../components/NavBar";
@@ -29,12 +36,89 @@ import { theme, AppScreen } from "../styles/theme";
 export function AppNavigator() {
   // 2. Create the State to track the active screen (defaults to "home")
   const [currentScreen, setCurrentScreen] = useState<AppScreen>("home");
+  const [isAlertsOpen, setIsAlertsOpen] = useState(false);
   const [activeJourneyConfig, setActiveJourneyConfig] =
     useState<StartJourneyConfig | null>(null);
   const [pendingRoutePreset, setPendingRoutePreset] =
     useState<SavedRouteStartPreset | null>(null);
   const [favoriteRoute, setFavoriteRoute] =
     useState<FavoriteRouteSummary | null>(defaultFavoriteRoute);
+  const [alerts, setAlerts] = useState<JourneyAlert[]>(initialAlerts);
+  const [toastAlertId, setToastAlertId] = useState<string | null>(
+    initialAlerts[0]?.id ?? null,
+  );
+  const openAlerts = () => setIsAlertsOpen(true);
+  const activeToast = useMemo(
+    () => alerts.find((alert) => alert.id === toastAlertId) ?? null,
+    [alerts, toastAlertId],
+  );
+  const hasAlertIndicator = alerts.some(
+    (alert) =>
+      alert.type === "missed-check-in" ||
+      alert.type === "off-route" ||
+      alert.type === "escalation",
+  );
+
+  useEffect(() => {
+    if (!activeToast) {
+      return undefined;
+    }
+
+    const timeoutId = setTimeout(() => {
+      setToastAlertId((current) => (current === activeToast.id ? null : current));
+    }, 3000);
+
+    return () => clearTimeout(timeoutId);
+  }, [activeToast]);
+
+  function addOrPromoteAlert(nextAlert: JourneyAlert) {
+    setAlerts((current) => {
+      const withoutMatch = current.filter((alert) => alert.type !== nextAlert.type);
+      return [nextAlert, ...withoutMatch];
+    });
+    setToastAlertId(nextAlert.id);
+  }
+
+  function dismissAlert(alertId: string) {
+    setAlerts((current) => current.filter((alert) => alert.id !== alertId));
+    setToastAlertId((current) => (current === alertId ? null : current));
+  }
+
+  function closeAlerts() {
+    setIsAlertsOpen(false);
+  }
+
+  function handleAlertAction(alertId: string, action: AlertAction) {
+    const timestamp = "Just now";
+
+    if (action.label === "Recenter route") {
+      setCurrentScreen(activeJourneyConfig ? "activeJourney" : "home");
+      setToastAlertId(null);
+      return;
+    }
+
+    if (action.label === "Extend time" || action.label === "Extend journey") {
+      dismissAlert(alertId);
+      return;
+    }
+
+    if (action.label === "Call emergency") {
+      dismissAlert(alertId);
+      addOrPromoteAlert(buildEscalationAlert(timestamp));
+      setIsAlertsOpen(true);
+      return;
+    }
+
+    if (action.label === "Close") {
+      dismissAlert(alertId);
+      return;
+    }
+
+    if (action.label === "Dismiss") {
+      dismissAlert(alertId);
+      return;
+    }
+  }
 
   // 3. Create a router function to swap the UI based on the state
   const renderScreen = () => {
@@ -44,40 +128,48 @@ export function AppNavigator() {
           <HomeScreen
             onOpenSavedRoutes={() => setCurrentScreen("routes")}
             onOpenPopularRoutes={() => setCurrentScreen("routes")}
-            onOpenAlerts={() => setCurrentScreen("alerts")}
+            onOpenAlerts={openAlerts}
             onOpenStartJourney={() => {
               setPendingRoutePreset(null);
               setCurrentScreen("startJourney");
             }}
             favoriteRoute={favoriteRoute}
             journeyMode={activeJourneyConfig ? "active" : "idle"}
+            hasAlertIndicator={hasAlertIndicator}
           />
         );
       case "routes":
         return (
           <RoutesScreen
-            onAlertPress={() => setCurrentScreen("alerts")}
+            onAlertPress={openAlerts}
             favoriteRouteId={favoriteRoute?.routeId ?? null}
             onFavoriteRouteChange={setFavoriteRoute}
             onStartRoute={(routePreset) => {
               setPendingRoutePreset(routePreset);
               setCurrentScreen("startJourney");
             }}
+            hasAlertIndicator={hasAlertIndicator}
           />
         );
       case "profile":
-        return <ProfileScreen />;
-      case "settings":
-        return <SettingsScreen />;
-      case "stats":
-        return <StatisticsScreen />;
-      case "alerts":
         return (
-          <AlertsScreen
-            onAlertPress={() => {}}
-            onViewJourney={() =>
-              setCurrentScreen(activeJourneyConfig ? "activeJourney" : "home")
-            }
+          <ProfileScreen
+            onOpenAlerts={openAlerts}
+            hasAlertIndicator={hasAlertIndicator}
+          />
+        );
+      case "settings":
+        return (
+          <SettingsScreen
+            onOpenAlerts={openAlerts}
+            hasAlertIndicator={hasAlertIndicator}
+          />
+        );
+      case "stats":
+        return (
+          <StatisticsScreen
+            onOpenAlerts={openAlerts}
+            hasAlertIndicator={hasAlertIndicator}
           />
         );
       case "startJourney":
@@ -89,18 +181,21 @@ export function AppNavigator() {
               setPendingRoutePreset(null);
               setCurrentScreen("activeJourney");
             }}
+            onOpenAlerts={openAlerts}
             onOpenProfile={() => setCurrentScreen("profile")}
+            hasAlertIndicator={hasAlertIndicator}
           />
         );
       case "activeJourney":
         return (
           <ActiveJourneyScreen
             journeyConfig={activeJourneyConfig}
-            onOpenAlerts={() => setCurrentScreen("alerts")}
+            onOpenAlerts={openAlerts}
             onJourneyComplete={() => {
               setActiveJourneyConfig(null);
               setCurrentScreen("home");
             }}
+            hasAlertIndicator={hasAlertIndicator}
           />
         );
       // If "routes" or "startJourney" is clicked before they are built, 
@@ -110,13 +205,14 @@ export function AppNavigator() {
           <HomeScreen
             onOpenSavedRoutes={() => setCurrentScreen("routes")}
             onOpenPopularRoutes={() => setCurrentScreen("routes")}
-            onOpenAlerts={() => setCurrentScreen("alerts")}
+            onOpenAlerts={openAlerts}
             onOpenStartJourney={() => {
               setPendingRoutePreset(null);
               setCurrentScreen("startJourney");
             }}
             favoriteRoute={favoriteRoute}
             journeyMode={activeJourneyConfig ? "active" : "idle"}
+            hasAlertIndicator={hasAlertIndicator}
           />
         ); 
     }
@@ -126,9 +222,30 @@ export function AppNavigator() {
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" />
       <View style={styles.container}>
+        {activeToast && !isAlertsOpen ? (
+          <AlertToast
+            alert={activeToast}
+            onDismiss={dismissAlert}
+            onOpenAlerts={openAlerts}
+          />
+        ) : null}
         
         {/* 4. Render the dynamic screen instead of the hardcoded HomeScreen */}
         {renderScreen()}
+
+        <Modal
+          visible={isAlertsOpen}
+          transparent
+          animationType="fade"
+          onRequestClose={closeAlerts}
+        >
+          <AlertsScreen
+            alerts={alerts}
+            onAlertAction={handleAlertAction}
+            onDismissAlert={dismissAlert}
+            onClose={closeAlerts}
+          />
+        </Modal>
 
         {/* 5. Pass the state into the NavBar so it knows which button to highlight, 
             and what to do when a new button is pressed */}

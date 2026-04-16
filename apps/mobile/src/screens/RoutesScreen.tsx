@@ -46,6 +46,7 @@ type RoutesScreenProps = {
   onAlertPress: () => void;
   favoriteRouteId: string | null;
   onFavoriteRouteChange: (route: FavoriteRouteSummary | null) => void;
+  hasAlertIndicator?: boolean;
 };
 
 type RouteShape = "oneWay" | "loop";
@@ -230,6 +231,7 @@ export function RoutesScreen({
   onStartRoute,
   favoriteRouteId,
   onFavoriteRouteChange,
+  hasAlertIndicator = false,
 }: RoutesScreenProps) {
   const [expandedSections, setExpandedSections] = useState<
     Record<RouteSectionKey, boolean>
@@ -653,7 +655,7 @@ export function RoutesScreen({
             style={({ pressed }) => [styles.alertButton, pressed && styles.alertPressed]}
           >
             <Feather name="bell" size={18} color={theme.colors.white} />
-            <View style={styles.alertDot} />
+            {hasAlertIndicator ? <View style={styles.alertDot} /> : null}
           </Pressable>
         </View>
 
@@ -1109,10 +1111,12 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: theme.colors.brandBright,
+    backgroundColor: theme.colors.brand,
+    borderWidth: 1,
+    borderColor: theme.colors.brandDeep,
     position: "relative",
     shadowColor: theme.colors.brandDeep,
-    shadowOpacity: 0.18,
+    shadowOpacity: 0.22,
     shadowRadius: 18,
     shadowOffset: { width: 0, height: 8 },
     elevation: 4,
