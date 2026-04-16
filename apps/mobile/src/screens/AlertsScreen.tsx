@@ -114,11 +114,6 @@ export function AlertsScreen({
   onAlertPress,
   onViewJourney: _onViewJourney,
 }: AlertsScreenProps) {
-  const totalAlerts = alertSections.reduce(
-    (count, section) => count + section.alerts.length,
-    0,
-  );
-
   return (
     <LinearGradient
       colors={[
@@ -142,16 +137,36 @@ export function AlertsScreen({
           onAlertPress={onAlertPress}
         />
 
-        <View style={styles.summaryCard}>
-          <Text style={styles.eyebrow}>Alerts overview</Text>
-          <Text style={styles.summaryTitle}>
-            {totalAlerts} alerts organized into {alertSections.length} sections
-          </Text>
-          <Text style={styles.summaryBody}>
-            Active, recent, and resolved updates are ready to be brought back in
-            progressively.
-          </Text>
-        </View>
+        {alertSections.map((section) => (
+          <View key={section.title} style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>{section.title}</Text>
+              <Text style={styles.sectionSubtitle}>{section.subtitle}</Text>
+            </View>
+
+            <View style={styles.alertList}>
+              {section.alerts.map((alert) => (
+                <View key={alert.id} style={styles.alertCard}>
+                  <View style={styles.alertTopRow}>
+                    <View style={styles.alertTitleWrap}>
+                      <Text style={styles.alertIcon}>{alert.icon}</Text>
+                      <View style={styles.alertCopy}>
+                        <Text style={styles.alertTitle}>{alert.title}</Text>
+                        <Text style={styles.alertTimestamp}>
+                          {alert.timestamp}
+                        </Text>
+                      </View>
+                    </View>
+
+                    <Text style={styles.alertStatus}>{alert.status}</Text>
+                  </View>
+
+                  <Text style={styles.alertMessage}>{alert.message}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        ))}
       </ScrollView>
     </LinearGradient>
   );
@@ -168,28 +183,68 @@ const styles = StyleSheet.create({
     paddingBottom: 180,
     gap: 18,
   },
-  summaryCard: {
-    borderRadius: 28,
-    backgroundColor: "rgba(255,252,249,0.98)",
-    padding: 20,
-    gap: 10,
-    borderWidth: 1,
-    borderColor: "rgba(202,116,73,0.12)",
+  section: {
+    gap: 12,
   },
-  eyebrow: {
-    fontSize: 12,
-    fontWeight: "800",
-    letterSpacing: 1,
-    textTransform: "uppercase",
-    color: theme.colors.brandDeep,
+  sectionHeader: {
+    gap: 4,
   },
-  summaryTitle: {
+  sectionTitle: {
     fontSize: 24,
-    lineHeight: 29,
+    lineHeight: 28,
     fontWeight: "800",
     color: theme.colors.text,
   },
-  summaryBody: {
+  sectionSubtitle: {
+    fontSize: 14,
+    color: theme.colors.textSoft,
+  },
+  alertList: {
+    gap: 12,
+  },
+  alertCard: {
+    borderRadius: 28,
+    backgroundColor: "rgba(255,252,249,0.98)",
+    padding: 18,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: "rgba(202,116,73,0.12)",
+  },
+  alertTopRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 10,
+  },
+  alertTitleWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    flex: 1,
+    minWidth: 0,
+  },
+  alertIcon: {
+    fontSize: 22,
+  },
+  alertCopy: {
+    flex: 1,
+    minWidth: 0,
+  },
+  alertTitle: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: theme.colors.text,
+  },
+  alertTimestamp: {
+    marginTop: 4,
+    fontSize: 13,
+    color: theme.colors.textMuted,
+  },
+  alertStatus: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: theme.colors.brandDeep,
+  },
+  alertMessage: {
     fontSize: 14,
     lineHeight: 21,
     color: theme.colors.textSoft,
