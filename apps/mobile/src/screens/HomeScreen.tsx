@@ -150,7 +150,7 @@ export function HomeScreen({
           <View style={styles.mapTopRow}>
             <View style={styles.mapBrand}>
               <View style={styles.mapBrandLogoWrap}>
-                <AnimatedWayPointLogo size={92} />
+                <AnimatedWayPointLogo size={84} />
               </View>
               <View style={styles.mapBrandCopy}>
                 <Text style={styles.mapBrandTitle}>
@@ -387,6 +387,8 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     justifyContent: "space-between",
     gap: 12,
+    zIndex: 3,
+    elevation: 3,
   },
   mapBrand: {
     flexDirection: "row",
@@ -404,11 +406,16 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     elevation: 2,
     minWidth: 0,
+    zIndex: 4,
   },
   mapBrandLogoWrap: {
-    marginTop: -22,
-    marginBottom: -22,
+    marginTop: -24,
+    marginBottom: -24,
     marginLeft: -8,
+    width: 92,
+    height: 92,
+    alignItems: "center",
+    justifyContent: "center",
   },
   mapBrandCopy: {
     marginLeft: -10,

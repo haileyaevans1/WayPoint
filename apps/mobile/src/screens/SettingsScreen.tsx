@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import AnimatedWayPointLogo from "../components/AnimatedWayPointLogo";
 import { theme } from "../styles/theme";
 import type { TrustedContact, UserSettings } from "../types/appData";
 
@@ -93,7 +94,12 @@ export default function SettingsScreen({
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.pageHeaderRow}>
           <View style={styles.titleWrap}>
-            <Text style={styles.pageHeader}>Settings</Text>
+            <View style={styles.headerTitleRow}>
+              <View style={styles.headerLogoWrap}>
+                <AnimatedWayPointLogo size={70} />
+              </View>
+              <Text style={styles.pageHeader}>Settings</Text>
+            </View>
             <Text style={styles.pageSubheader}>
               Fine tune privacy, alerts, and the people your journeys depend on.
             </Text>
@@ -273,6 +279,17 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   titleWrap: { flex: 1, gap: 6 },
+  headerTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  headerLogoWrap: {
+    width: 62,
+    height: 62,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   pageHeader: {
     fontSize: 34,
     lineHeight: 38,
