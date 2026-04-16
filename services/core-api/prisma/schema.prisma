@@ -1,0 +1,81 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// For local development, SQLite is used eithout installing full database server
+// Can switch this to "postgresql" later!
+datasource db {
+  provider = "postgresql"
+}
+
+// 1. Users
+model User {
+  id            Int               @id @default(autoincrement())
+  name          String
+  email         String            @unique
+  passwordHash  String
+  phoneNumber   String?
+  createdAt     DateTime          @default(now())
+  
+  // Relationships
+  contacts      TrustedContact[]
+  journeys      Journey[]
+}
+
+// 2. TrustedContacts
+model TrustedContact {
+  id            Int               @id @default(autoincrement())
+  userId        Int
+  contactName   String
+  phoneNumber   String
+  email         String?
+  relationship  String?
+
+  // Relationships
+  user          User              @relation(fields: [userId], references: [id])
+  journeys      JourneyContact[]
+}
+
+// 3. Journeys (Simplified for initial setup based on ML data)
+model Journey {
+  id                  Int               @id @default(autoincrement())
+  userId              Int
+  journeyType         String
+  status              String            // active, completed, cancelled, escalated
+  riskScore           Float?
+  riskLevel           String?
+  startedAt           DateTime          @default(now())
+  completedAt         DateTime?
+
+  // Relationships
+  user                User              @relation(fields: [userId], references: [id])
+  contactsAlerted     JourneyContact[]
+  checkIns            CheckIn[]
+}
+
+// 4. JourneyContacts (Join table)
+model JourneyContact {
+  id               Int            @id @default(autoincrement())
+  journeyId        Int
+  trustedContactId Int
+
+  // Relationships
+  journey          Journey        @relation(fields: [journeyId], references: [id])
+  contact          TrustedContact @relation(fields: [trustedContactId], references: [id])
+}
+
+// 5. CheckIns
+model CheckIn {
+  id            Int      @id @default(autoincrement())
+  journeyId     Int
+  latitude      Float
+  longitude     Float
+  timestamp     DateTime @default(now())
+  deviationFlag Boolean  @default(false)
+
+  // Relationships
+  journey       Journey  @relation(fields: [journeyId], references: [id])
+}
