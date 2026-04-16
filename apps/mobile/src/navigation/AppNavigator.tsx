@@ -8,13 +8,9 @@ import {
   type JourneyAlert,
 } from "../alerts/alertData";
 import { AlertToast } from "../components/AlertToast";
-
-// 1. Import all of the screens!
 import { NavBar } from "../components/NavBar";
 import { HomeScreen } from "../screens/HomeScreen";
-// Note: Based on your previous code, these were created as "default" exports, 
-// so they don't use the curly braces { } around the name.
-import ProfileScreen from "../screens/ProfileScreen"; 
+import ProfileScreen from "../screens/ProfileScreen";
 import SettingsScreen from "../screens/SettingsScreen";
 import StatisticsScreen from "../screens/StatisticsScreen";
 import {
@@ -29,12 +25,91 @@ import {
   StartJourneyScreen,
   type StartJourneyConfig,
 } from "../screens/StartJourneyScreen";
+import { theme, AppScreen } from "../styles/theme";
+import type {
+  StatsSnapshot,
+  TrustedContact,
+  UserProfile,
+  UserSettings,
+} from "../types/appData";
 
-// Import the team's theme and the AppScreen type
-import { theme, AppScreen } from "../styles/theme"; 
+const initialTrustedContacts: TrustedContact[] = [
+  {
+    id: "maya",
+    firstName: "Maya",
+    lastName: "Lopez",
+    phone: "(918) 555-0143",
+    note: "Mom",
+  },
+  {
+    id: "jordan",
+    firstName: "Jordan",
+    lastName: "Reed",
+    phone: "(918) 555-0188",
+    note: "Best friend",
+  },
+  {
+    id: "chris",
+    firstName: "Chris",
+    lastName: "Parker",
+    phone: "(918) 555-0121",
+    note: "Emergency contact",
+  },
+];
+
+const initialProfile: UserProfile = {
+  firstName: "Melissa",
+  lastName: "West",
+  headline: "Student builder and trail regular",
+  bio: "Balancing engineering projects with long walks, route reviews, and safer solo outings.",
+  city: "Tulsa, OK",
+  privacyLabel: "Visible to trusted contacts during active journeys",
+  memberSince: "January 2026",
+  nextMilestone: "200 trail miles",
+};
+
+const initialSettings: UserSettings = {
+  autoShareLocation: true,
+  pushNotifications: true,
+  routeDeviationAlerts: true,
+  missedCheckInAlerts: true,
+  weeklyDigest: true,
+  locationVisibility: "during journey",
+  defaultJourneyMode: "solo",
+};
+
+const initialStats: StatsSnapshot = {
+  milesThisWeek: 15.4,
+  weeklyGoalMiles: 20,
+  safeJourneys: 48,
+  hoursOutside: 142,
+  currentStreakDays: 5,
+  completionRate: 96,
+  checkInRate: 92,
+  favoriteRouteTitle: defaultFavoriteRoute.title,
+  lastJourneyLabel: "River Parks Morning Walk",
+  nextGoalLabel: "Hit 20 miles this week",
+};
+
+function getJourneyMiles(journeyConfig: StartJourneyConfig | null) {
+  if (!journeyConfig) {
+    return 0;
+  }
+
+  const milesMatch = journeyConfig.tripSetupLabel.match(/([\d.]+)\s*mi/i);
+  if (milesMatch) {
+    return Number(milesMatch[1]) || 0;
+  }
+
+  const kilometersMatch = journeyConfig.tripSetupLabel.match(/([\d.]+)\s*km/i);
+  if (kilometersMatch) {
+    return (Number(kilometersMatch[1]) || 0) * 0.621371;
+  }
+
+  return Math.max(1, journeyConfig.plannedDurationMinutes / 30);
+}
 
 export function AppNavigator() {
-  // 2. Create the State to track the active screen (defaults to "home")
   const [currentScreen, setCurrentScreen] = useState<AppScreen>("home");
   const [isAlertsOpen, setIsAlertsOpen] = useState(false);
   const [activeJourneyConfig, setActiveJourneyConfig] =
@@ -47,6 +122,12 @@ export function AppNavigator() {
   const [toastAlertId, setToastAlertId] = useState<string | null>(
     initialAlerts[0]?.id ?? null,
   );
+  const [trustedContacts, setTrustedContacts] =
+    useState<TrustedContact[]>(initialTrustedContacts);
+  const [profile] = useState<UserProfile>(initialProfile);
+  const [settings, setSettings] = useState<UserSettings>(initialSettings);
+  const [statsSnapshot, setStatsSnapshot] = useState<StatsSnapshot>(initialStats);
+
   const openAlerts = () => setIsAlertsOpen(true);
   const activeToast = useMemo(
     () => alerts.find((alert) => alert.id === toastAlertId) ?? null,
@@ -57,6 +138,26 @@ export function AppNavigator() {
       alert.type === "missed-check-in" ||
       alert.type === "off-route" ||
       alert.type === "escalation",
+  );
+  const urgentAlertsCount = alerts.filter(
+    (alert) =>
+      alert.type === "missed-check-in" ||
+      alert.type === "off-route" ||
+      alert.type === "escalation",
+  ).length;
+  const primaryContact =
+    trustedContacts[0]
+      ? `${trustedContacts[0].firstName} ${trustedContacts[0].lastName}`.trim()
+      : "No trusted contact selected";
+
+  const liveStats = useMemo<StatsSnapshot>(
+    () => ({
+      ...statsSnapshot,
+      favoriteRouteTitle: favoriteRoute?.title ?? statsSnapshot.favoriteRouteTitle,
+      lastJourneyLabel:
+        activeJourneyConfig?.journeyLabel ?? statsSnapshot.lastJourneyLabel,
+    }),
+    [activeJourneyConfig, favoriteRoute, statsSnapshot],
   );
 
   useEffect(() => {
@@ -109,18 +210,30 @@ export function AppNavigator() {
       return;
     }
 
-    if (action.label === "Close") {
+    if (action.label === "Close" || action.label === "Dismiss") {
       dismissAlert(alertId);
-      return;
-    }
-
-    if (action.label === "Dismiss") {
-      dismissAlert(alertId);
-      return;
     }
   }
 
-  // 3. Create a router function to swap the UI based on the state
+  function handleJourneyComplete() {
+    if (activeJourneyConfig) {
+      const completedMiles = getJourneyMiles(activeJourneyConfig);
+      setStatsSnapshot((current) => ({
+        ...current,
+        milesThisWeek: Number((current.milesThisWeek + completedMiles).toFixed(1)),
+        safeJourneys: current.safeJourneys + 1,
+        hoursOutside: Number(
+          (current.hoursOutside + activeJourneyConfig.plannedDurationMinutes / 60).toFixed(1),
+        ),
+        currentStreakDays: current.currentStreakDays + 1,
+        lastJourneyLabel: activeJourneyConfig.journeyLabel,
+      }));
+    }
+
+    setActiveJourneyConfig(null);
+    setCurrentScreen("home");
+  }
+
   const renderScreen = () => {
     switch (currentScreen) {
       case "home":
@@ -154,21 +267,92 @@ export function AppNavigator() {
       case "profile":
         return (
           <ProfileScreen
+            profile={profile}
+            stats={liveStats}
+            trustedContacts={trustedContacts}
+            settings={settings}
+            primaryContactName={primaryContact}
             onOpenAlerts={openAlerts}
+            onOpenStats={() => setCurrentScreen("stats")}
+            onOpenSettings={() => setCurrentScreen("settings")}
+            onOpenRoutes={() => setCurrentScreen("routes")}
+            onOpenStartJourney={() => {
+              setPendingRoutePreset(null);
+              setCurrentScreen("startJourney");
+            }}
             hasAlertIndicator={hasAlertIndicator}
           />
         );
       case "settings":
         return (
           <SettingsScreen
+            settings={settings}
+            trustedContacts={trustedContacts}
+            urgentAlertsCount={urgentAlertsCount}
             onOpenAlerts={openAlerts}
+            onOpenProfile={() => setCurrentScreen("profile")}
+            onOpenStats={() => setCurrentScreen("stats")}
+            onOpenRoutes={() => setCurrentScreen("routes")}
+            onOpenStartJourney={() => {
+              setPendingRoutePreset(null);
+              setCurrentScreen("startJourney");
+            }}
+            onToggleSetting={(key) =>
+              setSettings((current) => ({
+                ...current,
+                [key]: !current[key],
+              }))
+            }
+            onCycleLocationVisibility={() =>
+              setSettings((current) => ({
+                ...current,
+                locationVisibility:
+                  current.locationVisibility === "private"
+                    ? "trusted contacts"
+                    : current.locationVisibility === "trusted contacts"
+                      ? "during journey"
+                      : "private",
+              }))
+            }
+            onCycleDefaultJourneyMode={() =>
+              setSettings((current) => ({
+                ...current,
+                defaultJourneyMode:
+                  current.defaultJourneyMode === "solo" ? "group" : "solo",
+              }))
+            }
+            onPromoteContact={(contactId) =>
+              setTrustedContacts((current) => {
+                const selectedContact = current.find((contact) => contact.id === contactId);
+                if (!selectedContact) {
+                  return current;
+                }
+
+                return [
+                  selectedContact,
+                  ...current.filter((contact) => contact.id !== contactId),
+                ];
+              })
+            }
             hasAlertIndicator={hasAlertIndicator}
           />
         );
       case "stats":
         return (
           <StatisticsScreen
+            stats={liveStats}
+            trustedContacts={trustedContacts}
+            settings={settings}
+            hasActiveJourney={Boolean(activeJourneyConfig)}
+            urgentAlertsCount={urgentAlertsCount}
             onOpenAlerts={openAlerts}
+            onOpenRoutes={() => setCurrentScreen("routes")}
+            onOpenStartJourney={() => {
+              setPendingRoutePreset(null);
+              setCurrentScreen("startJourney");
+            }}
+            onOpenProfile={() => setCurrentScreen("profile")}
+            onOpenSettings={() => setCurrentScreen("settings")}
             hasAlertIndicator={hasAlertIndicator}
           />
         );
@@ -176,6 +360,8 @@ export function AppNavigator() {
         return (
           <StartJourneyScreen
             initialRoutePreset={pendingRoutePreset}
+            trustedContacts={trustedContacts}
+            defaultJourneyMode={settings.defaultJourneyMode}
             onStartJourney={(journeyConfig) => {
               setActiveJourneyConfig(journeyConfig);
               setPendingRoutePreset(null);
@@ -191,15 +377,10 @@ export function AppNavigator() {
           <ActiveJourneyScreen
             journeyConfig={activeJourneyConfig}
             onOpenAlerts={openAlerts}
-            onJourneyComplete={() => {
-              setActiveJourneyConfig(null);
-              setCurrentScreen("home");
-            }}
+            onJourneyComplete={handleJourneyComplete}
             hasAlertIndicator={hasAlertIndicator}
           />
         );
-      // If "routes" or "startJourney" is clicked before they are built, 
-      // safely fallback to home so the app doesn't crash!
       default:
         return (
           <HomeScreen
@@ -214,7 +395,7 @@ export function AppNavigator() {
             journeyMode={activeJourneyConfig ? "active" : "idle"}
             hasAlertIndicator={hasAlertIndicator}
           />
-        ); 
+        );
     }
   };
 
@@ -229,8 +410,7 @@ export function AppNavigator() {
             onOpenAlerts={openAlerts}
           />
         ) : null}
-        
-        {/* 4. Render the dynamic screen instead of the hardcoded HomeScreen */}
+
         {renderScreen()}
 
         <Modal
@@ -247,19 +427,16 @@ export function AppNavigator() {
           />
         </Modal>
 
-        {/* 5. Pass the state into the NavBar so it knows which button to highlight, 
-            and what to do when a new button is pressed */}
-        <NavBar 
-          activeScreen={currentScreen} 
+        <NavBar
+          activeScreen={currentScreen}
           hasActiveJourney={Boolean(activeJourneyConfig)}
           onNavigate={(screen) => {
             if (screen === "startJourney") {
               setPendingRoutePreset(null);
             }
             setCurrentScreen(screen);
-          }} 
+          }}
         />
-        
       </View>
     </SafeAreaView>
   );
@@ -268,13 +445,10 @@ export function AppNavigator() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    // The team set a global background color here
-    backgroundColor: theme.colors.background, 
+    backgroundColor: theme.colors.background,
   },
   container: {
     flex: 1,
-    // Note: We leave a little padding at the bottom so the screens 
-    // don't hide behind the floating navigation bar!
-    paddingBottom: 90, 
+    paddingBottom: 90,
   },
 });

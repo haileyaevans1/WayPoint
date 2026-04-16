@@ -50,7 +50,7 @@ export function NavBar({
       : "Start";
 
   const centerBottomLabel = showsHomeCenterButton ? "" : "Journey";
-  const centerButtonColors = showsHomeCenterButton
+  const centerButtonColors: [string, string] = showsHomeCenterButton
     ? usesGreenHomeButton
       ? [centerGreen, centerGreen]
       : [navPeach, navPeach]

@@ -13,12 +13,15 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { theme } from "../styles/theme";
 import type { SavedRouteStartPreset } from "./RoutesScreen";
+import type { TrustedContact, UserSettings } from "../types/appData";
 
 type StartJourneyScreenProps = {
   onStartJourney?: (journeyConfig: StartJourneyConfig) => void;
   onOpenAlerts?: () => void;
   onOpenProfile?: () => void;
   initialRoutePreset?: SavedRouteStartPreset | null;
+  trustedContacts?: TrustedContact[];
+  defaultJourneyMode?: UserSettings["defaultJourneyMode"];
   hasAlertIndicator?: boolean;
 };
 
@@ -142,13 +145,32 @@ const journeySpeedMph: Record<JourneyType, number> = {
   bike: 10,
 };
 
+function mapTrustedContactsToEditableContacts(
+  contacts: TrustedContact[] | undefined,
+): EditableContact[] {
+  if (!contacts || contacts.length === 0) {
+    return initialTrustedContacts;
+  }
+
+  return contacts.map((contact) => ({
+    id: contact.id,
+    firstName: contact.firstName,
+    lastName: contact.lastName,
+    phone: contact.phone,
+    note: contact.note,
+  }));
+}
+
 export function StartJourneyScreen({
   onStartJourney,
   onOpenAlerts,
   onOpenProfile,
   initialRoutePreset = null,
+  trustedContacts,
+  defaultJourneyMode = "solo",
   hasAlertIndicator = false,
 }: StartJourneyScreenProps) {
+  const initialTrustedContactList = mapTrustedContactsToEditableContacts(trustedContacts);
   const safetyScrollRef = useRef<ScrollView | null>(null);
   const [journeyType, setJourneyType] = useState<JourneyType>("walk");
   const [measureType, setMeasureType] = useState<TripMeasure>("distance");
@@ -159,17 +181,19 @@ export function StartJourneyScreen({
   const [destinationLocation, setDestinationLocation] = useState("");
   const [locationMode, setLocationMode] = useState<LocationMode>("current");
   const [routeShape, setRouteShape] = useState<RouteShape>("oneWay");
-  const [groupJourneyEnabled, setGroupJourneyEnabled] = useState(false);
+  const [groupJourneyEnabled, setGroupJourneyEnabled] = useState(
+    defaultJourneyMode === "group",
+  );
   const [trustedContactList, setTrustedContactList] =
-    useState<EditableContact[]>(initialTrustedContacts);
+    useState<EditableContact[]>(initialTrustedContactList);
   const [groupMemberList, setGroupMemberList] =
     useState<EditableContact[]>(initialGroupMembers);
   const [includedSafetyIds, setIncludedSafetyIds] =
     useState<string[]>([...defaultIncludedSafetyIds]);
   const [selectedTrustedContactName, setSelectedTrustedContactName] =
     useState(
-      initialTrustedContacts[0]
-        ? `${initialTrustedContacts[0].firstName} ${initialTrustedContacts[0].lastName}`.trim()
+      initialTrustedContactList[0]
+        ? `${initialTrustedContactList[0].firstName} ${initialTrustedContactList[0].lastName}`.trim()
         : "",
     );
   const [safetyScrollX, setSafetyScrollX] = useState(0);
@@ -244,6 +268,20 @@ export function StartJourneyScreen({
       : initialRoutePreset?.routeName?.trim()
         ? initialRoutePreset.routeName
       : `${selectedJourney?.label ?? "Journey"} ${routeShape === "loop" ? "Loop" : "Route"}`;
+
+  useEffect(() => {
+    const nextTrustedContacts = mapTrustedContactsToEditableContacts(trustedContacts);
+    setTrustedContactList(nextTrustedContacts);
+    setSelectedTrustedContactName(
+      nextTrustedContacts[0]
+        ? `${nextTrustedContacts[0].firstName} ${nextTrustedContacts[0].lastName}`.trim()
+        : "",
+    );
+  }, [trustedContacts]);
+
+  useEffect(() => {
+    setGroupJourneyEnabled(defaultJourneyMode === "group");
+  }, [defaultJourneyMode]);
 
   useEffect(() => {
     if (!initialRoutePreset) {
