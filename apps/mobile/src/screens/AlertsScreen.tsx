@@ -110,6 +110,41 @@ const alertSections: AlertSection[] = [
   },
 ];
 
+const toneColors: Record<
+  AlertTone,
+  {
+    badge: [string, string];
+    statusBg: string;
+    statusText: string;
+    cardBorder: string;
+  }
+> = {
+  warning: {
+    badge: ["#F6D3BE", "#EFA774"],
+    statusBg: "rgba(239,167,116,0.16)",
+    statusText: "#A76139",
+    cardBorder: "rgba(239,167,116,0.22)",
+  },
+  critical: {
+    badge: ["#F5C5BF", "#E28A6E"],
+    statusBg: "rgba(226,138,110,0.18)",
+    statusText: "#9B4E3D",
+    cardBorder: "rgba(226,138,110,0.24)",
+  },
+  info: {
+    badge: ["#DCE8F5", "#B8CCE5"],
+    statusBg: "rgba(184,204,229,0.22)",
+    statusText: "#607C97",
+    cardBorder: "rgba(184,204,229,0.22)",
+  },
+  success: {
+    badge: ["#D8E59C", "#B9CD62"],
+    statusBg: "rgba(185,205,98,0.18)",
+    statusText: "#617228",
+    cardBorder: "rgba(185,205,98,0.22)",
+  },
+};
+
 export function AlertsScreen({
   onAlertPress,
   onViewJourney: _onViewJourney,
@@ -145,25 +180,53 @@ export function AlertsScreen({
             </View>
 
             <View style={styles.alertList}>
-              {section.alerts.map((alert) => (
-                <View key={alert.id} style={styles.alertCard}>
-                  <View style={styles.alertTopRow}>
-                    <View style={styles.alertTitleWrap}>
-                      <Text style={styles.alertIcon}>{alert.icon}</Text>
-                      <View style={styles.alertCopy}>
-                        <Text style={styles.alertTitle}>{alert.title}</Text>
-                        <Text style={styles.alertTimestamp}>
-                          {alert.timestamp}
+              {section.alerts.map((alert) => {
+                const colors = toneColors[alert.tone];
+
+                return (
+                  <View
+                    key={alert.id}
+                    style={[styles.alertCard, { borderColor: colors.cardBorder }]}
+                  >
+                    <View style={styles.alertTopRow}>
+                      <View style={styles.alertHeadingWrap}>
+                        <LinearGradient
+                          colors={colors.badge}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                          style={styles.iconBadge}
+                        >
+                          <Text style={styles.iconText}>{alert.icon}</Text>
+                        </LinearGradient>
+                        <View style={styles.alertCopy}>
+                          <Text style={styles.alertTitle}>{alert.title}</Text>
+                          <Text style={styles.alertTimestamp}>
+                            {alert.timestamp}
+                          </Text>
+                        </View>
+                      </View>
+
+                      <View
+                        style={[
+                          styles.statusPill,
+                          { backgroundColor: colors.statusBg },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.statusPillText,
+                            { color: colors.statusText },
+                          ]}
+                        >
+                          {alert.status}
                         </Text>
                       </View>
                     </View>
 
-                    <Text style={styles.alertStatus}>{alert.status}</Text>
+                    <Text style={styles.alertMessage}>{alert.message}</Text>
                   </View>
-
-                  <Text style={styles.alertMessage}>{alert.message}</Text>
-                </View>
-              ))}
+                );
+              })}
             </View>
           </View>
         ))}
@@ -187,7 +250,9 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   sectionHeader: {
-    gap: 4,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   sectionTitle: {
     fontSize: 24,
@@ -208,22 +273,33 @@ const styles = StyleSheet.create({
     padding: 18,
     gap: 12,
     borderWidth: 1,
-    borderColor: "rgba(202,116,73,0.12)",
+    shadowColor: theme.colors.brandDeep,
+    shadowOpacity: 0.08,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 4,
   },
   alertTopRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     gap: 10,
   },
-  alertTitleWrap: {
+  alertHeadingWrap: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
     flex: 1,
     minWidth: 0,
   },
-  alertIcon: {
-    fontSize: 22,
+  iconBadge: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  iconText: {
+    fontSize: 20,
   },
   alertCopy: {
     flex: 1,
@@ -239,10 +315,15 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: theme.colors.textMuted,
   },
-  alertStatus: {
+  statusPill: {
+    alignSelf: "flex-start",
+    borderRadius: theme.radius.pill,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  statusPillText: {
     fontSize: 12,
     fontWeight: "800",
-    color: theme.colors.brandDeep,
   },
   alertMessage: {
     fontSize: 14,
