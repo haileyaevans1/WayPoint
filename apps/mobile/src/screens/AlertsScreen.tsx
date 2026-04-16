@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Header } from "../components/Header";
 import { theme } from "../styles/theme";
@@ -147,7 +147,7 @@ const toneColors: Record<
 
 export function AlertsScreen({
   onAlertPress,
-  onViewJourney: _onViewJourney,
+  onViewJourney,
 }: AlertsScreenProps) {
   return (
     <LinearGradient
@@ -175,8 +175,10 @@ export function AlertsScreen({
         {alertSections.map((section) => (
           <View key={section.title} style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>{section.title}</Text>
-              <Text style={styles.sectionSubtitle}>{section.subtitle}</Text>
+              <View>
+                <Text style={styles.sectionTitle}>{section.title}</Text>
+                <Text style={styles.sectionSubtitle}>{section.subtitle}</Text>
+              </View>
             </View>
 
             <View style={styles.alertList}>
@@ -224,6 +226,29 @@ export function AlertsScreen({
                     </View>
 
                     <Text style={styles.alertMessage}>{alert.message}</Text>
+
+                    {alert.actionLabel ? (
+                      <View style={styles.actionRow}>
+                        <Pressable
+                          onPress={onViewJourney}
+                          style={[
+                            styles.primaryAction,
+                            alert.actionLabel === "I'm Safe" &&
+                              styles.primaryActionSoft,
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.primaryActionText,
+                              alert.actionLabel === "I'm Safe" &&
+                                styles.primaryActionTextSoft,
+                            ]}
+                          >
+                            {alert.actionLabel}
+                          </Text>
+                        </Pressable>
+                      </View>
+                    ) : null}
                   </View>
                 );
               })}
@@ -261,6 +286,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
   },
   sectionSubtitle: {
+    marginTop: 4,
     fontSize: 14,
     color: theme.colors.textSoft,
   },
@@ -329,5 +355,27 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 21,
     color: theme.colors.textSoft,
+  },
+  actionRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  primaryAction: {
+    alignSelf: "flex-start",
+    borderRadius: 20,
+    backgroundColor: theme.colors.ink,
+    paddingHorizontal: 16,
+    paddingVertical: 13,
+  },
+  primaryActionSoft: {
+    backgroundColor: theme.colors.surfaceSoft,
+  },
+  primaryActionText: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: theme.colors.white,
+  },
+  primaryActionTextSoft: {
+    color: theme.colors.text,
   },
 });
