@@ -14,16 +14,20 @@ const pageColors = {
 
 type ProfileScreenProps = {
   onOpenAlerts?: () => void;
+  hasAlertIndicator?: boolean;
 };
 
-export default function ProfileScreen({ onOpenAlerts }: ProfileScreenProps) {
+export default function ProfileScreen({
+  onOpenAlerts,
+  hasAlertIndicator = false,
+}: ProfileScreenProps) {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
       <View style={styles.pageTopRow}>
         <View style={styles.pageTopSpacer} />
         <TouchableOpacity style={styles.alertButton} onPress={onOpenAlerts}>
           <Feather name="bell" size={18} color={pageColors.white} />
-          <View style={styles.alertDot} />
+          {hasAlertIndicator ? <View style={styles.alertDot} /> : null}
         </TouchableOpacity>
       </View>
       
@@ -129,11 +133,13 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: pageColors.tangerine,
+    backgroundColor: '#DE8558',
+    borderWidth: 1,
+    borderColor: '#CA7449',
     position: 'relative',
-    shadowColor: pageColors.charcoal,
+    shadowColor: '#CA7449',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.16,
+    shadowOpacity: 0.22,
     shadowRadius: 16,
     elevation: 4,
   },

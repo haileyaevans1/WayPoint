@@ -8,6 +8,7 @@ type HeaderProps = {
   subtitle?: string;
   tagline?: string;
   onAlertPress?: () => void;
+  hasAlertIndicator?: boolean;
 };
 
 export function Header({
@@ -15,6 +16,7 @@ export function Header({
   subtitle = "Welcome back, Hailey",
   tagline = "Journey Smart, Journey Safe",
   onAlertPress,
+  hasAlertIndicator = false,
 }: HeaderProps) {
   const [taglineTop, taglineBottom] = tagline.split(",").map((part) => part.trim());
 
@@ -55,7 +57,7 @@ export function Header({
           onPress={onAlertPress}
         >
           <Feather name="bell" size={16} color={theme.colors.white} />
-          <View style={styles.alertDot} />
+          {hasAlertIndicator ? <View style={styles.alertDot} /> : null}
         </Pressable>
       </View>
     </LinearGradient>
@@ -170,12 +172,12 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: theme.colors.brandBright,
+    backgroundColor: theme.colors.brand,
     borderWidth: 1,
-    borderColor: "rgba(202,116,73,0.18)",
+    borderColor: theme.colors.brandDeep,
     position: "relative",
     shadowColor: theme.colors.brandDeep,
-    shadowOpacity: 0.18,
+    shadowOpacity: 0.22,
     shadowRadius: 14,
     shadowOffset: { width: 0, height: 6 },
     elevation: 3,

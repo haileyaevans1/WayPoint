@@ -52,6 +52,12 @@ export function AppNavigator() {
     () => alerts.find((alert) => alert.id === toastAlertId) ?? null,
     [alerts, toastAlertId],
   );
+  const hasAlertIndicator = alerts.some(
+    (alert) =>
+      alert.type === "missed-check-in" ||
+      alert.type === "off-route" ||
+      alert.type === "escalation",
+  );
 
   useEffect(() => {
     if (!activeToast) {
@@ -129,6 +135,7 @@ export function AppNavigator() {
             }}
             favoriteRoute={favoriteRoute}
             journeyMode={activeJourneyConfig ? "active" : "idle"}
+            hasAlertIndicator={hasAlertIndicator}
           />
         );
       case "routes":
@@ -141,14 +148,30 @@ export function AppNavigator() {
               setPendingRoutePreset(routePreset);
               setCurrentScreen("startJourney");
             }}
+            hasAlertIndicator={hasAlertIndicator}
           />
         );
       case "profile":
-        return <ProfileScreen onOpenAlerts={openAlerts} />;
+        return (
+          <ProfileScreen
+            onOpenAlerts={openAlerts}
+            hasAlertIndicator={hasAlertIndicator}
+          />
+        );
       case "settings":
-        return <SettingsScreen onOpenAlerts={openAlerts} />;
+        return (
+          <SettingsScreen
+            onOpenAlerts={openAlerts}
+            hasAlertIndicator={hasAlertIndicator}
+          />
+        );
       case "stats":
-        return <StatisticsScreen onOpenAlerts={openAlerts} />;
+        return (
+          <StatisticsScreen
+            onOpenAlerts={openAlerts}
+            hasAlertIndicator={hasAlertIndicator}
+          />
+        );
       case "startJourney":
         return (
           <StartJourneyScreen
@@ -160,6 +183,7 @@ export function AppNavigator() {
             }}
             onOpenAlerts={openAlerts}
             onOpenProfile={() => setCurrentScreen("profile")}
+            hasAlertIndicator={hasAlertIndicator}
           />
         );
       case "activeJourney":
@@ -171,6 +195,7 @@ export function AppNavigator() {
               setActiveJourneyConfig(null);
               setCurrentScreen("home");
             }}
+            hasAlertIndicator={hasAlertIndicator}
           />
         );
       // If "routes" or "startJourney" is clicked before they are built, 
@@ -187,6 +212,7 @@ export function AppNavigator() {
             }}
             favoriteRoute={favoriteRoute}
             journeyMode={activeJourneyConfig ? "active" : "idle"}
+            hasAlertIndicator={hasAlertIndicator}
           />
         ); 
     }

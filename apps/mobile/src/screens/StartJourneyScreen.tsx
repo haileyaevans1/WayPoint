@@ -19,6 +19,7 @@ type StartJourneyScreenProps = {
   onOpenAlerts?: () => void;
   onOpenProfile?: () => void;
   initialRoutePreset?: SavedRouteStartPreset | null;
+  hasAlertIndicator?: boolean;
 };
 
 export type JourneyType = "walk" | "run" | "hike" | "bike";
@@ -146,6 +147,7 @@ export function StartJourneyScreen({
   onOpenAlerts,
   onOpenProfile,
   initialRoutePreset = null,
+  hasAlertIndicator = false,
 }: StartJourneyScreenProps) {
   const safetyScrollRef = useRef<ScrollView | null>(null);
   const [journeyType, setJourneyType] = useState<JourneyType>("walk");
@@ -477,7 +479,7 @@ export function StartJourneyScreen({
           <View style={styles.pageActionSpacer} />
           <Pressable onPress={onOpenAlerts} style={styles.alertButton}>
             <Feather name="bell" size={18} color={theme.colors.white} />
-            <View style={styles.alertDot} />
+            {hasAlertIndicator ? <View style={styles.alertDot} /> : null}
           </Pressable>
         </View>
 
@@ -1206,10 +1208,12 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: theme.colors.brandBright,
+    backgroundColor: theme.colors.brand,
+    borderWidth: 1,
+    borderColor: theme.colors.brandDeep,
     position: "relative",
     shadowColor: theme.colors.brandDeep,
-    shadowOpacity: 0.18,
+    shadowOpacity: 0.22,
     shadowRadius: 18,
     shadowOffset: { width: 0, height: 8 },
     elevation: 4,

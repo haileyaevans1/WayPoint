@@ -44,6 +44,7 @@ type HomeScreenProps = {
   onOpenStartJourney: () => void;
   favoriteRoute: FavoriteRouteSummary | null;
   journeyMode?: JourneyMode;
+  hasAlertIndicator?: boolean;
 };
 
 const heroStateByMode: Record<
@@ -93,6 +94,7 @@ export function HomeScreen({
   onOpenStartJourney,
   favoriteRoute,
   journeyMode = "idle",
+  hasAlertIndicator = false,
 }: HomeScreenProps) {
   const heroState = heroStateByMode[journeyMode];
 
@@ -160,7 +162,7 @@ export function HomeScreen({
 
             <Pressable onPress={onOpenAlerts} style={({ pressed }) => [styles.alertButton, pressed && styles.alertPressed]}>
               <Feather name="bell" size={18} color={theme.colors.white} />
-              <View style={styles.alertDot} />
+              {hasAlertIndicator ? <View style={styles.alertDot} /> : null}
             </Pressable>
           </View>
 
@@ -442,10 +444,12 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: theme.colors.brandBright,
+    backgroundColor: theme.colors.brand,
+    borderWidth: 1,
+    borderColor: theme.colors.brandDeep,
     position: "relative",
     shadowColor: theme.colors.brandDeep,
-    shadowOpacity: 0.18,
+    shadowOpacity: 0.22,
     shadowRadius: 18,
     shadowOffset: { width: 0, height: 8 },
     elevation: 4,

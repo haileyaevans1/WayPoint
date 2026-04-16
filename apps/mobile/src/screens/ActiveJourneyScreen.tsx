@@ -21,6 +21,7 @@ type ActiveJourneyScreenProps = {
   onJourneyComplete?: () => void;
   onOpenAlerts?: () => void;
   journeyConfig?: StartJourneyConfig | null;
+  hasAlertIndicator?: boolean;
 };
 
 const readyLimeLight = "#CFE17A";
@@ -59,6 +60,7 @@ export function ActiveJourneyScreen({
   onJourneyComplete,
   onOpenAlerts,
   journeyConfig,
+  hasAlertIndicator = false,
 }: ActiveJourneyScreenProps) {
   const { height: windowHeight } = useWindowDimensions();
   const safetyPulse = useRef(new Animated.Value(1)).current;
@@ -248,7 +250,7 @@ export function ActiveJourneyScreen({
                   onPress={onOpenAlerts}
                 >
                   <Feather name="bell" size={18} color={theme.colors.white} />
-                  <View style={styles.mapAlertDot} />
+                  {hasAlertIndicator ? <View style={styles.mapAlertDot} /> : null}
                 </Pressable>
                 {!isComplete ? (
                   <Pressable
@@ -628,14 +630,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 11,
     borderRadius: 20,
-    backgroundColor: theme.colors.brandBright,
+    backgroundColor: theme.colors.brand,
+    borderWidth: 1,
+    borderColor: theme.colors.brandDeep,
     position: "relative",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
     shadowColor: theme.colors.brandDeep,
-    shadowOpacity: 0.18,
+    shadowOpacity: 0.22,
     shadowRadius: 18,
     shadowOffset: { width: 0, height: 8 },
     elevation: 4,
